@@ -59,7 +59,7 @@ export async function searchMedia(
 export async function getTrending(
   type: "all" | "movie" | "tv" = "all",
   page: number = 1
-): Promise<{ results: TMDBSearchResult[]; totalResults: number }> {
+): Promise<{ results: TMDBSearchResult[]; totalResults: number; totalPages: number }> {
   const media = type;
   const data = await tmdbFetch(`/trending/${media}/week`, { page: String(page) });
 
@@ -72,7 +72,7 @@ export async function getTrending(
     .slice(0, 20)
     .map((r) => mapResult(r, (r.media_type as string) || "movie"));
 
-  return { results, totalResults: (data.total_results as number) || 0 };
+  return { results, totalResults: (data.total_results as number) || 0, totalPages: (data.total_pages as number) || 0 };
 }
 
 export async function getMediaDetails(

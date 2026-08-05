@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/app/auth-context";
 import { Link } from "react-router-dom";
 import { Search, BookOpen, List, Sparkles, TrendingUp, ChevronRight, Film, Clapperboard } from "lucide-react";
-import { useTrending } from "@/hooks/useMedia";
+import { useInfiniteTrending } from "@/hooks/useMedia";
 import HorizontalMediaCard from "@/components/media/HorizontalMediaCard";
 import MediaCard from "@/components/media/MediaCard";
+import HorizontalCarousel from "@/components/media/HorizontalCarousel";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import { getUserLibrary, removeFromLibrary } from "@/services/library";
 import { getUserLists } from "@/services/lists";
@@ -14,13 +15,14 @@ import type { TMDBSearchResult, Entry } from "@/types";
 export default function HomePage() {
   const { user, profile } = useAuth();
   const name = profile?.display_name || user?.email?.split("@")[0] || "usuario";
-  const { data: trendingAll } = useTrending("all");
-  const { data: trendingMovies } = useTrending("movie");
+  const trendingInf = useInfiniteTrending("all");
+  const moviesInf = useInfiniteTrending("movie");
 
   const [entries, setEntries] = useState<Entry[]>([]);
   const [listsCount, setListsCount] = useState(0);
   const [selected, setSelected] = useState<TMDBSearchResult | null>(null);
   const [bgIndex, setBgIndex] = useState(0);
+  const [recentLimit, setRecentLimit] = useState(10);
 
   const heroBg = useMemo(() => entries.filter((e) => e.poster_path).slice(0, 5), [entries]);
 
@@ -33,8 +35,8 @@ export default function HomePage() {
 
   const isInLibrary = (item: TMDBSearchResult) =>
     entries.some((e) => e.tmdb_id === item.tmdbId && e.media_type === item.mediaType);
-  const trending = (trendingAll?.results || []).filter((item) => !isInLibrary(item));
-  const movies = (trendingMovies?.results || []).filter((item) => !isInLibrary(item));
+  const trending = trendingInf.items.filter((item) => !isInLibrary(item));
+  const movies = moviesInf.items.filter((item) => !isInLibrary(item));
 
   useEffect(() => {
     if (!user) return;
@@ -58,7 +60,7 @@ export default function HomePage() {
     ];
   }, [entries, listsCount]);
 
-  const recentEntries = entries.slice(0, 10);
+  const recentEntries = entries.slice(0, recentLimit);
 
   return (
     <div className="w-full px-5 md:px-8 pt-6 md:pt-10 pb-24 space-y-12">
@@ -146,7 +148,14 @@ export default function HomePage() {
               Ver todo <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <div className="flex gap-6 md:gap-8 overflow-x-auto no-scrollbar pb-6 pt-6 px-1 snap-x">
+          <HorizontalCarousel
+            className="gap-6 md:gap-8 pt-6 pb-6 px-1"
+            onLoadMore={
+              recentLimit < entries.length
+                ? () => setRecentLimit((l) => Math.min(l + 8, entries.length))
+                : undefined
+            }
+          >
             {recentEntries.map((entry) => (
               <div key={entry.id} className="w-[210px] sm:w-[240px] md:w-[270px] shrink-0 snap-start">
                 <MediaCard
@@ -182,7 +191,7 @@ export default function HomePage() {
                 />
               </div>
             ))}
-          </div>
+          </HorizontalCarousel>
         </section>
       )}
 
@@ -195,13 +204,17 @@ export default function HomePage() {
               Tendencia de la semana
             </h2>
           </div>
-          <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4 snap-x">
-            {trending.slice(0, 14).map((item) => (
-              <div key={`${item.mediaType}-${item.tmdbId}`} className="w-[520px] sm:w-[640px] md:w-[800px] h-72 sm:h-80 md:h-[28rem] shrink-0 snap-start">
+          <HorizontalCarousel
+            className="gap-6 pt-6 pb-6 px-1"
+            onLoadMore={trendingInf.hasMore ? trendingInf.loadMore : undefined}
+            loadingMore={trendingInf.loading}
+          >
+            {trending.map((item) => (
+              <div key={`${item.mediaType}-${item.tmdbId}`} className="w-[520px] sm:w-[640px] md:w-[800px] shrink-0 snap-start">
                 <HorizontalMediaCard item={item} onClick={() => setSelected(item)} />
               </div>
             ))}
-          </div>
+          </HorizontalCarousel>
         </section>
       )}
 
@@ -214,13 +227,17 @@ export default function HomePage() {
               Películas populares
             </h2>
           </div>
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 snap-x">
-            {movies.slice(0, 14).map((item) => (
-              <div key={`${item.mediaType}-${item.tmdbId}`} className="w-[300px] md:w-[340px] h-36 md:h-44 shrink-0 snap-start">
+          <HorizontalCarousel
+            className="gap-4 pt-6 pb-6 px-1"
+            onLoadMore={moviesInf.hasMore ? moviesInf.loadMore : undefined}
+            loadingMore={moviesInf.loading}
+          >
+            {movies.map((item) => (
+              <div key={`${item.mediaType}-${item.tmdbId}`} className="w-[300px] md:w-[340px] shrink-0 snap-start">
                 <HorizontalMediaCard item={item} onClick={() => setSelected(item)} />
               </div>
             ))}
-          </div>
+          </HorizontalCarousel>
         </section>
       )}
 

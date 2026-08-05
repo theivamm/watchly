@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Star, ListPlus, ChevronDown, Check, Sparkles } from "lucide-react";
+import { X, Star, ListPlus, ChevronDown, Check, Sparkles, Quote } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { getPosterUrl, getMediaDetails } from "@/services/tmdb";
 import { addToLibrary, updateEntry, removeFromLibrary, getEntry } from "@/services/library";
@@ -34,6 +34,7 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [notes, setNotes] = useState("");
+  const [description, setDescription] = useState(result.overview || "");
   const [existingEntry, setExistingEntry] = useState<Entry | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -44,6 +45,8 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
   const [addedToListId, setAddedToListId] = useState<string | null>(null);
   const [fetchingDesc, setFetchingDesc] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const posterUrl = getPosterUrl(result.posterPath, "w500");
 
   useEffect(() => {
     if (!user) return;
@@ -59,6 +62,10 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
       .finally(() => setLoading(false));
   }, [user, result.tmdbId, result.mediaType]);
 
+  useEffect(() => {
+    setDescription(result.overview || "");
+  }, [result.overview]);
+
   const fillDescription = async () => {
     if (fetchingDesc) return;
     setFetchingDesc(true);
@@ -68,7 +75,7 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
         const details = await getMediaDetails(result.mediaType as "movie" | "tv", result.tmdbId);
         desc = details.overview;
       }
-      setNotes(desc || "");
+      setDescription(desc || "");
     } catch {
       /* ignore */
     } finally {
@@ -164,241 +171,291 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+
       <div
-        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl p-6"
+        className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl overflow-hidden"
         style={{
-          backgroundColor: "var(--surface-1)",
-          border: "1px solid rgba(139,92,246,0.25)",
-          boxShadow: "0 30px 80px -20px rgba(139,92,246,0.4)",
+          backgroundColor: "rgba(19,19,31,0.78)",
+          border: "1px solid rgba(139,92,246,0.3)",
+          backdropFilter: "blur(24px) saturate(140%)",
+          WebkitBackdropFilter: "blur(24px) saturate(140%)",
+          boxShadow: "0 30px 90px -20px rgba(139,92,246,0.45)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-          style={{ backgroundColor: "var(--surface-2)", color: "var(--text-secondary)" }}
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        <div className="flex gap-5 mb-6">
+        {/* Soft blurred cover backdrop */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <img
-            src={getPosterUrl(result.posterPath, "w342")}
-            alt={result.title}
-            className="w-28 rounded-xl object-cover flex-shrink-0"
-            style={{ aspectRatio: "2/3" }}
+            src={posterUrl}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-30"
+            loading="lazy"
           />
-          <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-extrabold mb-1" style={{ color: "var(--text-primary)" }}>
-              {result.title}
-            </h2>
-            <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>
-              {result.year} · {result.mediaType === "movie" ? "Película" : "Serie"}
-            </p>
-            {result.overview && (
-              <p className="text-xs leading-relaxed line-clamp-4" style={{ color: "var(--text-secondary)" }}>
-                {result.overview}
-              </p>
-            )}
-          </div>
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(19,19,31,0.55) 0%, rgba(19,19,31,0.25) 45%, rgba(19,19,31,0.85) 100%)",
+            }}
+          />
         </div>
 
-        <div className="space-y-5">
-          <div>
-            <p className="text-xs font-bold mb-2.5 uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-              Estado
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {STATUSES.map((s) => (
-                <button
-                  key={s.value}
-                  onClick={() => setStatus(s.value)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all"
-                  style={{
-                    backgroundColor: status === s.value ? STATUS_COLORS[s.value] : "var(--surface-2)",
-                    color: status === s.value ? "#000" : "var(--text-secondary)",
-                    border: `1.5px solid ${status === s.value ? STATUS_COLORS[s.value] : "var(--border)"}`,
-                  }}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="relative z-10 p-6 md:p-8">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              color: "var(--text-primary)",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+            }}
+          >
+            <X className="w-4 h-4" />
+          </button>
 
-          <div>
-            <p className="text-xs font-bold mb-2.5 uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-              Calificación
-            </p>
-            <div className="flex gap-1.5">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onMouseEnter={() => setHoverRating(star)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  onClick={() => setRating(rating === star ? 0 : star)}
-                  className="transition-transform hover:scale-110"
-                >
-                  <Star
-                    className="w-7 h-7"
-                    fill={(hoverRating || rating) >= star ? "var(--accent)" : "none"}
-                    stroke={(hoverRating || rating) >= star ? "var(--accent)" : "var(--text-secondary)"}
-                    strokeWidth={1.5}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between gap-3 mb-2.5">
-              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                Descripción
-              </p>
-              <button
-                onClick={fillDescription}
-                disabled={fetchingDesc}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all hover:scale-[1.03] disabled:opacity-60"
-                style={{
-                  backgroundColor: "var(--accent-soft)",
-                  color: "#c4b5fd",
-                  border: "1px solid rgba(139,92,246,0.3)",
-                }}
-              >
-                <Sparkles className="w-3 h-3" />
-                {fetchingDesc ? "Buscando..." : "Obtener automáticamente"}
-              </button>
-            </div>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Escribí tu descripción, opinión o progreso..."
-              rows={3}
-              className="w-full !rounded-xl !text-sm !p-3 resize-none"
-              style={{
-                backgroundColor: "var(--surface-2)",
-                border: "1.5px solid var(--border)",
-                color: "var(--text-primary)",
-              }}
-            />
-          </div>
-
-          <div ref={dropdownRef} className="relative">
-            <p className="text-xs font-bold mb-2.5 uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-              Agregar a lista
-            </p>
-            <button
-              onClick={() => setShowListDropdown((v) => !v)}
-              className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all"
-              style={{
-                backgroundColor: "var(--surface-2)",
-                border: "1.5px solid var(--border)",
-                color: "var(--text-primary)",
-              }}
-            >
-              <span className="inline-flex items-center gap-2">
-                <ListPlus className="w-4 h-4" />
-                {addedToListId ? "¡Agregado!" : "Seleccionar lista..."}
-              </span>
-              <ChevronDown className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
-            </button>
-            {showListDropdown && (
+          <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+            {/* Left: big image */}
+            <div className="mx-auto sm:mx-0 w-44 sm:w-56 md:w-64 shrink-0">
               <div
-                className="absolute z-10 mt-2 w-full rounded-xl border overflow-hidden"
+                className="w-full aspect-[2/3] rounded-2xl overflow-hidden border"
                 style={{
-                  backgroundColor: "var(--surface-1)",
-                  borderColor: "var(--border)",
-                  boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
+                  borderColor: "rgba(139,92,246,0.35)",
+                  boxShadow: "0 24px 60px -12px rgba(0,0,0,0.65)",
                 }}
               >
-                {lists.length === 0 ? (
-                  <div className="px-4 py-3 text-xs" style={{ color: "var(--text-secondary)" }}>
-                    No tenés listas aún
-                  </div>
-                ) : (
-                  lists.map((list) => (
+                <img src={posterUrl} alt={result.title} className="w-full h-full object-cover" />
+              </div>
+            </div>
+
+            {/* Right: content */}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-1" style={{ color: "var(--text-primary)" }}>
+                {result.title}
+              </h2>
+              <p className="text-sm font-semibold mb-4" style={{ color: "var(--text-secondary)" }}>
+                {result.year || "Sin año"} · {result.mediaType === "movie" ? "Película" : "Serie"}
+              </p>
+
+              <div className="space-y-6">
+                {/* Description */}
+                <div>
+                  <div className="flex items-center justify-between gap-3 mb-2.5">
+                    <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                      Descripción
+                    </p>
                     <button
-                      key={list.id}
-                      onClick={() => handleAddToList(list.id)}
-                      disabled={addingToList === list.id}
-                      className="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-bold transition-colors text-left"
+                      onClick={fillDescription}
+                      disabled={fetchingDesc}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all hover:scale-[1.03] disabled:opacity-60"
                       style={{
-                        color: "var(--text-primary)",
-                        backgroundColor:
-                          addedToListId === list.id ? "rgba(74,222,128,0.1)" : "transparent",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (addedToListId !== list.id) {
-                          e.currentTarget.style.backgroundColor = "var(--surface-2)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (addedToListId !== list.id) {
-                          e.currentTarget.style.backgroundColor = "transparent";
-                        }
+                        backgroundColor: "rgba(139,92,246,0.15)",
+                        color: "#c4b5fd",
+                        border: "1px solid rgba(139,92,246,0.3)",
                       }}
                     >
-                      <span className="truncate">{list.name}</span>
-                      {addedToListId === list.id ? (
-                        <Check className="w-4 h-4 flex-shrink-0" style={{ color: "#4ade80" }} />
-                      ) : addingToList === list.id ? (
-                        <div
-                          className="w-4 h-4 rounded-full border-2 animate-spin flex-shrink-0"
-                          style={{ borderColor: "var(--border)", borderTopColor: "var(--accent)" }}
-                        />
-                      ) : null}
+                      <Sparkles className="w-3 h-3" />
+                      {fetchingDesc ? "Buscando..." : "Obtener automáticamente"}
                     </button>
-                  ))
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                    {description || "Sin descripción disponible. Tocá “Obtener automáticamente” para cargarla desde TMDB."}
+                  </p>
+                </div>
+
+                {/* Personal comment */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <Quote className="w-3.5 h-3.5" style={{ color: "#c4b5fd" }} />
+                    <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                      Mi comentario
+                    </p>
+                  </div>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Escribí un breve comentario personal sobre esta película..."
+                    rows={3}
+                    className="w-full !rounded-xl !text-sm !p-3 resize-none"
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.05)",
+                      border: "1.5px solid var(--border)",
+                      color: "var(--text-primary)",
+                      backdropFilter: "blur(8px)",
+                      WebkitBackdropFilter: "blur(8px)",
+                    }}
+                  />
+                </div>
+
+                {/* Status */}
+                <div>
+                  <p className="text-xs font-bold mb-2.5 uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                    Estado
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {STATUSES.map((s) => (
+                      <button
+                        key={s.value}
+                        onClick={() => setStatus(s.value)}
+                        className="px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                        style={{
+                          backgroundColor: status === s.value ? STATUS_COLORS[s.value] : "rgba(255,255,255,0.05)",
+                          color: status === s.value ? "#000" : "var(--text-secondary)",
+                          border: `1.5px solid ${status === s.value ? STATUS_COLORS[s.value] : "var(--border)"}`,
+                        }}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Rating */}
+                <div>
+                  <p className="text-xs font-bold mb-2.5 uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                    Calificación
+                  </p>
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setRating(rating === star ? 0 : star)}
+                        className="transition-transform hover:scale-110"
+                      >
+                        <Star
+                          className="w-7 h-7"
+                          fill={(hoverRating || rating) >= star ? "var(--accent)" : "none"}
+                          stroke={(hoverRating || rating) >= star ? "var(--accent)" : "var(--text-secondary)"}
+                          strokeWidth={1.5}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Lists */}
+                <div ref={dropdownRef} className="relative">
+                  <p className="text-xs font-bold mb-2.5 uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                    Agregar a lista
+                  </p>
+                  <button
+                    onClick={() => setShowListDropdown((v) => !v)}
+                    className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all"
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.05)",
+                      border: "1.5px solid var(--border)",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <ListPlus className="w-4 h-4" />
+                      {addedToListId ? "¡Agregado!" : "Seleccionar lista..."}
+                    </span>
+                    <ChevronDown className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
+                  </button>
+                  {showListDropdown && (
+                    <div
+                      className="absolute z-10 mt-2 w-full rounded-xl border overflow-hidden"
+                      style={{
+                        backgroundColor: "rgba(19,19,31,0.95)",
+                        borderColor: "var(--border)",
+                        boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
+                        backdropFilter: "blur(16px)",
+                        WebkitBackdropFilter: "blur(16px)",
+                      }}
+                    >
+                      {lists.length === 0 ? (
+                        <div className="px-4 py-3 text-xs" style={{ color: "var(--text-secondary)" }}>
+                          No tenés listas aún
+                        </div>
+                      ) : (
+                        lists.map((list) => (
+                          <button
+                            key={list.id}
+                            onClick={() => handleAddToList(list.id)}
+                            disabled={addingToList === list.id}
+                            className="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-bold transition-colors text-left"
+                            style={{
+                              color: "var(--text-primary)",
+                              backgroundColor:
+                                addedToListId === list.id ? "rgba(74,222,128,0.1)" : "transparent",
+                            }}
+                            onMouseEnter={(e) => {
+                              if (addedToListId !== list.id) {
+                                e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (addedToListId !== list.id) {
+                                e.currentTarget.style.backgroundColor = "transparent";
+                              }
+                            }}
+                          >
+                            <span className="truncate">{list.name}</span>
+                            {addedToListId === list.id ? (
+                              <Check className="w-4 h-4 flex-shrink-0" style={{ color: "#4ade80" }} />
+                            ) : addingToList === list.id ? (
+                              <div
+                                className="w-4 h-4 rounded-full border-2 animate-spin flex-shrink-0"
+                                style={{ borderColor: "var(--border)", borderTopColor: "var(--accent)" }}
+                              />
+                            ) : null}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {saveError && (
+                  <div
+                    className="px-4 py-3 rounded-xl text-xs font-bold"
+                    style={{
+                      backgroundColor: "rgba(248,113,113,0.12)",
+                      border: "1.5px solid rgba(248,113,113,0.4)",
+                      color: "#f87171",
+                    }}
+                  >
+                    {saveError}
+                  </div>
                 )}
+
+                <div className="flex gap-3 pt-1">
+                  <button
+                    onClick={handleSave}
+                    disabled={saving || loading}
+                    className="flex-1 px-6 py-3 rounded-full text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50"
+                    style={{
+                      background: "var(--gradient-accent)",
+                      color: "#fff",
+                      boxShadow: "0 4px 18px rgba(139,92,246,0.45)",
+                    }}
+                  >
+                    {saving ? "Guardando..." : existingEntry ? "Actualizar" : "Guardar en biblioteca"}
+                  </button>
+                  {existingEntry && (
+                    <button
+                      onClick={handleRemove}
+                      disabled={saving}
+                      className="px-4 py-3 rounded-full text-sm font-bold transition-opacity disabled:opacity-50"
+                      style={{
+                        backgroundColor: "rgba(255,255,255,0.05)",
+                        color: "#f87171",
+                        border: "1.5px solid var(--border)",
+                      }}
+                    >
+                      Eliminar
+                    </button>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-
-          {saveError && (
-            <div
-              className="px-4 py-3 rounded-xl text-xs font-bold"
-              style={{
-                backgroundColor: "rgba(248,113,113,0.12)",
-                border: "1.5px solid rgba(248,113,113,0.4)",
-                color: "#f87171",
-              }}
-            >
-              {saveError}
             </div>
-          )}
-
-          <div className="flex gap-3 pt-1">
-            <button
-              onClick={handleSave}
-              disabled={saving || loading}
-              className="flex-1 px-6 py-3 rounded-full text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50"
-              style={{
-                background: "var(--gradient-accent)",
-                color: "#fff",
-                boxShadow: "0 4px 18px rgba(139,92,246,0.45)",
-              }}
-            >
-              {saving ? "Guardando..." : existingEntry ? "Actualizar" : "Guardar en biblioteca"}
-            </button>
-            {existingEntry && (
-              <button
-                onClick={handleRemove}
-                disabled={saving}
-                className="px-4 py-3 rounded-full text-sm font-bold transition-opacity disabled:opacity-50"
-                style={{
-                  backgroundColor: "var(--surface-2)",
-                  color: "#f87171",
-                  border: "1.5px solid var(--border)",
-                }}
-              >
-                Eliminar
-              </button>
-            )}
           </div>
         </div>
       </div>

@@ -1,7 +1,5 @@
-import { useRef } from "react";
 import { Plus } from "lucide-react";
 import { getPosterUrl } from "@/services/tmdb";
-import { useDominantColor, toGlow } from "@/hooks/useDominantColor";
 import type { MediaType, EntryStatus } from "@/types";
 
 interface MediaCardProps {
@@ -50,26 +48,8 @@ export default function MediaCard({
   notes,
   actionLabel = "Agregar",
 }: MediaCardProps) {
-  const posterRef = useRef<HTMLDivElement>(null);
   const posterUrl = getPosterUrl(posterPath);
-  const aura = useDominantColor(posterUrl);
   const showTmdb = tmdbRating != null && tmdbRating > 0;
-
-  const accent = aura ?? "rgba(139,92,246,0.5)";
-
-  const handleEnter = () => {
-    const el = posterRef.current;
-    if (!el) return;
-    el.style.boxShadow = `0 0 80px 16px ${toGlow(accent, 0.85)}, 0 18px 44px -12px rgba(0,0,0,0.6)`;
-    el.style.borderColor = aura ?? "rgba(139,92,246,0.5)";
-  };
-
-  const handleLeave = () => {
-    const el = posterRef.current;
-    if (!el) return;
-    el.style.boxShadow = "none";
-    el.style.borderColor = "var(--border)";
-  };
 
   return (
     <div
@@ -80,32 +60,34 @@ export default function MediaCard({
         if (e.key === "Enter" && onClick) onClick();
       }}
       className="relative text-left group w-full poster-card rounded-2xl cursor-pointer"
+      style={{
+        backgroundColor: "var(--surface-1)",
+        border: "1px solid var(--border)",
+        padding: "0.75rem",
+      }}
     >
-      {/* Full-card color halo on hover */}
-      <div
-        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"
-        style={{ boxShadow: `0 0 55px 10px ${toGlow(accent, 0.75)}, 0 0 22px 5px ${toGlow(accent, 0.5)}` }}
-      />
+      {/* Blurred cover backdrop on hover */}
+      <div className="absolute inset-0 z-0 rounded-2xl overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+        <img
+          src={posterUrl}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover blur-xl scale-110"
+          loading="lazy"
+        />
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(180deg, rgba(11,11,20,0.12) 0%, rgba(11,11,20,0.65) 100%)" }}
+        />
+      </div>
 
-      <div
-        ref={posterRef}
-        onMouseEnter={handleEnter}
-        onMouseLeave={handleLeave}
-        className="relative z-10 aspect-[2/3] rounded-2xl overflow-hidden mb-3 border"
-        style={{ borderColor: "var(--border)", transition: "border-color 0.3s ease, box-shadow 0.3s ease" }}
-      >
+      <div className="relative z-10 aspect-[2/3] rounded-xl overflow-hidden">
         <img
           src={posterUrl}
           alt={title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           loading="lazy"
         />
-
-        {/* Color wash on hover */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{
-            background: `radial-gradient(140% 120% at 50% 100%, ${toGlow(accent, 0.9)} 0%, ${toGlow(accent, 0.3)} 45%, transparent 75%)`,
-          }} />
 
         {/* Rating badge (top-right) */}
         {showTmdb && (
@@ -166,7 +148,7 @@ export default function MediaCard({
           </button>
         )}
       </div>
-      <div className="relative z-10 px-0.5">
+      <div className="relative z-10 px-1 pt-3 pb-1">
         <p className="text-sm font-bold truncate transition-colors group-hover:text-[#c4b5fd]"
           style={{ color: "var(--text-primary)" }}>
           {title}
