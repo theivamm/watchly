@@ -10,7 +10,9 @@ import { getPublicLists } from "@/services/lists";
 import { getPublicLibrary } from "@/services/library";
 import MediaCard from "@/components/media/MediaCard";
 import SavePromptModal from "@/components/media/SavePromptModal";
-import type { Profile, List, Entry, EntryStatus } from "@/types";
+import EntryDetailModal from "@/components/media/EntryDetailModal";
+import MediaDetailModal from "@/components/media/MediaDetailModal";
+import type { Profile, List, Entry, EntryStatus, TMDBSearchResult } from "@/types";
 
 type Section = "resumen" | "quierover" | "peliculas" | "series" | "listas";
 
@@ -42,6 +44,8 @@ export default function PublicProfilePage() {
   const [section, setSection] = useState<Section>("resumen");
   const [statusFilter, setStatusFilter] = useState<EntryStatus | "all">("all");
   const [showSavePrompt, setShowSavePrompt] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
+  const [editEntry, setEditEntry] = useState<Entry | null>(null);
 
   const isOwner = user?.id === profile?.id;
 
@@ -51,6 +55,8 @@ export default function PublicProfilePage() {
     setEntries([]);
     setSection("resumen");
     setShowSavePrompt(false);
+    setSelectedEntry(null);
+    setEditEntry(null);
     getProfileByUsername(username)
       .then(async (p) => {
         setProfile(p);
@@ -200,15 +206,37 @@ export default function PublicProfilePage() {
           mediaType={e.media_type}
           status={e.status}
           rating={e.rating}
+          notes={e.notes}
           onClick={onClickItem ? () => onClickItem(e) : undefined}
+          onAction={onClickItem ? () => openAction(e) : undefined}
         />
       ))}
     </div>
   );
 
-  const openCard = (_entry: Entry) => {
-    if (!user) setShowSavePrompt(true);
+  const openCard = (entry: Entry) => {
+    if (user) setEditEntry(entry);
+    else setSelectedEntry(entry);
   };
+
+  const openAction = (entry: Entry) => {
+    if (!user) setShowSavePrompt(true);
+    else setEditEntry(entry);
+  };
+
+  const toResult = (entry: Entry): TMDBSearchResult => ({
+    tmdbId: entry.tmdb_id,
+    mediaType: entry.media_type,
+    title: entry.title,
+    originalTitle: entry.title,
+    overview: "",
+    year: null,
+    releaseDate: null,
+    posterPath: entry.poster_path,
+    backdropPath: null,
+    genreIds: [],
+    tmdbRating: null,
+  });
 
   const renderResumen = () => (
     <div className="space-y-10">
@@ -491,6 +519,28 @@ export default function PublicProfilePage() {
       </div>
 
       {showSavePrompt && <SavePromptModal onClose={() => setShowSavePrompt(false)} />}
+
+      {selectedEntry && (
+        <EntryDetailModal
+          entry={selectedEntry}
+          onClose={() => setSelectedEntry(null)}
+          onAction={() => {
+            setSelectedEntry(null);
+            setShowSavePrompt(true);
+          }}
+        />
+      )}
+
+      {editEntry && (
+        <MediaDetailModal
+          result={toResult(editEntry)}
+          onClose={() => setEditEntry(null)}
+          onSaved={() => {
+            setEditEntry(null);
+            if (profile) getPublicLibrary(profile.id).then(setEntries).catch(console.error);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { Plus } from "lucide-react";
 import { getPosterUrl } from "@/services/tmdb";
 import { useDominantColor, toGlow } from "@/hooks/useDominantColor";
 import type { MediaType, EntryStatus } from "@/types";
@@ -13,6 +14,7 @@ interface MediaCardProps {
   tmdbRating?: number | null;
   status?: EntryStatus;
   onClick?: () => void;
+  onAction?: () => void;
   badge?: string;
   notes?: string | null;
   actionLabel?: string;
@@ -43,6 +45,7 @@ export default function MediaCard({
   tmdbRating,
   status,
   onClick,
+  onAction,
   badge,
   notes,
   actionLabel = "Agregar",
@@ -69,7 +72,15 @@ export default function MediaCard({
   };
 
   return (
-    <button type="button" className="text-left group w-full poster-card rounded-2xl" onClick={onClick}>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && onClick) onClick();
+      }}
+      className="text-left group w-full poster-card rounded-2xl cursor-pointer"
+    >
       <div
         ref={posterRef}
         onMouseEnter={handleEnter}
@@ -121,15 +132,34 @@ export default function MediaCard({
           </span>
         )}
 
-        {/* Hover overlay */}
-        <div className="absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <span
-            className="w-full py-3 rounded-xl text-xs font-bold text-center shadow-lg"
+        {/* Action overlay (desktop hover) */}
+        {onAction && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAction();
+            }}
+            className="absolute inset-x-3 bottom-3 py-3 rounded-xl text-xs font-bold text-center opacity-0 md:group-hover:opacity-100 translate-y-2 md:group-hover:translate-y-0 transition-all duration-300 cursor-pointer"
             style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 20px rgba(139,92,246,0.5)" }}
           >
             {actionLabel}
-          </span>
-        </div>
+          </button>
+        )}
+
+        {/* Mobile + */}
+        {onAction && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAction();
+            }}
+            aria-label={actionLabel}
+            className="absolute bottom-3 right-3 w-9 h-9 rounded-full flex items-center justify-center md:hidden cursor-pointer"
+            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 6px 16px rgba(139,92,246,0.5)" }}
+          >
+            <Plus className="w-4 h-4" strokeWidth={2.6} />
+          </button>
+        )}
       </div>
       <div className="px-0.5">
         <p className="text-sm font-bold truncate transition-colors group-hover:text-[#c4b5fd]"
@@ -148,6 +178,6 @@ export default function MediaCard({
           </p>
         ) : null}
       </div>
-    </button>
+    </div>
   );
 }

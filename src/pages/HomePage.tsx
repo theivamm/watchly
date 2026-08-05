@@ -14,8 +14,10 @@ export default function HomePage() {
   const name = profile?.display_name || user?.email?.split("@")[0] || "usuario";
   const { data: trendingAll } = useTrending("all");
   const { data: trendingMovies } = useTrending("movie");
-  const trending = trendingAll?.results || [];
-  const movies = trendingMovies?.results || [];
+  const isInLibrary = (item: TMDBSearchResult) =>
+    entries.some((e) => e.tmdb_id === item.tmdbId && e.media_type === item.mediaType);
+  const trending = (trendingAll?.results || []).filter((item) => !isInLibrary(item));
+  const movies = (trendingMovies?.results || []).filter((item) => !isInLibrary(item));
 
   const [entries, setEntries] = useState<Entry[]>([]);
   const [listsCount, setListsCount] = useState(0);
