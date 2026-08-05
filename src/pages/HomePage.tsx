@@ -167,7 +167,7 @@ export default function HomePage() {
           </div>
           <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4 snap-x">
             {trending.slice(0, 14).map((item) => (
-              <div key={`${item.mediaType}-${item.tmdbId}`} className="w-[360px] sm:w-[440px] md:w-[560px] h-52 sm:h-60 md:h-72 shrink-0 snap-start">
+              <div key={`${item.mediaType}-${item.tmdbId}`} className="w-[520px] sm:w-[640px] md:w-[800px] h-72 sm:h-80 md:h-[28rem] shrink-0 snap-start">
                 <HorizontalMediaCard item={item} onClick={() => setSelected(item)} />
               </div>
             ))}
