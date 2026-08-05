@@ -52,39 +52,21 @@ export default function Sidebar() {
               key={to}
               to={to}
               title={label}
-              className="group relative flex flex-col items-center gap-1 rounded-2xl transition-all duration-300 overflow-hidden"
+              className="group flex flex-col items-center gap-1 rounded-2xl transition-all duration-300"
               style={{
                 padding: "10px 0",
-                color: active ? "#fff" : "var(--text-secondary)",
-                background: active ? "var(--gradient-accent)" : "transparent",
-                boxShadow: active ? "0 8px 24px rgba(139,92,246,0.55)" : "none",
+                color: active ? "#c4b5fd" : "var(--text-secondary)",
               }}
             >
-              {/* Hover gradient base */}
-              <span
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{ background: active ? "none" : "var(--gradient-accent-soft)" }}
-              />
-
-              {/* Shine sweep */}
-              <span
-                className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"
-                style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent)" }}
-              />
-
-              {/* Active top bar */}
-              <span
-                className={`absolute top-0 left-1/2 -translate-x-1/2 w-7 h-1 rounded-full transition-all duration-300 ${
-                  active ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0 group-hover:opacity-70 group-hover:scale-x-75"
-                }`}
-                style={{ background: active ? "#fff" : "var(--accent)", boxShadow: "0 0 12px rgba(255,255,255,0.6)" }}
-              />
-
               <Icon
                 className="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6"
                 strokeWidth={active ? 2.4 : 2}
               />
-              <span className="text-[10px] font-semibold leading-none">{label}</span>
+              <span
+                className="text-[10px] font-semibold leading-none transition-colors duration-300 group-hover:text-[#c4b5fd]"
+              >
+                {label}
+              </span>
             </Link>
           );
         })}
