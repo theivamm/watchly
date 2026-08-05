@@ -4,9 +4,11 @@ import { Link } from "react-router-dom";
 import { Search, BookOpen, List, Sparkles, TrendingUp, ChevronRight, Film, Clapperboard } from "lucide-react";
 import { useTrending } from "@/hooks/useMedia";
 import HorizontalMediaCard from "@/components/media/HorizontalMediaCard";
+import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import { getUserLibrary, removeFromLibrary } from "@/services/library";
 import { getUserLists } from "@/services/lists";
+import { getPosterUrl } from "@/services/tmdb";
 import type { TMDBSearchResult, Entry } from "@/types";
 
 export default function HomePage() {
@@ -18,6 +20,16 @@ export default function HomePage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [listsCount, setListsCount] = useState(0);
   const [selected, setSelected] = useState<TMDBSearchResult | null>(null);
+  const [bgIndex, setBgIndex] = useState(0);
+
+  const heroBg = useMemo(() => entries.filter((e) => e.poster_path).slice(0, 5), [entries]);
+
+  useEffect(() => {
+    if (heroBg.length <= 1) return;
+    setBgIndex(0);
+    const t = setInterval(() => setBgIndex((i) => (i + 1) % heroBg.length), 4000);
+    return () => clearInterval(t);
+  }, [heroBg.length]);
 
   const isInLibrary = (item: TMDBSearchResult) =>
     entries.some((e) => e.tmdb_id === item.tmdbId && e.media_type === item.mediaType);
@@ -54,6 +66,26 @@ export default function HomePage() {
       {/* Welcome hero */}
       <section className="relative overflow-hidden rounded-[2rem] p-8 md:p-12 border"
         style={{ backgroundColor: "var(--surface-1)", borderColor: "rgba(139,92,246,0.25)" }}>
+        {/* Crossfading covers of added titles */}
+        {heroBg.length > 0 && (
+          <div className="absolute inset-0">
+            {heroBg.map((entry, i) => (
+              <img
+                key={entry.id}
+                src={getPosterUrl(entry.poster_path, "w500")}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2200ms] ease-in-out"
+                style={{
+                  opacity: i === bgIndex ? 1 : 0,
+                  filter: "blur(20px) saturate(1.15)",
+                  transform: "scale(1.15)",
+                }}
+              />
+            ))}
+            <div className="absolute inset-0"
+              style={{ background: "linear-gradient(180deg, rgba(11,11,20,0.85) 0%, rgba(11,11,20,0.55) 50%, rgba(11,11,20,0.9) 100%)" }} />
+          </div>
+        )}
         <div className="absolute -top-24 -right-20 w-80 h-80 rounded-full blur-[110px] animate-glow pointer-events-none"
           style={{ background: "var(--glow-violet)" }} />
         <div className="absolute -bottom-32 -left-24 w-72 h-72 rounded-full blur-[100px] animate-glow pointer-events-none"
@@ -114,25 +146,20 @@ export default function HomePage() {
               Ver todo <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 snap-x">
+          <div className="flex gap-6 md:gap-8 overflow-x-auto no-scrollbar pb-6 pt-6 px-1 snap-x">
             {recentEntries.map((entry) => (
-              <div key={entry.id} className="w-[300px] md:w-[340px] h-36 md:h-44 shrink-0 snap-start">
-                <HorizontalMediaCard
-                  item={{
-                    tmdbId: entry.tmdb_id,
-                    mediaType: entry.media_type,
-                    title: entry.title,
-                    originalTitle: entry.title,
-                    overview: "",
-                    year: null,
-                    releaseDate: null,
-                    posterPath: entry.poster_path,
-                    backdropPath: null,
-                    genreIds: [],
-                    tmdbRating: null,
-                  }}
-                  added
-                  onRemove={() => {
+              <div key={entry.id} className="w-[210px] sm:w-[240px] md:w-[270px] shrink-0 snap-start">
+                <MediaCard
+                  tmdbId={entry.tmdb_id}
+                  title={entry.title}
+                  posterPath={entry.poster_path}
+                  year={null}
+                  mediaType={entry.media_type}
+                  status={entry.status}
+                  rating={entry.rating}
+                  notes={entry.notes}
+                  actionLabel="Quitar"
+                  onAction={() => {
                     removeFromLibrary(entry.id)
                       .then(() => {
                         if (user) getUserLibrary(user.id).then(setEntries).catch(console.error);

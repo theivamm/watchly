@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Search, BookOpen, Share2, Sparkles, ArrowRight, Play, Star, LogIn, UserPlus } from "lucide-react";
 import { useTrending } from "@/hooks/useMedia";
 import { getPosterUrl } from "@/services/tmdb";
@@ -46,16 +47,38 @@ function PosterArt({ items }: { items: TMDBSearchResult[] }) {
 export default function LandingPage() {
   const { data } = useTrending("all");
   const trending = data?.results || [];
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "transparent" }}>
 
-      {/* Floating glass nav */}
-      <header className="sticky top-4 z-50 px-4 sm:px-6">
-        <nav className="glass max-w-5xl mx-auto flex items-center h-16 px-4 sm:px-5 rounded-full"
-          style={{ boxShadow: "0 12px 40px -12px rgba(139,92,246,0.35)" }}>
-          <span className="text-xl font-extrabold tracking-tight text-gradient whitespace-nowrap">Watchly</span>
-          <div className="ml-auto flex items-center gap-2">
+      {/* Navbar */}
+      <header
+        className="sticky top-0 z-50 transition-all duration-500"
+        style={{
+          padding: scrolled ? "10px 0" : "18px 0",
+          backgroundColor: scrolled ? "rgba(11,11,20,0.72)" : "transparent",
+          backdropFilter: scrolled ? "blur(20px) saturate(140%)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(20px) saturate(140%)" : "none",
+          borderBottom: scrolled ? "1px solid rgba(139,92,246,0.18)" : "1px solid transparent",
+          boxShadow: scrolled ? "0 12px 36px -16px rgba(0,0,0,0.6)" : "none",
+        }}
+      >
+        <div className="flex items-center justify-between px-6 md:px-10">
+          <span
+            className="text-2xl font-extrabold tracking-tight text-gradient whitespace-nowrap transition-transform duration-500"
+            style={{ transform: scrolled ? "scale(0.9)" : "scale(1)" }}
+          >
+            Watchly
+          </span>
+          <div className="flex items-center gap-2">
             <a href="/login"
               className="flex items-center gap-2 px-3 sm:px-5 h-11 rounded-full text-sm font-semibold transition-all hover:opacity-80"
               style={{ color: "var(--text-primary)", backgroundColor: "var(--surface-2)", border: "1px solid var(--border)" }}>
@@ -69,7 +92,7 @@ export default function LandingPage() {
               <span className="hidden sm:inline">Crear cuenta</span>
             </a>
           </div>
-        </nav>
+        </div>
       </header>
 
       {/* Hero */}
@@ -146,12 +169,12 @@ export default function LandingPage() {
             <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(139,92,246,0.4), transparent)" }} />
           </div>
           <div className="flex overflow-hidden">
-            <div className="flex gap-4 animate-marquee shrink-0">
+            <div className="flex gap-4 md:gap-6 animate-marquee shrink-0">
               {[...trending, ...trending].map((item, i) => (
-                <div key={`${item.tmdbId}-${i}`} className="w-16 md:w-20 shrink-0">
-                  <div className="aspect-[2/3] rounded-lg overflow-hidden border"
+                <div key={`${item.tmdbId}-${i}`} className="w-40 md:w-56 shrink-0">
+                  <div className="aspect-[2/3] rounded-2xl overflow-hidden border"
                     style={{ borderColor: "rgba(139,92,246,0.2)" }}>
-                    <img src={getPosterUrl(item.posterPath, "w200")} alt={item.title}
+                    <img src={getPosterUrl(item.posterPath, "w342")} alt={item.title}
                       className="w-full h-full object-cover" loading="lazy" />
                   </div>
                 </div>

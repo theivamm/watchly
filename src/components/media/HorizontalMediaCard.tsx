@@ -22,8 +22,8 @@ export default function HorizontalMediaCard({ item, onClick, added = false, onRe
   const handleEnter = () => {
     const el = ref.current;
     if (!el) return;
-    const base = aura ? toGlow(aura, 0.55) : "rgba(139,92,246,0.45)";
-    el.style.boxShadow = `0 0 90px 14px ${base}, 0 24px 48px -12px rgba(0,0,0,0.7)`;
+    const base = aura ? toGlow(aura, 0.65) : "rgba(139,92,246,0.45)";
+    el.style.boxShadow = `0 0 110px 18px ${base}, 0 24px 48px -12px rgba(0,0,0,0.7)`;
     if (aura) el.style.borderColor = aura;
   };
 
@@ -31,14 +31,14 @@ export default function HorizontalMediaCard({ item, onClick, added = false, onRe
     const el = ref.current;
     if (!el) return;
     el.style.boxShadow = aura
-      ? `0 0 55px 2px ${toGlow(aura, 0.35)}`
-      : "0 0 45px 2px rgba(139,92,246,0.25)";
+      ? `0 0 70px 8px ${toGlow(aura, 0.5)}`
+      : "0 0 55px 4px rgba(139,92,246,0.3)";
     el.style.borderColor = "rgba(139,92,246,0.2)";
   };
 
   const ambientGlow = aura
-    ? `0 0 55px 2px ${toGlow(aura, 0.35)}`
-    : "0 0 45px 2px rgba(139,92,246,0.25)";
+    ? `0 0 70px 8px ${toGlow(aura, 0.5)}`
+    : "0 0 55px 4px rgba(139,92,246,0.3)";
 
   return (
     <button
@@ -71,6 +71,16 @@ export default function HorizontalMediaCard({ item, onClick, added = false, onRe
             "linear-gradient(90deg, rgba(11,11,20,0.92) 0%, rgba(11,11,20,0.5) 45%, rgba(11,11,20,0.1) 75%)",
         }}
       />
+
+      {/* Ambient color fill from the cover */}
+      {aura && (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(120% 90% at 70% 0%, ${toGlow(aura, 0.45)} 0%, transparent 65%)`,
+          }}
+        />
+      )}
 
       {/* Glass sheen that appears on hover */}
       <div

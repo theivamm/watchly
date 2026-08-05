@@ -60,8 +60,8 @@ export default function MediaCard({
   const handleEnter = () => {
     const el = posterRef.current;
     if (!el) return;
-    el.style.boxShadow = `0 20px 44px -12px ${toGlow(accent, 0.6)}`;
-    el.style.borderColor = aura ?? "rgba(139,92,246,0.4)";
+    el.style.boxShadow = `0 0 80px 16px ${toGlow(accent, 0.85)}, 0 18px 44px -12px rgba(0,0,0,0.6)`;
+    el.style.borderColor = aura ?? "rgba(139,92,246,0.5)";
   };
 
   const handleLeave = () => {
@@ -79,13 +79,19 @@ export default function MediaCard({
       onKeyDown={(e) => {
         if (e.key === "Enter" && onClick) onClick();
       }}
-      className="text-left group w-full poster-card rounded-2xl cursor-pointer"
+      className="relative text-left group w-full poster-card rounded-2xl cursor-pointer"
     >
+      {/* Full-card color halo on hover */}
+      <div
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"
+        style={{ boxShadow: `0 0 55px 10px ${toGlow(accent, 0.75)}, 0 0 22px 5px ${toGlow(accent, 0.5)}` }}
+      />
+
       <div
         ref={posterRef}
         onMouseEnter={handleEnter}
         onMouseLeave={handleLeave}
-        className="relative aspect-[2/3] rounded-2xl overflow-hidden mb-3 border"
+        className="relative z-10 aspect-[2/3] rounded-2xl overflow-hidden mb-3 border"
         style={{ borderColor: "var(--border)", transition: "border-color 0.3s ease, box-shadow 0.3s ease" }}
       >
         <img
@@ -95,11 +101,10 @@ export default function MediaCard({
           loading="lazy"
         />
 
-        {/* Gradient glow on hover */}
+        {/* Color wash on hover */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{
-            background:
-              "linear-gradient(180deg, rgba(139,92,246,0) 30%, rgba(139,92,246,0.35) 100%)",
+            background: `radial-gradient(140% 120% at 50% 100%, ${toGlow(accent, 0.9)} 0%, ${toGlow(accent, 0.3)} 45%, transparent 75%)`,
           }} />
 
         {/* Rating badge (top-right) */}
@@ -161,7 +166,7 @@ export default function MediaCard({
           </button>
         )}
       </div>
-      <div className="px-0.5">
+      <div className="relative z-10 px-0.5">
         <p className="text-sm font-bold truncate transition-colors group-hover:text-[#c4b5fd]"
           style={{ color: "var(--text-primary)" }}>
           {title}
