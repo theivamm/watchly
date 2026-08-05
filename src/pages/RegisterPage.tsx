@@ -13,7 +13,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -21,14 +21,21 @@ export default function RegisterPage() {
       },
     });
     if (error) {
-      const isDuplicate = error.message.toLowerCase().includes("already registered") ||
-        error.message.toLowerCase().includes("already exists");
+      const msg = error.message.toLowerCase();
+      const isDuplicate = msg.includes("already registered") ||
+        msg.includes("already exists") ||
+        msg.includes("user_already") ||
+        msg.includes("duplicate");
       if (isDuplicate) {
         setError("Este email ya está registrado. ¿Ya tenés cuenta? Iniciá sesión.");
       } else {
         setError(error.message);
       }
-    } else setSuccess(true);
+    } else if (data?.user?.email_confirmed_at) {
+      setError("Este email ya está registrado. ¿Ya tenés cuenta? Iniciá sesión.");
+    } else {
+      setSuccess(true);
+    }
     setLoading(false);
   };
 
