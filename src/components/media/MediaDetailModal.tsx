@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Star, ListPlus, ChevronDown, Check } from "lucide-react";
+import { X, Star, ListPlus, ChevronDown, Check, Sparkles } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
-import { getPosterUrl } from "@/services/tmdb";
+import { getPosterUrl, getMediaDetails } from "@/services/tmdb";
 import { addToLibrary, updateEntry, removeFromLibrary, getEntry } from "@/services/library";
 import { getUserLists, addItemToList } from "@/services/lists";
 import type { TMDBSearchResult, Entry, EntryStatus, MediaType, List } from "@/types";
@@ -42,6 +42,7 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
   const [showListDropdown, setShowListDropdown] = useState(false);
   const [addingToList, setAddingToList] = useState<string | null>(null);
   const [addedToListId, setAddedToListId] = useState<string | null>(null);
+  const [fetchingDesc, setFetchingDesc] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,6 +58,23 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
       })
       .finally(() => setLoading(false));
   }, [user, result.tmdbId, result.mediaType]);
+
+  const fillDescription = async () => {
+    if (fetchingDesc) return;
+    setFetchingDesc(true);
+    try {
+      let desc = result.overview;
+      if (!desc) {
+        const details = await getMediaDetails(result.mediaType as "movie" | "tv", result.tmdbId);
+        desc = details.overview;
+      }
+      setNotes(desc || "");
+    } catch {
+      /* ignore */
+    } finally {
+      setFetchingDesc(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -238,9 +256,24 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
           </div>
 
           <div>
-            <p className="text-xs font-bold mb-2.5 uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-              Descripción
-            </p>
+            <div className="flex items-center justify-between gap-3 mb-2.5">
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                Descripción
+              </p>
+              <button
+                onClick={fillDescription}
+                disabled={fetchingDesc}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all hover:scale-[1.03] disabled:opacity-60"
+                style={{
+                  backgroundColor: "var(--accent-soft)",
+                  color: "#c4b5fd",
+                  border: "1px solid rgba(139,92,246,0.3)",
+                }}
+              >
+                <Sparkles className="w-3 h-3" />
+                {fetchingDesc ? "Buscando..." : "Obtener automáticamente"}
+              </button>
+            </div>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
