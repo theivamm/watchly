@@ -113,7 +113,7 @@ export default function HomePage() {
           </div>
           <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 snap-x">
             {recentEntries.map((entry) => (
-              <div key={entry.id} className="w-[300px] md:w-[340px] shrink-0 snap-start">
+              <div key={entry.id} className="w-[300px] md:w-[340px] h-36 md:h-44 shrink-0 snap-start">
                 <HorizontalMediaCard
                   item={{
                     tmdbId: entry.tmdb_id,
@@ -157,9 +157,9 @@ export default function HomePage() {
               Tendencia de la semana
             </h2>
           </div>
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 snap-x">
+          <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4 snap-x">
             {trending.slice(0, 14).map((item) => (
-              <div key={`${item.mediaType}-${item.tmdbId}`} className="w-[300px] md:w-[340px] shrink-0 snap-start">
+              <div key={`${item.mediaType}-${item.tmdbId}`} className="w-[360px] sm:w-[440px] md:w-[560px] h-52 sm:h-60 md:h-72 shrink-0 snap-start">
                 <HorizontalMediaCard item={item} onClick={() => setSelected(item)} />
               </div>
             ))}
@@ -178,7 +178,7 @@ export default function HomePage() {
           </div>
           <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 snap-x">
             {movies.slice(0, 14).map((item) => (
-              <div key={`${item.mediaType}-${item.tmdbId}`} className="w-[300px] md:w-[340px] shrink-0 snap-start">
+              <div key={`${item.mediaType}-${item.tmdbId}`} className="w-[300px] md:w-[340px] h-36 md:h-44 shrink-0 snap-start">
                 <HorizontalMediaCard item={item} onClick={() => setSelected(item)} />
               </div>
             ))}

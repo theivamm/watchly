@@ -20,17 +20,23 @@ export default function HorizontalMediaCard({ item, onClick }: HorizontalMediaCa
   const handleEnter = () => {
     const el = ref.current;
     if (!el) return;
-    const base = aura ? toGlow(aura, 0.45) : "rgba(139,92,246,0.35)";
-    el.style.boxShadow = `0 0 55px 6px ${base}, 0 20px 40px -12px rgba(0,0,0,0.7)`;
+    const base = aura ? toGlow(aura, 0.55) : "rgba(139,92,246,0.45)";
+    el.style.boxShadow = `0 0 90px 14px ${base}, 0 24px 48px -12px rgba(0,0,0,0.7)`;
     if (aura) el.style.borderColor = aura;
   };
 
   const handleLeave = () => {
     const el = ref.current;
     if (!el) return;
-    el.style.boxShadow = "none";
+    el.style.boxShadow = aura
+      ? `0 0 55px 2px ${toGlow(aura, 0.35)}`
+      : "0 0 45px 2px rgba(139,92,246,0.25)";
     el.style.borderColor = "rgba(139,92,246,0.2)";
   };
+
+  const ambientGlow = aura
+    ? `0 0 55px 2px ${toGlow(aura, 0.35)}`
+    : "0 0 45px 2px rgba(139,92,246,0.25)";
 
   return (
     <button
@@ -39,11 +45,12 @@ export default function HorizontalMediaCard({ item, onClick }: HorizontalMediaCa
       onClick={onClick}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
-      className="group relative w-full h-36 md:h-44 overflow-hidden rounded-2xl text-left transition-all duration-300"
+      className="group relative w-full h-full overflow-hidden rounded-2xl text-left transition-all duration-300"
       style={{
         border: "1px solid rgba(139,92,246,0.2)",
         backgroundColor: "var(--surface-1)",
         cursor: "pointer",
+        boxShadow: ambientGlow,
       }}
     >
       <img
@@ -77,7 +84,7 @@ export default function HorizontalMediaCard({ item, onClick }: HorizontalMediaCa
       {/* Bottom color wash from dominant color */}
       {aura && (
         <div
-          className="absolute inset-x-0 bottom-0 h-1/3 opacity-0 group-hover:opacity-60 transition-opacity duration-500"
+          className="absolute inset-x-0 bottom-0 h-1/2 opacity-40 group-hover:opacity-80 transition-opacity duration-500"
           style={{ background: `linear-gradient(0deg, ${toGlow(aura, 0.8)} 0%, transparent 100%)` }}
         />
       )}
