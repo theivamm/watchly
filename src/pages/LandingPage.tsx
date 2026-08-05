@@ -1,4 +1,4 @@
-import { Search, BookOpen, Share2, Sparkles, ArrowRight, Play, Star } from "lucide-react";
+import { Search, BookOpen, Share2, Sparkles, ArrowRight, Play, Star, LogIn, UserPlus } from "lucide-react";
 import { useTrending } from "@/hooks/useMedia";
 import { getPosterUrl } from "@/services/tmdb";
 import type { TMDBSearchResult } from "@/types";
@@ -51,20 +51,22 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "transparent" }}>
 
       {/* Floating glass nav */}
-      <header className="sticky top-4 z-50 px-6">
-        <nav className="glass max-w-5xl mx-auto flex items-center h-16 px-5 rounded-full"
+      <header className="sticky top-4 z-50 px-4 sm:px-6">
+        <nav className="glass max-w-5xl mx-auto flex items-center h-16 px-4 sm:px-5 rounded-full"
           style={{ boxShadow: "0 12px 40px -12px rgba(139,92,246,0.35)" }}>
-          <span className="text-xl font-extrabold tracking-tight text-gradient">Watchly</span>
-          <div className="ml-auto flex items-center gap-2.5">
+          <span className="text-xl font-extrabold tracking-tight text-gradient whitespace-nowrap">Watchly</span>
+          <div className="ml-auto flex items-center gap-2">
             <a href="/login"
-              className="px-5 py-2.5 rounded-full text-sm font-semibold transition-all hover:opacity-80"
+              className="flex items-center gap-2 px-3 sm:px-5 h-11 rounded-full text-sm font-semibold transition-all hover:opacity-80"
               style={{ color: "var(--text-primary)", backgroundColor: "var(--surface-2)", border: "1px solid var(--border)" }}>
-              Iniciar sesión
+              <LogIn className="w-4 h-4" />
+              <span className="hidden sm:inline">Iniciar sesión</span>
             </a>
             <a href="/registro"
-              className="px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-[1.04]"
+              className="flex items-center gap-2 px-3 sm:px-5 h-11 rounded-full text-sm font-bold transition-all hover:scale-[1.04]"
               style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}>
-              Crear cuenta
+              <UserPlus className="w-4 h-4" />
+              <span className="hidden sm:inline">Crear cuenta</span>
             </a>
           </div>
         </nav>

@@ -54,7 +54,7 @@ export default function RegisterPage() {
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px]" style={{ color: "var(--text-secondary)" }} />
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-                  className="pl-11" placeholder="tu@email.com" />
+                  className="!pl-11" placeholder="tu@email.com" />
               </div>
             </div>
 
@@ -63,7 +63,7 @@ export default function RegisterPage() {
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px]" style={{ color: "var(--text-secondary)" }} />
                 <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
-                  className="pl-11" placeholder="Mínimo 6 caracteres" />
+                  className="!pl-11" placeholder="Mínimo 6 caracteres" />
               </div>
             </div>
 
