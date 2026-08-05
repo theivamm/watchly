@@ -9,6 +9,7 @@ import { getProfileByUsername, getProfileLink } from "@/services/profile";
 import { getPublicLists } from "@/services/lists";
 import { getPublicLibrary } from "@/services/library";
 import MediaCard from "@/components/media/MediaCard";
+import SavePromptModal from "@/components/media/SavePromptModal";
 import type { Profile, List, Entry, EntryStatus } from "@/types";
 
 type Section = "resumen" | "quierover" | "peliculas" | "series" | "listas";
@@ -40,6 +41,7 @@ export default function PublicProfilePage() {
   const [copied, setCopied] = useState(false);
   const [section, setSection] = useState<Section>("resumen");
   const [statusFilter, setStatusFilter] = useState<EntryStatus | "all">("all");
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
 
   const isOwner = user?.id === profile?.id;
 
@@ -48,6 +50,7 @@ export default function PublicProfilePage() {
     setLists([]);
     setEntries([]);
     setSection("resumen");
+    setShowSavePrompt(false);
     getProfileByUsername(username)
       .then(async (p) => {
         setProfile(p);
@@ -185,7 +188,7 @@ export default function PublicProfilePage() {
     </div>
   );
 
-  const renderGrid = (items: Entry[]) => (
+  const renderGrid = (items: Entry[], onClickItem?: (entry: Entry) => void) => (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
       {items.map((e) => (
         <MediaCard
@@ -197,10 +200,15 @@ export default function PublicProfilePage() {
           mediaType={e.media_type}
           status={e.status}
           rating={e.rating}
+          onClick={onClickItem ? () => onClickItem(e) : undefined}
         />
       ))}
     </div>
   );
+
+  const openCard = (_entry: Entry) => {
+    if (!user) setShowSavePrompt(true);
+  };
 
   const renderResumen = () => (
     <div className="space-y-10">
@@ -243,7 +251,7 @@ export default function PublicProfilePage() {
               Más valoradas
             </h2>
           </div>
-          {renderGrid(favorites.slice(0, 8))}
+          {renderGrid(favorites.slice(0, 8), openCard)}
         </section>
       )}
 
@@ -255,7 +263,7 @@ export default function PublicProfilePage() {
             Últimos agregados
           </h2>
         </div>
-        {recent.length > 0 ? renderGrid(recent) : renderEmpty("Este perfil todavía no agregó títulos.")}
+        {recent.length > 0 ? renderGrid(recent, openCard) : renderEmpty("Este perfil todavía no agregó títulos.")}
       </section>
     </div>
   );
@@ -392,7 +400,7 @@ export default function PublicProfilePage() {
                 icon={Eye}
               />
               {wantToWatch.length > 0 ? (
-                renderGrid(wantToWatch)
+                renderGrid(wantToWatch, openCard)
               ) : (
                 renderEmpty("Sin pendientes... por ahora. Todos fuimos inocentes alguna vez.")
               )}
@@ -442,7 +450,7 @@ export default function PublicProfilePage() {
                 ))}
               </div>
 
-              {filtered.length > 0 ? renderGrid(filtered) : renderEmpty(`No hay ${section === "peliculas" ? "películas" : "series"} con este filtro.`)}
+              {filtered.length > 0 ? renderGrid(filtered, openCard) : renderEmpty(`No hay ${section === "peliculas" ? "películas" : "series"} con este filtro.`)}
             </div>
           )}
 
@@ -481,6 +489,8 @@ export default function PublicProfilePage() {
           )}
         </div>
       </div>
+
+      {showSavePrompt && <SavePromptModal onClose={() => setShowSavePrompt(false)} />}
     </div>
   );
 }
