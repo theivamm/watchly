@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { List, Plus, Globe, Lock, Trash2 } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
-import { getUserLists, createList, deleteList } from "@/services/lists";
+import { getUserLists, createList, deleteList, getList } from "@/services/lists";
+import { getPosterUrl } from "@/services/tmdb";
 import type { List as ListType } from "@/types";
 
 export default function ListsPage() {
   const { user } = useAuth();
   const [lists, setLists] = useState<ListType[]>([]);
+  const [listPosters, setListPosters] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
@@ -24,6 +26,34 @@ export default function ListsPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [user]);
+
+  useEffect(() => {
+    if (lists.length === 0) {
+      setListPosters({});
+      return;
+    }
+    let cancelled = false;
+    const fetchPosters = async () => {
+      const posters: Record<string, string | null> = {};
+      await Promise.all(
+        lists.map(async (list) => {
+          try {
+            const { items } = await getList(list.id);
+            if (items.length > 0) {
+              posters[list.id] = items[0].poster_path;
+            }
+          } catch {
+            /* ignore */
+          }
+        })
+      );
+      if (!cancelled) setListPosters(posters);
+    };
+    fetchPosters();
+    return () => {
+      cancelled = true;
+    };
+  }, [lists]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,64 +264,81 @@ export default function ListsPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {lists.map((list) => (
-            <Link
-              key={list.id}
-              to={`/listas/${list.id}`}
-              className="group relative overflow-hidden rounded-3xl border p-6 transition-all duration-300 hover:-translate-y-1"
-              style={{
-                backgroundColor: "var(--surface-1)",
-                borderColor: "rgba(139,92,246,0.2)",
-              }}
-            >
-              <div
-                className="absolute -top-16 -right-16 w-44 h-44 rounded-full blur-[70px] opacity-0 group-hover:opacity-60 transition-opacity duration-500"
-                style={{ background: "var(--gradient-accent)" }}
-              />
-              <div className="relative flex items-start justify-between mb-3">
-                <h3
-                  className="text-base font-extrabold truncate flex-1 mr-3"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {list.name}
-                </h3>
-                <button
-                  onClick={(e) => handleDelete(e, list.id)}
-                  disabled={deleting === list.id}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-500/10"
-                  style={{ color: "#f87171" }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-              {list.description && (
-                <p
-                  className="relative text-xs mb-3 line-clamp-2"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {list.description}
-                </p>
-              )}
-              <div className="relative flex items-center gap-2">
-                <span
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold"
-                  style={{
-                    backgroundColor: list.is_public
-                      ? "rgba(74,222,128,0.1)"
-                      : "var(--surface-2)",
-                    color: list.is_public ? "#4ade80" : "var(--text-secondary)",
-                  }}
-                >
-                  {list.is_public ? (
-                    <Globe className="w-3 h-3" />
-                  ) : (
-                    <Lock className="w-3 h-3" />
-                  )}
-                  {list.is_public ? "Pública" : "Privada"}
-                </span>
-              </div>
-            </Link>
-          ))}
+          {lists.map((list) => {
+            const poster = listPosters[list.id];
+            return (
+              <Link
+                key={list.id}
+                to={`/listas/${list.id}`}
+                className="group relative overflow-hidden rounded-3xl border p-6 transition-all duration-300 hover:-translate-y-1"
+                style={{
+                  backgroundColor: "var(--surface-1)",
+                  borderColor: "rgba(139,92,246,0.2)",
+                }}
+              >
+                {poster && (
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+                    <img
+                      src={getPosterUrl(poster, "w500")}
+                      alt=""
+                      aria-hidden="true"
+                      className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-25"
+                      loading="lazy"
+                    />
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, rgba(19,19,31,0.65) 0%, rgba(19,19,31,0.25) 50%, rgba(19,19,31,0.85) 100%)",
+                      }}
+                    />
+                  </div>
+                )}
+                <div className="relative z-10 flex items-start justify-between mb-3">
+                  <h3
+                    className="text-base font-extrabold truncate flex-1 mr-3"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {list.name}
+                  </h3>
+                  <button
+                    onClick={(e) => handleDelete(e, list.id)}
+                    disabled={deleting === list.id}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-500/10"
+                    style={{ color: "#f87171" }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                {list.description && (
+                  <p
+                    className="relative z-10 text-xs mb-3 line-clamp-2"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {list.description}
+                  </p>
+                )}
+                <div className="relative z-10 flex items-center gap-2">
+                  <span
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold"
+                    style={{
+                      backgroundColor: list.is_public
+                        ? "rgba(74,222,128,0.1)"
+                        : "var(--surface-2)",
+                      color: list.is_public ? "#4ade80" : "var(--text-secondary)",
+                    }}
+                  >
+                    {list.is_public ? (
+                      <Globe className="w-3 h-3" />
+                    ) : (
+                      <Lock className="w-3 h-3" />
+                    )}
+                    {list.is_public ? "Pública" : "Privada"}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

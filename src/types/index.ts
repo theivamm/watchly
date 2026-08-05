@@ -159,6 +159,7 @@ export interface Entry {
   rating: number | null;
   progress: Record<string, unknown>;
   notes: string | null;
+  description: string | null;
   start_date: string | null;
   finish_date: string | null;
   created_at: string;

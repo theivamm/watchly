@@ -9,6 +9,7 @@ interface AddEntryParams {
   status: EntryStatus;
   rating?: number | null;
   notes?: string;
+  description?: string;
   startDate?: string | null;
   finishDate?: string | null;
 }
@@ -25,6 +26,7 @@ export async function addToLibrary(userId: string, entry: AddEntryParams): Promi
       status: entry.status,
       rating: entry.rating ?? null,
       notes: entry.notes ?? null,
+      description: entry.description ?? null,
       start_date: entry.startDate ?? null,
       finish_date: entry.finishDate ?? null,
     }, { onConflict: "user_id,tmdb_id,media_type" })
@@ -70,7 +72,7 @@ export async function getPublicLibrary(userId: string): Promise<Entry[]> {
 
 export async function updateEntry(
   entryId: string,
-  updates: Partial<Pick<Entry, "status" | "rating" | "notes" | "progress" | "start_date" | "finish_date">>
+  updates: Partial<Pick<Entry, "status" | "rating" | "notes" | "description" | "progress" | "start_date" | "finish_date">>
 ): Promise<Entry> {
   const { data, error } = await supabase
     .from("entries")

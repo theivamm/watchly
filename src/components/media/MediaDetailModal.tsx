@@ -46,6 +46,14 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
   const [fetchingDesc, setFetchingDesc] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
   const posterUrl = getPosterUrl(result.posterPath, "w500");
 
   useEffect(() => {
@@ -57,6 +65,7 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
           setStatus(entry.status);
           setRating(entry.rating ?? 0);
           setNotes(entry.notes ?? "");
+          setDescription(entry.description ?? result.overview ?? "");
         }
       })
       .finally(() => setLoading(false));
@@ -111,6 +120,7 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
           status,
           rating: rating || null,
           notes: notes || undefined,
+          description: description || undefined,
         });
       } else {
         entry = await addToLibrary(user.id, {
@@ -121,6 +131,7 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
           status,
           rating: rating || null,
           notes: notes || undefined,
+          description: description || undefined,
         });
       }
       onSaved?.(entry);
@@ -175,18 +186,12 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
       <div
-        className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl overflow-hidden"
-        style={{
-          backgroundColor: "rgba(19,19,31,0.78)",
-          border: "1px solid rgba(139,92,246,0.3)",
-          backdropFilter: "blur(24px) saturate(140%)",
-          WebkitBackdropFilter: "blur(24px) saturate(140%)",
-          boxShadow: "0 30px 90px -20px rgba(139,92,246,0.45)",
-        }}
+        className="relative w-full max-w-3xl rounded-3xl overflow-hidden"
+        style={{ maxHeight: "90vh" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Soft blurred cover backdrop */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Soft blurred cover backdrop - covers full modal, outside scroll */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
           <img
             src={posterUrl}
             alt=""
@@ -198,15 +203,17 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(135deg, rgba(19,19,31,0.55) 0%, rgba(19,19,31,0.25) 45%, rgba(19,19,31,0.85) 100%)",
+                "linear-gradient(135deg, rgba(19,19,31,0.65) 0%, rgba(19,19,31,0.25) 50%, rgba(19,19,31,0.85) 100%)",
             }}
           />
         </div>
 
-        <div className="relative z-10 p-6 md:p-8">
+        {/* Scrollable content */}
+        <div className="relative z-10 max-h-[90vh] overflow-y-auto p-6 md:p-8">
+        <div className="flex justify-end sticky top-0 mb-4">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
             style={{
               backgroundColor: "rgba(255,255,255,0.08)",
               border: "1px solid rgba(255,255,255,0.15)",
@@ -217,10 +224,11 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
           >
             <X className="w-4 h-4" />
           </button>
+        </div>
 
           <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
             {/* Left: big image */}
-            <div className="mx-auto sm:mx-0 w-44 sm:w-56 md:w-64 shrink-0">
+            <div className="mx-auto sm:mx-0 w-56 sm:w-64 md:w-72 lg:w-80 shrink-0">
               <div
                 className="w-full aspect-[2/3] rounded-2xl overflow-hidden border"
                 style={{

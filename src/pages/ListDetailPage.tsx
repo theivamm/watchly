@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Lock, Trash2, List } from "lucide-react";
+import { ArrowLeft, Globe, Lock, List } from "lucide-react";
 import { getList, removeItemFromList, deleteList } from "@/services/lists";
-import { getPosterUrl } from "@/services/tmdb";
-import type { ListWithItems } from "@/types";
+import MediaCard from "@/components/media/MediaCard";
+import MediaDetailModal from "@/components/media/MediaDetailModal";
+import type { ListWithItems, TMDBSearchResult, MediaType } from "@/types";
 
 export default function ListDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [list, setList] = useState<ListWithItems | null>(null);
   const [loading, setLoading] = useState(true);
-  const [removing, setRemoving] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [selected, setSelected] = useState<TMDBSearchResult | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -23,7 +24,6 @@ export default function ListDetailPage() {
   }, [id]);
 
   const handleRemoveItem = async (itemId: string) => {
-    setRemoving(itemId);
     try {
       await removeItemFromList(itemId);
       setList((prev) =>
@@ -33,8 +33,6 @@ export default function ListDetailPage() {
       );
     } catch (err) {
       console.error("Failed to remove item:", err);
-    } finally {
-      setRemoving(null);
     }
   };
 
@@ -49,6 +47,20 @@ export default function ListDetailPage() {
       setDeleting(false);
     }
   };
+
+  const toSearchResult = (item: ListWithItems["items"][0]): TMDBSearchResult => ({
+    tmdbId: item.tmdb_id,
+    mediaType: item.media_type as MediaType,
+    title: item.title,
+    originalTitle: item.title,
+    overview: "",
+    year: null,
+    releaseDate: null,
+    posterPath: item.poster_path,
+    backdropPath: null,
+    genreIds: [],
+    tmdbRating: null,
+  });
 
   if (loading) {
     return (
@@ -120,7 +132,7 @@ export default function ListDetailPage() {
               className="text-xs font-bold"
               style={{ color: "var(--text-secondary)" }}
             >
-              {list.items.length} {list.items.length === 1 ? "ítulo" : "ítulos"}
+              {list.items.length} {list.items.length === 1 ? "título" : "títulos"}
             </span>
           </div>
         </div>
@@ -166,54 +178,36 @@ export default function ListDetailPage() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {list.items.map((item) => (
-            <div
+            <MediaCard
               key={item.id}
-              className="group relative rounded-3xl border overflow-hidden transition-all duration-300 hover:-translate-y-1"
-              style={{
-                backgroundColor: "var(--surface-1)",
-                borderColor: "rgba(139,92,246,0.2)",
-              }}
-            >
-              <div
-                className="absolute -top-16 -right-16 w-44 h-44 rounded-full blur-[70px] opacity-0 group-hover:opacity-60 transition-opacity duration-500"
-                style={{ background: "var(--gradient-accent)" }}
-              />
-              <img
-                src={getPosterUrl(item.poster_path, "w342")}
-                alt={item.title}
-                className="w-full object-cover"
-                style={{ aspectRatio: "2/3" }}
-              />
-              <button
-                onClick={() => handleRemoveItem(item.id)}
-                disabled={removing === item.id}
-                className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
-                style={{
-                  backgroundColor: "rgba(0,0,0,0.7)",
-                  color: "#f87171",
-                }}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-              <div className="p-3">
-                <p
-                  className="text-xs font-bold truncate"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {item.title}
-                </p>
-                <p
-                  className="text-[11px] mt-0.5"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {item.media_type === "movie" ? "Película" : "Serie"}
-                </p>
-              </div>
-            </div>
+              tmdbId={item.tmdb_id}
+              title={item.title}
+              posterPath={item.poster_path}
+              year={null}
+              mediaType={item.media_type as MediaType}
+              rating={null}
+              tmdbRating={null}
+              status={undefined}
+              onClick={() => setSelected(toSearchResult(item))}
+              onAction={() => handleRemoveItem(item.id)}
+              actionLabel="Quitar"
+            />
           ))}
         </div>
+      )}
+
+      {selected && (
+        <MediaDetailModal
+          result={selected}
+          onClose={() => setSelected(null)}
+          onSaved={() => {
+            if (id) {
+              getList(id).then(setList).catch(console.error);
+            }
+          }}
+        />
       )}
     </div>
   );
