@@ -182,7 +182,7 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
       <div
@@ -209,7 +209,7 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
         </div>
 
         {/* Scrollable content */}
-        <div className="relative z-10 max-h-[90vh] overflow-y-auto p-6 md:p-8">
+        <div className="relative z-10 max-h-[90vh] overflow-y-auto p-6 md:p-8 pb-24">
         <div className="flex justify-end sticky top-0 mb-4">
           <button
             onClick={onClose}
