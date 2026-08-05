@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/auth-context";
 import { AlertTriangle, Trash2, Check } from "lucide-react";
+import SettingsNav from "@/components/layout/SettingsNav";
 
 export default function AccountSettingsPage() {
   const { user } = useAuth();
@@ -41,6 +42,8 @@ export default function AccountSettingsPage() {
       <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-8" style={{ color: "var(--text-primary)" }}>
         Cuenta
       </h1>
+
+      <SettingsNav />
 
       <div className="space-y-6">
         <div

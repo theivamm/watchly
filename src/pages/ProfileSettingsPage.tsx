@@ -3,6 +3,7 @@ import { User, Share2, Check, AtSign, MapPin, Globe, Aperture, X } from "lucide-
 import { useAuth } from "@/app/auth-context";
 import { updateProfile, getProfileLink } from "@/services/profile";
 import type { Profile } from "@/types";
+import SettingsNav from "@/components/layout/SettingsNav";
 
 export default function ProfileSettingsPage() {
   const { user, profile, refreshProfile } = useAuth();
@@ -66,6 +67,8 @@ export default function ProfileSettingsPage() {
       <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-8" style={{ color: "var(--text-primary)" }}>
         Perfil
       </h1>
+
+      <SettingsNav />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form */}

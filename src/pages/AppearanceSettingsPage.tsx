@@ -1,9 +1,13 @@
+import SettingsNav from "@/components/layout/SettingsNav";
+
 export default function AppearanceSettingsPage() {
   return (
     <div className="w-full px-5 md:px-8 py-8 md:py-12 max-w-4xl">
       <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-8" style={{ color: "var(--text-primary)" }}>
         Apariencia
       </h1>
+
+      <SettingsNav />
 
       <div className="space-y-6">
         <div
