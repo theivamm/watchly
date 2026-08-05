@@ -14,6 +14,21 @@ export default function RegisterPage() {
     setLoading(true);
     setError("");
 
+    // First, check if the email is already registered by attempting sign-in
+    const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (!signInError && signInData?.session) {
+      // Sign-in succeeded → the email already exists and is confirmed
+      await supabase.auth.signOut();
+      setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
+      setLoading(false);
+      return;
+    }
+
+    // Email not registered (or password mismatch) → proceed with signUp
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -32,26 +47,15 @@ export default function RegisterPage() {
         msg.includes("ya está registrada") ||
         msg.includes("ya existe");
       if (isDuplicate) {
-        setError("Este email ya está registrado. ¿Ya tenés cuenta? Iniciá sesión.");
+        setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
       } else {
         setError(error.message);
       }
     } else if (data?.user?.email_confirmed_at) {
-      setError("Este email ya está registrado. ¿Ya tenés cuenta? Iniciá sesión.");
+      // signUp returned an existing confirmed user
+      setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
     } else {
-      // Check si el usuario ya existía (no confirmado) intentando iniciar sesión
-      const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (!signInError && signInData?.session) {
-        // El usuario ya existía y puede iniciar sesión → email ya registrado
-        await supabase.auth.signOut();
-        setError("Este email ya está registrado. ¿Ya tenés cuenta? Iniciá sesión.");
-      } else {
-        setSuccess(true);
-      }
+      setSuccess(true);
     }
 
     setLoading(false);
@@ -108,7 +112,7 @@ export default function RegisterPage() {
             {error && (
               <div className="px-4 py-3 rounded-xl text-sm" style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#ef4444" }}>
                 <p>{error}</p>
-                {error.includes("registrado") && (
+                {error.includes("EXISTE") && (
                   <a href="/login" className="font-semibold underline mt-1 block" style={{ color: "#c4b5fd" }}>
                     Iniciar sesión
                   </a>
