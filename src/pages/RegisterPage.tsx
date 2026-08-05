@@ -13,9 +13,22 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) setError(error.message);
-    else setSuccess(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/confirmar-email`,
+      },
+    });
+    if (error) {
+      const isDuplicate = error.message.toLowerCase().includes("already registered") ||
+        error.message.toLowerCase().includes("already exists");
+      if (isDuplicate) {
+        setError("Este email ya está registrado. ¿Ya tenés cuenta? Iniciá sesión.");
+      } else {
+        setError(error.message);
+      }
+    } else setSuccess(true);
     setLoading(false);
   };
 
@@ -68,8 +81,13 @@ export default function RegisterPage() {
             </div>
 
             {error && (
-              <div className="px-4 py-3 rounded-xl text-sm font-medium" style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#ef4444" }}>
-                {error}
+              <div className="px-4 py-3 rounded-xl text-sm" style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#ef4444" }}>
+                <p>{error}</p>
+                {error.includes("registrado") && (
+                  <a href="/login" className="font-semibold underline mt-1 block" style={{ color: "#c4b5fd" }}>
+                    Iniciar sesión
+                  </a>
+                )}
               </div>
             )}
 

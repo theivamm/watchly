@@ -48,12 +48,20 @@ export default function LandingPage() {
   const { data } = useTrending("all");
   const trending = data?.results || [];
   const [scrolled, setScrolled] = useState(false);
+  const [showDeletedBanner, setShowDeletedBanner] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (window.location.search.includes("account_deleted=1")) {
+      setShowDeletedBanner(true);
+      window.history.replaceState({}, "", "/");
+    }
   }, []);
 
   return (
@@ -94,6 +102,13 @@ export default function LandingPage() {
           </div>
         </div>
       </header>
+
+      {showDeletedBanner && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-6 py-3 rounded-full text-sm font-semibold"
+          style={{ backgroundColor: "rgba(234,179,163,0.9)", color: "#7c2d12", boxShadow: "0 4px 20px rgba(239,68,68,0.3)" }}>
+          Cuenta eliminada correctamente. ¡Esperamos verte de vuelta pronto!
+        </div>
+      )}
 
       {/* Hero */}
       <section className="relative flex-1 flex items-center px-6 md:px-10 pt-12 pb-16 overflow-hidden">
