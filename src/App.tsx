@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/app/auth-context";
 import AppShell from "@/components/layout/AppShell";
 import LandingPage from "@/pages/LandingPage";
@@ -33,6 +33,11 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function LegacyProfileRedirect() {
+  const { username } = useParams();
+  return <Navigate to={`/perfil/${username}`} replace />;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -45,7 +50,8 @@ function AppRoutes() {
       <Route path="/actualizar-password" element={<UpdatePasswordPage />} />
 
       {/* Public profiles */}
-      <Route path="/@:username" element={<PublicProfilePage />} />
+      <Route path="/perfil/:username" element={<PublicProfilePage />} />
+      <Route path="/@:username" element={<LegacyProfileRedirect />} />
 
       {/* Private with AppShell */}
       <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>

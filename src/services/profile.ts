@@ -51,5 +51,5 @@ export async function updateProfile(
 
 export function getProfileLink(username: string): string {
   const base = import.meta.env.VITE_APP_URL || window.location.origin;
-  return `${base}/@${username}`;
+  return `${base}/perfil/${username}`;
 }
