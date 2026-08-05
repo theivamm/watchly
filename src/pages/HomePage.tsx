@@ -5,7 +5,7 @@ import { Search, BookOpen, List, Sparkles, TrendingUp, ChevronRight, Film, Clapp
 import { useTrending } from "@/hooks/useMedia";
 import HorizontalMediaCard from "@/components/media/HorizontalMediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
-import { getUserLibrary } from "@/services/library";
+import { getUserLibrary, removeFromLibrary } from "@/services/library";
 import { getUserLists } from "@/services/lists";
 import type { TMDBSearchResult, Entry } from "@/types";
 
@@ -127,6 +127,14 @@ export default function HomePage() {
                     backdropPath: null,
                     genreIds: [],
                     tmdbRating: null,
+                  }}
+                  added
+                  onRemove={() => {
+                    removeFromLibrary(entry.id)
+                      .then(() => {
+                        if (user) getUserLibrary(user.id).then(setEntries).catch(console.error);
+                      })
+                      .catch(console.error);
                   }}
                   onClick={() => setSelected({
                     tmdbId: entry.tmdb_id,

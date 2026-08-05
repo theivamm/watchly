@@ -57,6 +57,17 @@ export async function getUserLibrary(
   return data ?? [];
 }
 
+export async function getPublicLibrary(userId: string): Promise<Entry[]> {
+  const { data, error } = await supabase
+    .from("entries")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function updateEntry(
   entryId: string,
   updates: Partial<Pick<Entry, "status" | "rating" | "notes" | "progress" | "start_date" | "finish_date">>

@@ -91,6 +91,8 @@ export default function LibraryPage() {
               mediaType={entry.media_type}
               status={entry.status}
               rating={entry.rating}
+              notes={entry.notes}
+              actionLabel="Editar"
               onClick={() => setSelected(entry)}
             />
           ))}

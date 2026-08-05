@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { Plus, Star, Play } from "lucide-react";
+import { Plus, Star, Play, Trash2 } from "lucide-react";
 import { getBackdropUrl, getPosterUrl } from "@/services/tmdb";
 import { useDominantColor, toGlow } from "@/hooks/useDominantColor";
 import type { TMDBSearchResult } from "@/types";
@@ -7,9 +7,11 @@ import type { TMDBSearchResult } from "@/types";
 interface HorizontalMediaCardProps {
   item: TMDBSearchResult;
   onClick?: () => void;
+  added?: boolean;
+  onRemove?: () => void;
 }
 
-export default function HorizontalMediaCard({ item, onClick }: HorizontalMediaCardProps) {
+export default function HorizontalMediaCard({ item, onClick, added = false, onRemove }: HorizontalMediaCardProps) {
   const ref = useRef<HTMLButtonElement>(null);
   const imgUrl =
     item.backdropPath != null
@@ -120,18 +122,37 @@ export default function HorizontalMediaCard({ item, onClick }: HorizontalMediaCa
         </div>
 
         <div className="flex items-center gap-2 ml-3">
-          <span
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-300"
-            style={{
-              background: "var(--gradient-accent)",
-              color: "#fff",
-              boxShadow: "0 6px 20px rgba(139,92,246,0.55)",
-              backdropFilter: "blur(8px)",
-            }}
-          >
-            <Plus className="w-3.5 h-3.5" strokeWidth={2.6} />
-            Agregar
-          </span>
+          {added ? (
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove?.();
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[11px] font-bold opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-300 cursor-pointer"
+              style={{
+                backgroundColor: "rgba(248,113,113,0.15)",
+                border: "1px solid rgba(248,113,113,0.45)",
+                color: "#fca5a5",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              <Trash2 className="w-3 h-3" strokeWidth={2.6} />
+              Quitar
+            </span>
+          ) : (
+            <span
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-300"
+              style={{
+                background: "var(--gradient-accent)",
+                color: "#fff",
+                boxShadow: "0 6px 20px rgba(139,92,246,0.55)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              <Plus className="w-3.5 h-3.5" strokeWidth={2.6} />
+              Agregar
+            </span>
+          )}
           <span
             className="flex items-center justify-center w-10 h-10 rounded-full opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-300"
             style={{

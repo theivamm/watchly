@@ -12,6 +12,8 @@ interface MediaCardProps {
   status?: EntryStatus;
   onClick?: () => void;
   badge?: string;
+  notes?: string | null;
+  actionLabel?: string;
 }
 
 const STATUS_LABELS: Record<EntryStatus, string> = {
@@ -40,6 +42,8 @@ export default function MediaCard({
   status,
   onClick,
   badge,
+  notes,
+  actionLabel = "Agregar",
 }: MediaCardProps) {
   const showTmdb = tmdbRating != null && tmdbRating > 0;
 
@@ -92,12 +96,12 @@ export default function MediaCard({
         )}
 
         {/* Hover overlay */}
-        <div className="absolute inset-0 flex items-end justify-center pb-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <span
-            className="px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg"
+            className="w-full py-3 rounded-xl text-xs font-bold text-center shadow-lg"
             style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 20px rgba(139,92,246,0.5)" }}
           >
-            Agregar
+            {actionLabel}
           </span>
         </div>
       </div>
@@ -111,6 +115,11 @@ export default function MediaCard({
         {mediaType === "movie" ? "Película" : "Serie"}
         {rating != null && ` · ${"★".repeat(rating)}${"☆".repeat(5 - rating)}`}
       </p>
+      {notes ? (
+        <p className="text-xs mt-1.5 leading-snug line-clamp-2" style={{ color: "var(--text-secondary)" }}>
+          {notes}
+        </p>
+      ) : null}
     </button>
   );
 }
