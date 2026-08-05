@@ -13,44 +13,47 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/confirmar-email`,
-        },
-      });
+      options: {
+        emailRedirectTo: `${window.location.origin}/confirmar-email`,
+      },
+    });
 
-      if (error) {
-        const msg = error.message.toLowerCase();
-        const isDuplicate = msg.includes("already registered") ||
-          msg.includes("already exists") ||
-          msg.includes("user_already") ||
-          msg.includes("duplicate") ||
-          msg.includes("ya está registrada") ||
-          msg.includes("ya existe");
-        if (isDuplicate) {
-          setError("Este email ya está registrado. ¿Ya tenés cuenta? Iniciá sesión.");
-        } else {
-          setError(error.message);
-        }
-      } else if (data?.user?.email_confirmed_at) {
+    if (error) {
+      const msg = error.message.toLowerCase();
+      const isDuplicate =
+        msg.includes("already registered") ||
+        msg.includes("already exists") ||
+        msg.includes("user_already") ||
+        msg.includes("duplicate") ||
+        msg.includes("ya está registrada") ||
+        msg.includes("ya existe");
+      if (isDuplicate) {
         setError("Este email ya está registrado. ¿Ya tenés cuenta? Iniciá sesión.");
       } else {
-        // Check si el usuario ya existía (no confirmado) intentando iniciar sesión
-        const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (!signInError && signInData?.session) {
-          // El usuario ya existía y puede iniciar sesión → email ya registrado
-          await supabase.auth.signOut();
-          setError("Este email ya está registrado. ¿Ya tenés cuenta? Iniciá sesión.");
-        } else {
-          setSuccess(true);
-        }
+        setError(error.message);
       }
+    } else if (data?.user?.email_confirmed_at) {
+      setError("Este email ya está registrado. ¿Ya tenés cuenta? Iniciá sesión.");
+    } else {
+      // Check si el usuario ya existía (no confirmado) intentando iniciar sesión
+      const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (!signInError && signInData?.session) {
+        // El usuario ya existía y puede iniciar sesión → email ya registrado
+        await supabase.auth.signOut();
+        setError("Este email ya está registrado. ¿Ya tenés cuenta? Iniciá sesión.");
+      } else {
+        setSuccess(true);
+      }
+    }
+
     setLoading(false);
   };
 
