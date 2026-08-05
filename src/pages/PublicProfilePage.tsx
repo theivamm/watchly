@@ -262,11 +262,13 @@ export default function PublicProfilePage() {
 
   return (
     <div className="w-full px-5 md:px-8 py-8 md:py-12 max-w-7xl mx-auto">
-      <button onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-[1.02] mb-8"
-        style={{ backgroundColor: "var(--surface-2)", color: "var(--text-primary)", border: "1.5px solid var(--border)" }}>
-        <ArrowLeft className="w-4 h-4" /> Volver
-      </button>
+      {user && (
+        <button onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-[1.02] mb-8"
+          style={{ backgroundColor: "var(--surface-2)", color: "var(--text-primary)", border: "1.5px solid var(--border)" }}>
+          <ArrowLeft className="w-4 h-4" /> Volver
+        </button>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 items-start">
 

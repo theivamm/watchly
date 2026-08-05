@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import { getPosterUrl } from "@/services/tmdb";
+import { useDominantColor, toGlow } from "@/hooks/useDominantColor";
 import type { MediaType, EntryStatus } from "@/types";
 
 interface MediaCardProps {
@@ -45,14 +47,38 @@ export default function MediaCard({
   notes,
   actionLabel = "Agregar",
 }: MediaCardProps) {
+  const posterRef = useRef<HTMLDivElement>(null);
+  const posterUrl = getPosterUrl(posterPath);
+  const aura = useDominantColor(posterUrl);
   const showTmdb = tmdbRating != null && tmdbRating > 0;
+
+  const accent = aura ?? "rgba(139,92,246,0.5)";
+
+  const handleEnter = () => {
+    const el = posterRef.current;
+    if (!el) return;
+    el.style.boxShadow = `0 20px 44px -12px ${toGlow(accent, 0.6)}`;
+    el.style.borderColor = aura ?? "rgba(139,92,246,0.4)";
+  };
+
+  const handleLeave = () => {
+    const el = posterRef.current;
+    if (!el) return;
+    el.style.boxShadow = "none";
+    el.style.borderColor = "var(--border)";
+  };
 
   return (
     <button type="button" className="text-left group w-full poster-card rounded-2xl" onClick={onClick}>
-      <div className="relative aspect-[2/3] rounded-2xl overflow-hidden mb-3 border"
-        style={{ borderColor: "var(--border)" }}>
+      <div
+        ref={posterRef}
+        onMouseEnter={handleEnter}
+        onMouseLeave={handleLeave}
+        className="relative aspect-[2/3] rounded-2xl overflow-hidden mb-3 border"
+        style={{ borderColor: "var(--border)", transition: "border-color 0.3s ease, box-shadow 0.3s ease" }}
+      >
         <img
-          src={getPosterUrl(posterPath)}
+          src={posterUrl}
           alt={title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           loading="lazy"
@@ -105,21 +131,23 @@ export default function MediaCard({
           </span>
         </div>
       </div>
-      <p className="text-sm font-bold truncate transition-colors group-hover:text-[#c4b5fd]"
-        style={{ color: "var(--text-primary)" }}>
-        {title}
-      </p>
-      <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
-        {year || ""}
-        {year && mediaType && " · "}
-        {mediaType === "movie" ? "Película" : "Serie"}
-        {rating != null && ` · ${"★".repeat(rating)}${"☆".repeat(5 - rating)}`}
-      </p>
-      {notes ? (
-        <p className="text-xs mt-1.5 leading-snug line-clamp-2" style={{ color: "var(--text-secondary)" }}>
-          {notes}
+      <div className="px-0.5">
+        <p className="text-sm font-bold truncate transition-colors group-hover:text-[#c4b5fd]"
+          style={{ color: "var(--text-primary)" }}>
+          {title}
         </p>
-      ) : null}
+        <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+          {year || ""}
+          {year && mediaType && " · "}
+          {mediaType === "movie" ? "Película" : "Serie"}
+          {rating != null && ` · ${"★".repeat(rating)}${"☆".repeat(5 - rating)}`}
+        </p>
+        {notes ? (
+          <p className="text-xs mt-1.5 leading-snug line-clamp-2" style={{ color: "var(--text-secondary)" }}>
+            {notes}
+          </p>
+        ) : null}
+      </div>
     </button>
   );
 }
