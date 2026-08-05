@@ -26,38 +26,60 @@ export default function Sidebar() {
         WebkitBackdropFilter: "blur(20px) saturate(140%)",
       }}
     >
-      {/* Logo */}
-      <div className="flex items-center h-16 px-5 shrink-0">
-        <Link to="/inicio" className="flex items-center gap-2.5 min-w-0">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-extrabold text-lg"
-            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 14px rgba(139,92,246,0.45)" }}
-          >
-            W
-          </div>
-          <span className="text-xl font-extrabold tracking-tight text-gradient whitespace-nowrap">Watchly</span>
-        </Link>
+      {/* Logo: solo la W */}
+      <div className="flex items-center justify-center h-20 shrink-0">
+        <span
+          className="text-4xl font-extrabold tracking-tight text-gradient select-none"
+          style={{ textShadow: "0 0 30px rgba(139,92,246,0.45)" }}
+        >
+          W
+        </span>
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 flex flex-col gap-1.5 px-3 py-4">
+      <nav className="flex-1 flex flex-col gap-2 px-3 py-4">
         {navItems.map(({ to, label, icon: Icon }) => {
           const active = location.pathname.startsWith(to);
           return (
             <Link
               key={to}
               to={to}
-              className="flex items-center rounded-2xl transition-all duration-200"
+              className="group relative flex items-center rounded-2xl transition-all duration-300 overflow-hidden"
               style={{
-                padding: "10px 12px",
+                padding: "11px 14px",
                 color: active ? "#fff" : "var(--text-secondary)",
                 background: active ? "var(--gradient-accent)" : "transparent",
-                boxShadow: active ? "0 4px 16px rgba(139,92,246,0.4)" : "none",
+                boxShadow: active ? "0 8px 24px rgba(139,92,246,0.55)" : "none",
               }}
             >
-              <div className="flex items-center gap-3">
-                <Icon className="w-5 h-5" strokeWidth={active ? 2.4 : 2} />
-                <span className="text-sm font-semibold whitespace-nowrap">{label}</span>
+              {/* Hover gradient base */}
+              <span
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{ background: active ? "none" : "var(--gradient-accent-soft)" }}
+              />
+
+              {/* Shine sweep */}
+              <span
+                className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"
+                style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent)" }}
+              />
+
+              {/* Active left bar */}
+              <span
+                className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 rounded-full transition-all duration-300 ${
+                  active ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0 group-hover:opacity-70 group-hover:scale-y-75"
+                }`}
+                style={{ background: active ? "#fff" : "var(--accent)", boxShadow: "0 0 12px rgba(255,255,255,0.6)" }}
+              />
+
+              <div className="relative flex items-center gap-3">
+                <Icon
+                  className="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6"
+                  strokeWidth={active ? 2.4 : 2}
+                />
+                <span className="text-sm font-semibold whitespace-nowrap transition-transform duration-300 group-hover:translate-x-0.5">
+                  {label}
+                </span>
               </div>
             </Link>
           );
@@ -65,20 +87,30 @@ export default function Sidebar() {
       </nav>
 
       {/* Perfil */}
-      <div className="px-3 pb-4 shrink-0">
+      <div className="px-3 pb-5 shrink-0">
         <Link
           to="/configuracion/perfil"
-          className="flex items-center rounded-2xl transition-all"
+          className="group relative flex items-center rounded-2xl transition-all duration-300 overflow-hidden"
           style={{
-            padding: "10px 12px",
+            padding: "11px 14px",
             color: "var(--text-secondary)",
             background: "var(--surface-2)",
             border: "1px solid var(--border)",
           }}
         >
-          <div className="flex items-center gap-3">
-            <User className="w-5 h-5" />
-            <span className="text-sm font-semibold whitespace-nowrap">Perfil</span>
+          <span
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{ background: "var(--gradient-accent-soft)" }}
+          />
+          <span
+            className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"
+            style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)" }}
+          />
+          <div className="relative flex items-center gap-3">
+            <User className="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-6deg]" />
+            <span className="text-sm font-semibold whitespace-nowrap transition-transform duration-300 group-hover:translate-x-0.5">
+              Perfil
+            </span>
           </div>
         </Link>
       </div>

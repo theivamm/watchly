@@ -26,6 +26,7 @@
   --accent-contrast: #fff;
   --focus-ring: rgba(139, 92, 246, 0.4);
   --gradient-accent: linear-gradient(135deg, #8b5cf6 0%, #a855f7 55%, #c084fc 100%);
+  --gradient-accent-soft: linear-gradient(135deg, rgba(139,92,246,0.16) 0%, rgba(168,85,247,0.12) 55%, rgba(192,132,252,0.1) 100%);
   --gradient-text: linear-gradient(120deg, #c4b5fd 0%, #8b5cf6 45%, #e879f9 100%);
   --glow-violet: rgba(139, 92, 246, 0.22);
   --glow-purple: rgba(168, 85, 247, 0.14);
