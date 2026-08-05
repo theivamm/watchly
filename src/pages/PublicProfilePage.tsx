@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   Share2, Check, MapPin, Globe, Aperture, X, Lock, Film, List as ListIcon,
-  ArrowLeft, Clapperboard, Sparkles, Star, LayoutGrid, Tv, BookOpen,
+  ArrowLeft, Clapperboard, Sparkles, Star, LayoutGrid, Tv, BookOpen, Eye,
 } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { getProfileByUsername, getProfileLink } from "@/services/profile";
@@ -11,7 +11,7 @@ import { getPublicLibrary } from "@/services/library";
 import MediaCard from "@/components/media/MediaCard";
 import type { Profile, List, Entry, EntryStatus } from "@/types";
 
-type Section = "resumen" | "peliculas" | "series" | "listas";
+type Section = "resumen" | "quierover" | "peliculas" | "series" | "listas";
 
 const STATUS_FILTERS: { value: EntryStatus | "all"; label: string }[] = [
   { value: "all", label: "Todos" },
@@ -65,6 +65,7 @@ export default function PublicProfilePage() {
 
   const movies = useMemo(() => entries.filter((e) => e.media_type === "movie"), [entries]);
   const series = useMemo(() => entries.filter((e) => e.media_type === "tv"), [entries]);
+  const wantToWatch = useMemo(() => entries.filter((e) => e.status === "want_to_watch"), [entries]);
   const favorites = useMemo(() => entries.filter((e) => (e.rating ?? 0) >= 4), [entries]);
   const recent = entries.slice(0, 8);
 
@@ -145,10 +146,36 @@ export default function PublicProfilePage() {
 
   const sections: { key: Section; label: string; icon: typeof Film; count: number }[] = [
     { key: "resumen", label: "Resumen", icon: LayoutGrid, count: entries.length },
+    { key: "quierover", label: "Quiero ver", icon: Eye, count: wantToWatch.length },
     { key: "peliculas", label: "Películas", icon: Clapperboard, count: movies.length },
     { key: "series", label: "Series", icon: Tv, count: series.length },
     { key: "listas", label: "Listas", icon: ListIcon, count: lists.length },
   ];
+
+  const SectionBanner = ({ eyebrow, title, subtitle, icon: Icon }: {
+    eyebrow: string; title: string; subtitle: string; icon: typeof Film;
+  }) => (
+    <div className="relative overflow-hidden rounded-3xl border p-7 md:p-9 mb-8"
+      style={{ backgroundColor: "var(--surface-1)", borderColor: "rgba(139,92,246,0.25)" }}>
+      <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full blur-[80px] animate-glow pointer-events-none"
+        style={{ background: "var(--glow-violet)" }} />
+      <div className="absolute -bottom-20 -left-14 w-44 h-44 rounded-full blur-[70px] animate-glow pointer-events-none"
+        style={{ background: "var(--glow-pink)" }} />
+      <div className="relative flex items-center gap-5">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+          style={{ background: "var(--gradient-accent)", boxShadow: "0 6px 18px rgba(139,92,246,0.4)" }}>
+          <Icon className="w-5 h-5 text-white" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#c4b5fd" }}>{eyebrow}</p>
+          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight" style={{ color: "var(--text-primary)" }}>
+            {title}
+          </h2>
+          <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>{subtitle}</p>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderEmpty = (msg: string) => (
     <div className="flex flex-col items-center justify-center py-16 rounded-2xl border"
@@ -177,6 +204,12 @@ export default function PublicProfilePage() {
 
   const renderResumen = () => (
     <div className="space-y-10">
+      <SectionBanner
+        eyebrow="Mi mundo del cine"
+        title="Mi rincón de películas"
+        subtitle="Todo lo que vi, lo que estoy viendo y lo que todavía no empiezo... en un solo lugar."
+        icon={LayoutGrid}
+      />
       {/* Big stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
@@ -348,12 +381,42 @@ export default function PublicProfilePage() {
         <div className="min-w-0">
           {section === "resumen" && renderResumen()}
 
+          {section === "quierover" && (
+            <div className="space-y-8">
+              <SectionBanner
+                eyebrow="Siempre en espera"
+                title="¿Qué me gustaría ver?"
+                subtitle="La lista de 'algún día lo miro'. Crece sola, no me preguntes cómo. Y no, todavía no empecé nada de esto."
+                icon={Eye}
+              />
+              {wantToWatch.length > 0 ? (
+                renderGrid(wantToWatch)
+              ) : (
+                renderEmpty("Sin pendientes... por ahora. Todos fuimos inocentes alguna vez.")
+              )}
+            </div>
+          )}
+
           {(section === "peliculas" || section === "series") && (
             <div className="space-y-6">
+              {section === "peliculas" ? (
+                <SectionBanner
+                  eyebrow="En pantalla grande"
+                  title="Mis películas"
+                  subtitle="Palomitas listas, luces apagadas y la mejor butaca de la casa."
+                  icon={Clapperboard}
+                />
+              ) : (
+                <SectionBanner
+                  eyebrow="Un capítulo más"
+                  title="Mis series"
+                  subtitle="Prometí ver un capítulo. Terminé la temporada. Fue el destino."
+                  icon={Tv}
+                />
+              )}
               <div className="flex items-center justify-between gap-4 flex-wrap">
-                <h2 className="text-2xl font-extrabold tracking-tight flex items-center gap-3"
+                <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-3"
                   style={{ color: "var(--text-primary)" }}>
-                  {section === "peliculas" ? <Clapperboard className="w-6 h-6" style={{ color: "#c4b5fd" }} /> : <Tv className="w-6 h-6" style={{ color: "#c4b5fd" }} />}
                   {section === "peliculas" ? "Películas" : "Series"}
                   <span className="px-2.5 py-1 rounded-lg text-xs font-extrabold"
                     style={{ backgroundColor: "var(--accent-soft)", color: "#c4b5fd" }}>
@@ -383,9 +446,12 @@ export default function PublicProfilePage() {
 
           {section === "listas" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-extrabold tracking-tight flex items-center gap-3" style={{ color: "var(--text-primary)" }}>
-                <ListIcon className="w-6 h-6" style={{ color: "#c4b5fd" }} /> Listas públicas
-              </h2>
+              <SectionBanner
+                eyebrow="Mis universos"
+                title="Mis listas"
+                subtitle="Cine y series organizados por tema, por mood o por pura inspiración de la madrugada."
+                icon={ListIcon}
+              />
               {lists.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {lists.map((list) => (

@@ -93,7 +93,7 @@ h1, h2, h3 {
 }
 .poster-card:hover {
   transform: translateY(-8px) scale(1.03);
-  box-shadow: 0 24px 48px -16px rgba(139, 92, 246, 0.45), 0 0 0 1px rgba(139, 92, 246, 0.25);
+  box-shadow: 0 24px 48px -16px rgba(139, 92, 246, 0.45);
 }
 
 /* ===== Animations ===== */

@@ -10,8 +10,8 @@ import { getUserLists } from "@/services/lists";
 import type { TMDBSearchResult, Entry } from "@/types";
 
 export default function HomePage() {
-  const { user } = useAuth();
-  const name = user?.email?.split("@")[0] || "usuario";
+  const { user, profile } = useAuth();
+  const name = profile?.display_name || user?.email?.split("@")[0] || "usuario";
   const { data: trendingAll } = useTrending("all");
   const { data: trendingMovies } = useTrending("movie");
   const trending = trendingAll?.results || [];
