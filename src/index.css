@@ -1,0 +1,150 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ===== Dark-only violet theme ===== */
+:root,
+[data-theme="dark"],
+.dark {
+  --bg: #0b0b14;
+  --surface-1: #13131f;
+  --surface-2: #1c1c2c;
+  --surface-3: #26263a;
+  --text-primary: #f5f5fa;
+  --text-secondary: #a2a2bd;
+  --border: #2a2a42;
+  --overlay: rgba(5, 5, 12, 0.7);
+
+  --accent: #8b5cf6;
+  --accent-2: #a855f7;
+  --accent-3: #c084fc;
+  --accent-soft: rgba(139, 92, 246, 0.14);
+  --accent-contrast: #fff;
+  --focus-ring: rgba(139, 92, 246, 0.4);
+  --gradient-accent: linear-gradient(135deg, #8b5cf6 0%, #a855f7 55%, #c084fc 100%);
+  --gradient-text: linear-gradient(120deg, #c4b5fd 0%, #8b5cf6 45%, #e879f9 100%);
+  --glow-violet: rgba(139, 92, 246, 0.22);
+  --glow-purple: rgba(168, 85, 247, 0.14);
+  --glow-pink: rgba(217, 70, 239, 0.1);
+}
+
+/* ===== Body: deep dark + violet glows + film grain ===== */
+body {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1100px 600px at 85% -5%, var(--glow-violet), transparent 60%),
+    radial-gradient(900px 520px at -10% 105%, var(--glow-purple), transparent 60%),
+    radial-gradient(700px 400px at 50% 120%, var(--glow-pink), transparent 60%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ===== Typography ===== */
+h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.text-gradient {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  border-radius: 999px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, var(--accent-2), var(--accent-3)); }
+* { scrollbar-width: thin; scrollbar-color: var(--accent) var(--bg); }
+
+/* ===== Glass ===== */
+.glass {
+  background: rgba(19, 19, 31, 0.55);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+}
+
+/* ===== Poster cards ===== */
+.poster-card {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.poster-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 24px 48px -16px rgba(139, 92, 246, 0.45), 0 0 0 1px rgba(139, 92, 246, 0.25);
+}
+
+/* ===== Animations ===== */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+  50% { transform: translateY(-24px) scale(1.04) rotate(2deg); }
+}
+.animate-float { animation: float-slow 12s ease-in-out infinite; }
+.animate-float-delay { animation: float-slow 14s ease-in-out 2s infinite; }
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.9; }
+}
+.animate-glow { animation: glow-pulse 6s ease-in-out infinite; }
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee { animation: marquee 45s linear infinite; }
+.animate-marquee:hover { animation-play-state: paused; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ===== Base form controls ===== */
+input, textarea, select {
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  font-size: 0.9375rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+  outline: none;
+}
+input::placeholder, textarea::placeholder { color: var(--text-secondary); opacity: 0.6; }
+
+/* Hide horizontal scrollbar on carousels but keep scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
