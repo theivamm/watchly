@@ -319,7 +319,7 @@ export default function ListsPage() {
                           {posters.slice(0, 4).map((p, i) => (
                             <img
                               key={i}
-                              src={getPosterUrl(p, "w300")}
+                              src={getPosterUrl(p, "w342")}
                               alt=""
                               aria-hidden="true"
                               className="w-full h-full object-cover blur-[3px] scale-110 transition-transform duration-700 group-hover:scale-125"
