@@ -26,15 +26,15 @@ function PosterArt({ items }: { items: TMDBSearchResult[] }) {
         <div
           key={`${item.tmdbId}-${i}`}
           className={`absolute w-28 md:w-32 aspect-[2/3] rounded-xl overflow-hidden border ${positions[i]} ${anims[i]}`}
-          style={{ borderColor: "rgba(139,92,246,0.35)", boxShadow: "0 20px 50px -12px rgba(0,0,0,0.7)" }}
+          style={{ borderColor: "color-mix(in srgb, var(--accent) 35%, transparent)", boxShadow: "0 20px 50px -12px rgba(0,0,0,0.7)" }}
         >
           <img src={getPosterUrl(item.posterPath, "w200")} alt={item.title}
             className="w-full h-full object-cover" loading="lazy" />
         </div>
       ))}
       <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 glass rounded-2xl px-5 py-3 flex items-center gap-3 z-40"
-        style={{ boxShadow: "0 12px 40px -10px rgba(139,92,246,0.5)" }}>
-        <Star className="w-5 h-5 fill-[#c4b5fd] stroke-[#c4b5fd]" />
+        style={{ boxShadow: "0 12px 40px -10px color-mix(in srgb, var(--accent) 50%, transparent)" }}>
+        <Star className="w-5 h-5 fill-[var(--accent-light)] stroke-[var(--accent-light)]" />
         <div>
           <p className="text-sm font-extrabold leading-none" style={{ color: "var(--text-primary)" }}>
             Miles de títulos
@@ -78,7 +78,7 @@ export default function LandingPage() {
           backgroundColor: scrolled ? "rgba(11,11,20,0.72)" : "transparent",
           backdropFilter: scrolled ? "blur(20px) saturate(140%)" : "none",
           WebkitBackdropFilter: scrolled ? "blur(20px) saturate(140%)" : "none",
-          borderBottom: scrolled ? "1px solid rgba(139,92,246,0.18)" : "1px solid transparent",
+          borderBottom: scrolled ? "1px solid color-mix(in srgb, var(--accent) 18%, transparent)" : "1px solid transparent",
           boxShadow: scrolled ? "0 12px 36px -16px rgba(0,0,0,0.6)" : "none",
         }}
       >
@@ -107,7 +107,7 @@ export default function LandingPage() {
                 </a>
                 <a href="/registro"
                   className="flex items-center gap-2 px-3 sm:px-5 h-11 rounded-full text-sm font-bold transition-all hover:scale-[1.04]"
-                  style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}>
+                  style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
                   <UserPlus className="w-4 h-4" />
                   <span className="hidden sm:inline">Crear cuenta</span>
                 </a>
@@ -134,7 +134,7 @@ export default function LandingPage() {
         <div className="relative z-10 w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-8 items-center">
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-7"
-              style={{ backgroundColor: "var(--accent-soft)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.3)" }}>
+              style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
               <Sparkles className="w-3.5 h-3.5" />
               Tu mundo de cine
             </div>
@@ -155,7 +155,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <a href="/registro"
                 className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
-                style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px rgba(139,92,246,0.5)" }}>
+                style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px color-mix(in srgb, var(--accent) 50%, transparent)" }}>
                 Crear mi perfil gratis
                 <ArrowRight className="w-5 h-5" />
               </a>
@@ -190,33 +190,48 @@ export default function LandingPage() {
 
       {/* Trending marquee */}
       {trending.length > 0 && (
-        <section className="py-6 overflow-hidden border-y" style={{ borderColor: "rgba(139,92,246,0.15)" }}>
-          <div className="flex gap-3 mb-5 px-6 items-center">
-            <span className="text-xs font-extrabold uppercase tracking-[0.25em]" style={{ color: "var(--text-secondary)" }}>
-              Tendencia de la semana
-            </span>
-            <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(139,92,246,0.4), transparent)" }} />
-          </div>
-          <div className="flex overflow-hidden">
-            <div className="flex gap-4 md:gap-6 animate-marquee shrink-0">
-              {[...trending, ...trending].map((item, i) => (
-                <div key={`${item.tmdbId}-${i}`} className="w-40 md:w-56 shrink-0">
-                  <div className="aspect-[2/3] rounded-2xl overflow-hidden border"
-                    style={{ borderColor: "rgba(139,92,246,0.2)" }}>
-                    <img src={getPosterUrl(item.posterPath, "w342")} alt={item.title}
-                      className="w-full h-full object-cover" loading="lazy" />
-                  </div>
+        <section className="relative px-6 md:px-10 py-10 overflow-hidden">
+          <div className="absolute top-1/2 -left-24 w-72 h-72 rounded-full blur-[110px] animate-glow pointer-events-none"
+            style={{ background: "color-mix(in srgb, var(--accent) 35%, transparent)" }} />
+          <div className="absolute -right-20 bottom-0 w-64 h-64 rounded-full blur-[100px] pointer-events-none"
+            style={{ background: "rgba(236,72,153,0.22)" }} />
+
+          <div className="relative max-w-6xl mx-auto">
+            <div className="glass rounded-[2.5rem] px-6 md:px-10 py-8 overflow-hidden"
+              style={{ boxShadow: "0 24px 60px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+              <div className="flex gap-3 mb-6 items-center">
+                <span className="text-xs font-extrabold uppercase tracking-[0.25em]" style={{ color: "var(--text-secondary)" }}>
+                  Tendencia de la semana
+                </span>
+                <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, color-mix(in srgb, var(--accent) 40%, transparent), transparent)" }} />
+              </div>
+              <div className="flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
+                <div className="flex gap-4 md:gap-6 animate-marquee shrink-0">
+                  {[...trending, ...trending].map((item, i) => (
+                    <div key={`${item.tmdbId}-${i}`} className="w-40 md:w-52 shrink-0">
+                      <div className="aspect-[2/3] rounded-2xl overflow-hidden border poster-card"
+                        style={{ borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)", boxShadow: "0 10px 30px -12px rgba(0,0,0,0.6)" }}>
+                        <img src={getPosterUrl(item.posterPath, "w342")} alt={item.title}
+                          className="w-full h-full object-cover" loading="lazy" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </section>
       )}
 
       {/* Features */}
-      <section className="px-6 md:px-10 py-20">
-        <div className="max-w-5xl mx-auto">
-          <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-center mb-3" style={{ color: "#c4b5fd" }}>
+      <section className="relative px-6 md:px-10 py-20 overflow-hidden">
+        <div className="absolute top-[-10%] right-[-6%] w-96 h-96 rounded-full blur-[130px] animate-glow pointer-events-none"
+          style={{ background: "var(--glow-violet)" }} />
+        <div className="absolute bottom-[-10%] left-[-6%] w-80 h-80 rounded-full blur-[120px] pointer-events-none"
+          style={{ background: "var(--glow-pink)" }} />
+
+        <div className="relative max-w-5xl mx-auto">
+          <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-center mb-3" style={{ color: "var(--accent-light)" }}>
             Por qué Watchly
           </p>
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-center mb-14"
@@ -224,23 +239,23 @@ export default function LandingPage() {
             Todo tu cine, <span className="text-gradient">en un solo lugar</span>
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { icon: Search, title: "Buscá todo", desc: "Encontrá cualquier película o serie de TMDB en segundos, con posters, sinopsis y puntajes reales." },
               { icon: BookOpen, title: "Organizá tu biblioteca", desc: "Estados, calificaciones con estrellas y notas en cada título. Tu colección siempre al día." },
               { icon: Share2, title: "Compartí tu perfil", desc: "Mostrá lo que ves con listas y un perfil público que podés compartir con quien quieras." },
             ].map(({ icon: Icon, title, desc }, i) => (
               <div key={title}
-                className="group relative rounded-3xl border p-8 overflow-hidden transition-all duration-300 hover:-translate-y-2"
-                style={{ backgroundColor: "var(--surface-1)", borderColor: "var(--border)" }}>
-                <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[80px] opacity-0 group-hover:opacity-60 transition-opacity duration-500"
-                  style={{ background: "var(--gradient-accent)" }} />
+                className="group relative glass rounded-[2rem] p-8 overflow-hidden transition-all duration-300 hover:-translate-y-2"
+                style={{ boxShadow: "0 20px 50px -18px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+                <div className="absolute -top-20 -right-20 w-52 h-52 rounded-full blur-[90px] opacity-40 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none"
+                  style={{ background: i === 1 ? "rgba(236,72,153,0.7)" : i === 2 ? "rgba(56,189,248,0.6)" : "color-mix(in srgb, var(--accent) 80%, transparent)" }} />
                 <div className="relative">
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
-                    style={{ background: "var(--gradient-accent)", boxShadow: "0 6px 20px rgba(139,92,246,0.4)" }}>
+                    style={{ background: "var(--gradient-accent)", boxShadow: "0 8px 24px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <p className="text-xs font-extrabold mb-2" style={{ color: "#c4b5fd" }}>0{i + 1}</p>
+                  <p className="text-xs font-extrabold mb-2" style={{ color: "var(--accent-light)" }}>0{i + 1}</p>
                   <h3 className="text-xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>{title}</h3>
                   <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{desc}</p>
                 </div>
@@ -251,11 +266,16 @@ export default function LandingPage() {
       </section>
 
       {/* Roadmap */}
-      <section className="px-6 md:px-10 py-20">
-        <div className="max-w-5xl mx-auto">
+      <section className="relative px-6 md:px-10 py-20 overflow-hidden">
+        <div className="absolute top-[-8%] left-[-8%] w-96 h-96 rounded-full blur-[130px] pointer-events-none"
+          style={{ background: "rgba(236,72,153,0.28)" }} />
+        <div className="absolute bottom-[-15%] right-[-8%] w-[420px] h-[420px] rounded-full blur-[140px] animate-glow pointer-events-none"
+          style={{ background: "rgba(56,189,248,0.22)" }} />
+
+        <div className="relative max-w-5xl mx-auto">
           <div className="flex items-center justify-center gap-3 mb-3">
-            <HelpCircle className="w-4 h-4" style={{ color: "#c4b5fd" }} />
-            <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-center" style={{ color: "#c4b5fd" }}>
+            <HelpCircle className="w-4 h-4" style={{ color: "var(--accent-light)" }} />
+            <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-center" style={{ color: "var(--accent-light)" }}>
               Roadmap
             </p>
           </div>
@@ -276,15 +296,15 @@ export default function LandingPage() {
               { icon: Users, title: "Modo pareja o grupo", desc: "Una sala con 2 a 8 personas, votación de portadas y una decisión sin discusiones eternas." },
               { icon: Clapperboard, title: "Cápsula y rewatch", desc: "Guardá lo que te dejó cada historia y mirá cómo cambió tu relación con ella con el tiempo." },
               { icon: Star, title: "Créditos del año", desc: "Tus créditos finales: primera y última película del año, mejor calificada y países recorridos." },
-            ].map(({ icon: Icon, title, desc }) => (
+            ].map(({ icon: Icon, title, desc }, i) => (
               <div key={title}
-                className="group relative rounded-3xl border p-7 overflow-hidden transition-all duration-300 hover:-translate-y-2"
-                style={{ backgroundColor: "var(--surface-1)", borderColor: "var(--border)" }}>
-                <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[80px] opacity-0 group-hover:opacity-60 transition-opacity duration-500"
-                  style={{ background: "var(--gradient-accent)" }} />
+                className="group relative glass rounded-[2rem] p-7 overflow-hidden transition-all duration-300 hover:-translate-y-2"
+                style={{ boxShadow: "0 20px 50px -18px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+                <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[80px] opacity-40 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none"
+                  style={{ background: i % 3 === 1 ? "rgba(236,72,153,0.7)" : i % 3 === 2 ? "rgba(56,189,248,0.6)" : "color-mix(in srgb, var(--accent) 80%, transparent)" }} />
                 <div className="relative">
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
-                    style={{ background: "var(--gradient-accent)", boxShadow: "0 6px 20px rgba(139,92,246,0.4)" }}>
+                    style={{ background: "var(--gradient-accent)", boxShadow: "0 6px 20px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
                     <Icon className="w-5 h-5 text-white" />
                   </div>
                   <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>{title}</h3>
@@ -297,7 +317,7 @@ export default function LandingPage() {
           <div className="text-center mt-10">
             <a href="/roadmap"
               className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px rgba(139,92,246,0.5)" }}>
+              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px color-mix(in srgb, var(--accent) 50%, transparent)" }}>
               Ver el roadmap completo
               <ArrowRight className="w-5 h-5" />
             </a>
@@ -306,11 +326,13 @@ export default function LandingPage() {
       </section>
 
       {/* CTA banner */}
-      <section className="px-6 md:px-10 pb-24">
-        <div className="relative max-w-4xl mx-auto rounded-[2.5rem] border p-10 md:p-16 text-center overflow-hidden"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: "rgba(139,92,246,0.3)" }}>
+      <section className="relative px-6 md:px-10 pb-24 overflow-hidden">
+        <div className="relative max-w-4xl mx-auto glass rounded-[2.5rem] p-10 md:p-16 text-center overflow-hidden"
+          style={{ boxShadow: "0 30px 70px -24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
           <div className="absolute top-[-40%] left-1/2 -translate-x-1/2 w-[560px] h-[560px] rounded-full blur-[120px] animate-glow pointer-events-none"
-            style={{ background: "var(--gradient-accent)", opacity: 0.35 }} />
+            style={{ background: "var(--gradient-accent)", opacity: 0.4 }} />
+          <div className="absolute bottom-[-45%] right-[-8%] w-72 h-72 rounded-full blur-[110px] pointer-events-none"
+            style={{ background: "rgba(236,72,153,0.3)" }} />
           <div className="relative">
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5" style={{ color: "var(--text-primary)" }}>
               Empezá hoy. <span className="text-gradient">Gratis.</span>
@@ -320,7 +342,7 @@ export default function LandingPage() {
             </p>
             <a href="/registro"
               className="inline-flex items-center gap-2.5 px-9 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 30px rgba(139,92,246,0.5)" }}>
+              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 30px color-mix(in srgb, var(--accent) 50%, transparent)" }}>
               Crear mi cuenta
               <ArrowRight className="w-5 h-5" />
             </a>
@@ -330,8 +352,8 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="px-6 md:px-10 py-8 text-center text-sm border-t"
-        style={{ color: "var(--text-secondary)", borderColor: "rgba(139,92,246,0.15)" }}>
-        <span className="font-extrabold text-gradient">Watchly</span> &mdash; Datos proporcionados por TMDB.
+        style={{ color: "var(--text-secondary)", borderColor: "color-mix(in srgb, var(--accent) 15%, transparent)" }}>
+        <span className="font-extrabold text-gradient">Watchly</span> &mdash; Tu identidad audiovisual.
       </footer>
     </div>
   );

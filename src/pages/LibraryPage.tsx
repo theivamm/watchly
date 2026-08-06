@@ -61,7 +61,7 @@ export default function LibraryPage() {
             className="px-5 py-2.5 rounded-full text-sm font-semibold transition-all"
             style={{
               backgroundColor: activeTab === tab.value ? "var(--accent-soft)" : "var(--surface-2)",
-              color: activeTab === tab.value ? "#c4b5fd" : "var(--text-secondary)",
+              color: activeTab === tab.value ? "var(--accent-light)" : "var(--text-secondary)",
               border: `1.5px solid ${activeTab === tab.value ? "var(--accent)" : "var(--border)"}`,
             }}>
             {tab.label}

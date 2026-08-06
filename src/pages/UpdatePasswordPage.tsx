@@ -41,11 +41,11 @@ export default function UpdatePasswordPage() {
 
         <div
           className="rounded-3xl border p-6 md:p-8"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: "rgba(139,92,246,0.2)" }}
+          style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}
         >
           {success ? (
             <div className="text-center py-4">
-              <p style={{ color: "#c4b5fd" }}>Contraseña actualizada. Redirigiendo...</p>
+              <p style={{ color: "var(--accent-light)" }}>Contraseña actualizada. Redirigiendo...</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,7 +75,7 @@ export default function UpdatePasswordPage() {
                 type="submit"
                 disabled={loading}
                 className="w-full h-12 rounded-full text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50"
-                style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}
+                style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}
               >
                 {loading ? "Actualizando..." : "Actualizar contraseña"}
               </button>

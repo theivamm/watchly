@@ -48,7 +48,7 @@ export default function AccountSettingsPage() {
       <div className="space-y-6">
         <div
           className="rounded-3xl border p-6 md:p-8"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: "rgba(139,92,246,0.2)" }}
+          style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}
         >
           <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>Email</h3>
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{user?.email}</p>
@@ -56,7 +56,7 @@ export default function AccountSettingsPage() {
 
         <div
           className="rounded-3xl border p-6 md:p-8"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: "rgba(139,92,246,0.2)" }}
+          style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}
         >
           <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>Cerrar sesión</h3>
           <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>

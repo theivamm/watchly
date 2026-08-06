@@ -22,7 +22,7 @@ export default function NotFoundPage() {
         <Link
           to="/"
           className="inline-block px-8 py-3.5 rounded-full text-sm font-bold transition-all hover:scale-[1.02]"
-          style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}
+          style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}
         >
           Volver al inicio
         </Link>

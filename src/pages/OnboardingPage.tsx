@@ -110,7 +110,7 @@ export default function OnboardingPage() {
             type="submit"
             disabled={loading || !username || username.length < 3}
             className="w-full h-12 rounded-xl text-sm font-bold transition-all hover:opacity-90 disabled:opacity-50"
-            style={{ background: "var(--gradient-accent)", color: "var(--accent-contrast)", boxShadow: "0 2px 10px rgba(139,92,246,0.35)" }}
+            style={{ background: "var(--gradient-accent)", color: "var(--accent-contrast)", boxShadow: "0 2px 10px color-mix(in srgb, var(--accent) 35%, transparent)" }}
           >
             {loading ? "Guardando..." : "Completar perfil"}
           </button>

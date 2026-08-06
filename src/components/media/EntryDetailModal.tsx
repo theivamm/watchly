@@ -1,6 +1,7 @@
-import { X, Star, Film, Tv, Plus } from "lucide-react";
-import { getPosterUrl } from "@/services/tmdb";
-import type { Entry, EntryStatus } from "@/types";
+import { useEffect, useState } from "react";
+import { X, Star, Film, Tv, Plus, Quote } from "lucide-react";
+import { getPosterUrl, getMediaDetails } from "@/services/tmdb";
+import type { Entry, EntryStatus, TMDBMediaDetails } from "@/types";
 
 interface EntryDetailModalProps {
   entry: Entry;
@@ -25,7 +26,24 @@ const STATUS_COLORS: Record<EntryStatus, string> = {
 };
 
 export default function EntryDetailModal({ entry, onClose, onAction }: EntryDetailModalProps) {
+  const [details, setDetails] = useState<TMDBMediaDetails | null>(null);
   const rating = entry.rating;
+
+  useEffect(() => {
+    let active = true;
+    getMediaDetails(entry.media_type, entry.tmdb_id)
+      .then((d) => {
+        if (active) setDetails(d);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [entry.media_type, entry.tmdb_id]);
+
+  const description = details?.overview || entry.description;
+  const year = details?.year ?? null;
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in"
@@ -37,8 +55,8 @@ export default function EntryDetailModal({ entry, onClose, onAction }: EntryDeta
         onClick={(e) => e.stopPropagation()}
         style={{
           backgroundColor: "var(--surface-1)",
-          borderColor: "rgba(139,92,246,0.35)",
-          boxShadow: "0 0 0 1px rgba(139,92,246,0.15), 0 40px 80px -20px rgba(139,92,246,0.5), 0 0 120px 20px rgba(139,92,246,0.15)",
+          borderColor: "color-mix(in srgb, var(--accent) 35%, transparent)",
+          boxShadow: "0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent), 0 40px 80px -20px color-mix(in srgb, var(--accent) 50%, transparent), 0 0 120px 20px color-mix(in srgb, var(--accent) 15%, transparent)",
         }}
       >
         <button
@@ -83,6 +101,7 @@ export default function EntryDetailModal({ entry, onClose, onAction }: EntryDeta
                 ) : (
                   <span className="inline-flex items-center gap-1"><Tv className="w-3 h-3" /> Serie</span>
                 )}
+                {year ? ` · ${year}` : ""}
               </span>
             </div>
 
@@ -102,32 +121,45 @@ export default function EntryDetailModal({ entry, onClose, onAction }: EntryDeta
                     }}
                   />
                 ))}
-                <span className="ml-2 text-sm font-bold" style={{ color: "#c4b5fd" }}>
+                <span className="ml-2 text-sm font-bold" style={{ color: "var(--accent-light)" }}>
                   {rating}/5
                 </span>
               </div>
             )}
 
-            {entry.notes ? (
+            {description ? (
               <>
                 <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--text-secondary)" }}>
                   Descripción
                 </p>
                 <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>
-                  {entry.notes}
+                  {description}
                 </p>
               </>
             ) : (
               <p className="text-sm italic" style={{ color: "var(--text-secondary)" }}>
-                Sin descripción.
+                Sin descripción disponible.
               </p>
+            )}
+
+            {entry.notes && (
+              <div className="mt-4 rounded-xl border p-3"
+                style={{ backgroundColor: "var(--surface-2)", borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)" }}>
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Quote className="w-3.5 h-3.5" style={{ color: "var(--accent-light)" }} />
+                  <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                    Mi comentario
+                  </p>
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>{entry.notes}</p>
+              </div>
             )}
 
             {onAction && (
               <button
                 onClick={onAction}
                 className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all hover:scale-[1.02]"
-                style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px rgba(139,92,246,0.55)" }}
+                style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px color-mix(in srgb, var(--accent) 55%, transparent)" }}
               >
                 <Plus className="w-4 h-4" strokeWidth={2.6} /> Agregar a mi biblioteca
               </button>

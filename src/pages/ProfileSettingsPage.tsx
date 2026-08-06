@@ -73,10 +73,10 @@ export default function ProfileSettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form */}
         <div className="lg:col-span-2 rounded-3xl border p-6 md:p-8 space-y-5"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: "rgba(139,92,246,0.2)" }}>
+          style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-              style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 16px rgba(139,92,246,0.4)" }}>
+              style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 16px color-mix(in srgb, var(--accent) 40%, transparent)" }}>
               <User className="w-7 h-7 text-white" />
             </div>
             <div>
@@ -174,7 +174,7 @@ export default function ProfileSettingsPage() {
             </div>
             <input type="checkbox" checked={form.is_profile_public ?? true}
               onChange={(e) => set("is_profile_public", e.target.checked)}
-              className="w-5 h-5 accent-[#8b5cf6]" />
+              className="w-5 h-5 accent-[var(--accent)]" />
           </label>
 
           {message && (
@@ -185,16 +185,16 @@ export default function ProfileSettingsPage() {
 
           <button onClick={handleSave} disabled={saving}
             className="w-full px-6 py-3.5 rounded-full text-sm font-bold transition-all hover:scale-[1.01] disabled:opacity-50"
-            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}>
+            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
             {saving ? "Guardando..." : "Guardar perfil"}
           </button>
         </div>
 
         {/* Share card */}
         <div className="rounded-3xl border p-6 space-y-5 h-fit lg:sticky lg:top-6"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: "rgba(139,92,246,0.2)" }}>
+          style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
           <h2 className="text-base font-extrabold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-            <Share2 className="w-4 h-4" style={{ color: "#c4b5fd" }} /> Tu perfil público
+            <Share2 className="w-4 h-4" style={{ color: "var(--accent-light)" }} /> Tu perfil público
           </h2>
           {profile?.username ? (
             <>
@@ -204,7 +204,7 @@ export default function ProfileSettingsPage() {
               </div>
               <button onClick={handleShare}
                 className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-all hover:scale-[1.02]"
-                style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}>
+                style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
                 {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
                 {copied ? "¡Link copiado!" : "Copiar link"}
               </button>

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronDown, User, LogOut } from "lucide-react";
+import { ChevronDown, User, LayoutDashboard, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/auth-context";
 
-export default function UserMenu() {
+export default function UserMenu({ compact = false }: { compact?: boolean }) {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -33,22 +33,26 @@ export default function UserMenu() {
       <button
         onClick={() => setOpen((o) => !o)}
         title="Tu cuenta"
-        className="flex items-center gap-2 h-11 pl-1 pr-3 rounded-full transition-all hover:scale-[1.03] cursor-pointer"
-        style={{ backgroundColor: "var(--surface-2)", border: "1px solid var(--border)" }}
+        className={compact
+          ? "flex items-center justify-center h-11 w-full cursor-pointer transition-transform hover:scale-105"
+          : "flex items-center gap-2 h-11 pl-1 pr-3 rounded-full transition-all hover:scale-[1.03] cursor-pointer"}
+        style={compact ? undefined : { backgroundColor: "var(--surface-2)", border: "1px solid var(--border)" }}
       >
         <div
           className="w-9 h-9 rounded-full bg-[#0b0b14] flex items-center justify-center"
-          style={{ boxShadow: "0 0 14px rgba(139,92,246,0.35)" }}
+          style={{ boxShadow: "0 0 14px color-mix(in srgb, var(--accent) 35%, transparent)" }}
         >
           <span className="text-sm font-extrabold text-gradient">{initial}</span>
         </div>
-        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-          style={{ color: "var(--text-secondary)" }} />
+        {!compact && (
+          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+            style={{ color: "var(--text-secondary)" }} />
+        )}
       </button>
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-2 w-60 rounded-2xl border p-2 z-50"
+          className={`absolute w-60 rounded-2xl border p-2 z-50 ${compact ? "left-0 bottom-full mb-2 animate-slide-up" : "right-0 top-full mt-2"}`}
           style={{
             backgroundColor: "var(--surface-2)",
             borderColor: "var(--border)",
@@ -60,7 +64,7 @@ export default function UserMenu() {
               {profile?.display_name || user.email}
             </p>
             {profile?.username && (
-              <p className="text-xs truncate mt-0.5" style={{ color: "#c4b5fd" }}>@{profile.username}</p>
+              <p className="text-xs truncate mt-0.5" style={{ color: "var(--accent-light)" }}>@{profile.username}</p>
             )}
           </div>
           <Link
@@ -71,6 +75,15 @@ export default function UserMenu() {
           >
             <User className="w-4 h-4" />
             Ver mi perfil
+          </Link>
+          <Link
+            to="/inicio"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors hover:opacity-80"
+            style={{ color: "var(--text-primary)" }}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            Ir al inicio
           </Link>
           <button
             onClick={handleLogout}

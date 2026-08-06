@@ -32,7 +32,7 @@ export default function ConfirmEmailPage() {
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
           style={{
             background: "var(--gradient-accent)",
-            boxShadow: "0 4px 18px rgba(139,92,246,0.4)",
+            boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 40%, transparent)",
           }}
         >
           <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

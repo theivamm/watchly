@@ -45,5 +45,4 @@ export function setStoredAccent(accent: AccentColor): void {
 
 export function initTheme(): void {
   document.documentElement.setAttribute("data-theme", "dark");
-  applyAccent(getStoredAccent());
 }

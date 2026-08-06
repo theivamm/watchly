@@ -62,8 +62,8 @@ export default function HorizontalMediaCard({ item, onClick, added = false, onRe
             className="absolute top-2 right-2 px-2 py-1 rounded-lg text-[11px] font-extrabold backdrop-blur-md"
             style={{
               backgroundColor: "rgba(11,11,20,0.7)",
-              color: "#c4b5fd",
-              border: "1px solid rgba(139,92,246,0.3)",
+              color: "var(--accent-light)",
+              border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
             }}
           >
             <span className="inline-flex items-center gap-1">
@@ -75,14 +75,14 @@ export default function HorizontalMediaCard({ item, onClick, added = false, onRe
 
         {/* Type chip */}
         <span className="absolute top-2 left-2 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider backdrop-blur-md"
-          style={{ backgroundColor: "rgba(11,11,20,0.65)", color: "#f4f4f5", border: "1px solid rgba(139,92,246,0.2)" }}>
+          style={{ backgroundColor: "rgba(11,11,20,0.65)", color: "#f4f4f5", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
           {item.mediaType === "movie" ? "Película" : "Serie"}
           {item.year ? ` · ${item.year}` : ""}
         </span>
       </div>
 
       <div className="relative z-10 px-1 pt-3 pb-1">
-        <h3 className="text-sm md:text-base font-extrabold truncate transition-colors group-hover:text-[#c4b5fd]"
+        <h3 className="text-sm md:text-base font-extrabold truncate transition-colors group-hover:text-[var(--accent-light)]"
           style={{ color: "var(--text-primary)" }}>
           {item.title}
         </h3>
@@ -109,7 +109,7 @@ export default function HorizontalMediaCard({ item, onClick, added = false, onRe
               style={{
                 background: "var(--gradient-accent)",
                 color: "#fff",
-                boxShadow: "0 6px 20px rgba(139,92,246,0.55)",
+                boxShadow: "0 6px 20px color-mix(in srgb, var(--accent) 55%, transparent)",
               }}
             >
               <Plus className="w-3.5 h-3.5" strokeWidth={2.6} />

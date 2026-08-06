@@ -66,7 +66,7 @@ export default function RegisterPage() {
           <div className="flex flex-col gap-3">
             <a href="/login"
               className="w-full h-12 flex items-center justify-center rounded-full text-sm font-bold transition-all hover:scale-[1.02]"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}>
+              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
               Iniciar sesión
             </a>
             <a href="/" className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>
@@ -89,7 +89,7 @@ export default function RegisterPage() {
           <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>Creá tu perfil de Watchly</p>
         </div>
 
-        <div className="glass p-8 rounded-[1.75rem]" style={{ boxShadow: "0 24px 60px -20px rgba(139,92,246,0.35)" }}>
+        <div className="glass p-8 rounded-[1.75rem]" style={{ boxShadow: "0 24px 60px -20px color-mix(in srgb, var(--accent) 35%, transparent)" }}>
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>Email</label>
@@ -113,7 +113,7 @@ export default function RegisterPage() {
               <div className="px-4 py-3 rounded-xl text-sm" style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#ef4444" }}>
                 <p>{error}</p>
                 {error.includes("EXISTE") && (
-                  <a href="/login" className="font-semibold underline mt-1 block" style={{ color: "#c4b5fd" }}>
+                  <a href="/login" className="font-semibold underline mt-1 block" style={{ color: "var(--accent-light)" }}>
                     Iniciar sesión
                   </a>
                 )}
@@ -122,7 +122,7 @@ export default function RegisterPage() {
 
             <button type="submit" disabled={loading}
               className="w-full h-12 rounded-full text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}>
+              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
               {loading ? "Creando cuenta..." : "Crear cuenta"}
             </button>
           </form>
@@ -130,7 +130,7 @@ export default function RegisterPage() {
 
         <p className="text-center mt-6 text-sm" style={{ color: "var(--text-secondary)" }}>
           ¿Ya tenés cuenta?{" "}
-          <a href="/login" className="font-semibold" style={{ color: "#c4b5fd" }}>Iniciar sesión</a>
+          <a href="/login" className="font-semibold" style={{ color: "var(--accent-light)" }}>Iniciar sesión</a>
         </p>
       </div>
     </div>

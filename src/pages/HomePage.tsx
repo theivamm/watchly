@@ -67,7 +67,7 @@ export default function HomePage() {
 
       {/* Welcome hero */}
       <section className="relative overflow-hidden rounded-[2rem] p-8 md:p-12 border"
-        style={{ backgroundColor: "var(--surface-1)", borderColor: "rgba(139,92,246,0.25)" }}>
+        style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)" }}>
         {/* Crossfading covers of added titles */}
         {heroBg.length > 0 && (
           <div className="absolute inset-0">
@@ -94,7 +94,7 @@ export default function HomePage() {
           style={{ background: "var(--glow-pink)" }} />
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-5"
-            style={{ backgroundColor: "var(--accent-soft)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.3)" }}>
+            style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
             <Sparkles className="w-3.5 h-3.5" /> Tu rincón de cine
           </div>
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-3" style={{ color: "var(--text-primary)" }}>
@@ -106,7 +106,7 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-3">
             <Link to="/buscar"
               className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full text-sm font-bold transition-all hover:scale-[1.04]"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 6px 22px rgba(139,92,246,0.45)" }}>
+              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 6px 22px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
               <Search className="w-[18px] h-[18px]" /> Buscar títulos
             </Link>
             <Link to="/biblioteca"
@@ -124,7 +124,7 @@ export default function HomePage() {
           <div key={label} className="flex items-center gap-4 p-5 rounded-2xl border transition-all duration-300 hover:-translate-y-1"
             style={{ backgroundColor: "var(--surface-1)", borderColor: "var(--border)" }}>
             <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 14px rgba(139,92,246,0.35)" }}>
+              style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent)" }}>
               <Icon className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -139,12 +139,12 @@ export default function HomePage() {
       {recentEntries.length > 0 && (
         <section>
           <div className="flex items-center gap-3 mb-5">
-            <BookOpen className="w-5 h-5" style={{ color: "#c4b5fd" }} />
+            <BookOpen className="w-5 h-5" style={{ color: "var(--accent-light)" }} />
             <h2 className="text-xl font-extrabold tracking-tight" style={{ color: "var(--text-primary)" }}>
               Recientes en tu biblioteca
             </h2>
             <Link to="/biblioteca" className="ml-auto flex items-center gap-1 text-xs font-bold hover:opacity-80"
-              style={{ color: "#c4b5fd" }}>
+              style={{ color: "var(--accent-light)" }}>
               Ver todo <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -199,7 +199,7 @@ export default function HomePage() {
       {trending.length > 0 && (
         <section>
           <div className="flex items-center gap-3 mb-5">
-            <TrendingUp className="w-5 h-5" style={{ color: "#c4b5fd" }} />
+            <TrendingUp className="w-5 h-5" style={{ color: "var(--accent-light)" }} />
             <h2 className="text-xl font-extrabold tracking-tight" style={{ color: "var(--text-primary)" }}>
               Tendencia de la semana
             </h2>
@@ -222,7 +222,7 @@ export default function HomePage() {
       {movies.length > 0 && (
         <section>
           <div className="flex items-center gap-3 mb-5">
-            <Film className="w-5 h-5" style={{ color: "#c4b5fd" }} />
+            <Film className="w-5 h-5" style={{ color: "var(--accent-light)" }} />
             <h2 className="text-xl font-extrabold tracking-tight" style={{ color: "var(--text-primary)" }}>
               Películas populares
             </h2>
@@ -249,7 +249,7 @@ export default function HomePage() {
             style={{ background: "var(--gradient-accent)" }} />
           <div className="relative flex items-center gap-5">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ background: "var(--gradient-accent)", boxShadow: "0 6px 20px rgba(139,92,246,0.4)" }}>
+              style={{ background: "var(--gradient-accent)", boxShadow: "0 6px 20px color-mix(in srgb, var(--accent) 40%, transparent)" }}>
               <List className="w-6 h-6 text-white" />
             </div>
             <div>

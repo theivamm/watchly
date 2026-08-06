@@ -39,7 +39,7 @@ export default function RecoverPasswordPage() {
             className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
             style={{
               background: "var(--gradient-accent)",
-              boxShadow: "0 4px 18px rgba(139,92,246,0.4)",
+              boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 40%, transparent)",
             }}
           >
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,7 +72,7 @@ export default function RecoverPasswordPage() {
 
         <div
           className="rounded-3xl border p-6 md:p-8"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: "rgba(139,92,246,0.2)" }}
+          style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}
         >
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -100,7 +100,7 @@ export default function RecoverPasswordPage() {
               type="submit"
               disabled={loading}
               className="w-full h-12 rounded-full text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}
+              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}
             >
               {loading ? "Enviando..." : "Enviar enlace"}
             </button>
@@ -108,7 +108,7 @@ export default function RecoverPasswordPage() {
         </div>
 
         <p className="text-center mt-6 text-sm" style={{ color: "var(--text-secondary)" }}>
-          <a href="/login" className="font-semibold" style={{ color: "#c4b5fd" }}>Volver al login</a>
+          <a href="/login" className="font-semibold" style={{ color: "var(--accent-light)" }}>Volver al login</a>
         </p>
       </div>
     </div>

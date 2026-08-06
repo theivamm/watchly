@@ -34,7 +34,7 @@ export default function SearchPage() {
             className="px-5 py-2.5 rounded-full text-sm font-semibold transition-all"
             style={{
               backgroundColor: activeTab === key ? "var(--accent-soft)" : "var(--surface-2)",
-              color: activeTab === key ? "#c4b5fd" : "var(--text-secondary)",
+              color: activeTab === key ? "var(--accent-light)" : "var(--text-secondary)",
               border: `1.5px solid ${activeTab === key ? "var(--accent)" : "var(--border)"}`,
             }}>
             {label}
@@ -46,7 +46,7 @@ export default function SearchPage() {
       {!query && (
         <div className="flex flex-col items-center py-24">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-            style={{ backgroundColor: "var(--surface-2)", boxShadow: "0 0 30px rgba(139,92,246,0.2)" }}>
+            style={{ backgroundColor: "var(--surface-2)", boxShadow: "0 0 30px color-mix(in srgb, var(--accent) 20%, transparent)" }}>
             <Search className="w-7 h-7" style={{ color: "var(--text-secondary)" }} />
           </div>
           <p className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>Escribí al menos 3 caracteres</p>

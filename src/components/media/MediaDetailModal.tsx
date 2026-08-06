@@ -232,7 +232,7 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
               <div
                 className="w-full aspect-[2/3] rounded-2xl overflow-hidden border"
                 style={{
-                  borderColor: "rgba(139,92,246,0.35)",
+                  borderColor: "color-mix(in srgb, var(--accent) 35%, transparent)",
                   boxShadow: "0 24px 60px -12px rgba(0,0,0,0.65)",
                 }}
               >
@@ -261,9 +261,9 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
                       disabled={fetchingDesc}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all hover:scale-[1.03] disabled:opacity-60"
                       style={{
-                        backgroundColor: "rgba(139,92,246,0.15)",
-                        color: "#c4b5fd",
-                        border: "1px solid rgba(139,92,246,0.3)",
+                        backgroundColor: "color-mix(in srgb, var(--accent) 15%, transparent)",
+                        color: "var(--accent-light)",
+                        border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
                       }}
                     >
                       <Sparkles className="w-3 h-3" />
@@ -278,7 +278,7 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
                 {/* Personal comment */}
                 <div>
                   <div className="flex items-center gap-2 mb-2.5">
-                    <Quote className="w-3.5 h-3.5" style={{ color: "#c4b5fd" }} />
+                    <Quote className="w-3.5 h-3.5" style={{ color: "var(--accent-light)" }} />
                     <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
                       Mi comentario
                     </p>
@@ -442,7 +442,7 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
                     style={{
                       background: "var(--gradient-accent)",
                       color: "#fff",
-                      boxShadow: "0 4px 18px rgba(139,92,246,0.45)",
+                      boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)",
                     }}
                   >
                     {saving ? "Guardando..." : existingEntry ? "Actualizar" : "Guardar en biblioteca"}

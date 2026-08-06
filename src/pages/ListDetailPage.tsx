@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Lock, List } from "lucide-react";
-import { getList, removeItemFromList, deleteList } from "@/services/lists";
+import { ArrowLeft, Globe, Lock, List, Pencil } from "lucide-react";
+import { getList, removeItemFromList, deleteList, updateList } from "@/services/lists";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
+import ListFormModal from "@/components/lists/ListFormModal";
 import type { ListWithItems, TMDBSearchResult, MediaType } from "@/types";
 
 export default function ListDetailPage() {
@@ -12,6 +13,7 @@ export default function ListDetailPage() {
   const [list, setList] = useState<ListWithItems | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [selected, setSelected] = useState<TMDBSearchResult | null>(null);
 
   useEffect(() => {
@@ -46,6 +48,13 @@ export default function ListDetailPage() {
       console.error("Failed to delete list:", err);
       setDeleting(false);
     }
+  };
+
+  const handleUpdate = async (name: string, description: string, isPublic: boolean) => {
+    if (!list) return;
+    const updated = await updateList(list.id, { name, description, is_public: isPublic });
+    setList((prev) => (prev ? { ...prev, ...updated } : prev));
+    setEditing(false);
   };
 
   const toSearchResult = (item: ListWithItems["items"][0]): TMDBSearchResult => ({
@@ -136,18 +145,31 @@ export default function ListDetailPage() {
             </span>
           </div>
         </div>
-        <button
-          onClick={handleDeleteList}
-          disabled={deleting}
-          className="px-4 py-2.5 rounded-full text-xs font-bold transition-all hover:scale-[1.02] disabled:opacity-50"
-          style={{
-            backgroundColor: "var(--surface-2)",
-            color: "#f87171",
-            border: "1.5px solid var(--border)",
-          }}
-        >
-          Eliminar lista
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setEditing(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-all hover:scale-[1.02]"
+            style={{
+              backgroundColor: "var(--surface-2)",
+              color: "var(--accent-light)",
+              border: "1.5px solid var(--border)",
+            }}
+          >
+            <Pencil className="w-3.5 h-3.5" /> Editar lista
+          </button>
+          <button
+            onClick={handleDeleteList}
+            disabled={deleting}
+            className="px-4 py-2.5 rounded-full text-xs font-bold transition-all hover:scale-[1.02] disabled:opacity-50"
+            style={{
+              backgroundColor: "var(--surface-2)",
+              color: "#f87171",
+              border: "1.5px solid var(--border)",
+            }}
+          >
+            Eliminar lista
+          </button>
+        </div>
       </div>
 
       {list.items.length === 0 ? (
@@ -155,14 +177,14 @@ export default function ListDetailPage() {
           className="flex flex-col items-center justify-center py-24 rounded-3xl border"
           style={{
             backgroundColor: "var(--surface-1)",
-            borderColor: "rgba(139,92,246,0.2)",
+            borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)",
           }}
         >
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
             style={{
               background: "var(--gradient-accent)",
-              boxShadow: "0 0 30px rgba(139,92,246,0.35)",
+              boxShadow: "0 0 30px color-mix(in srgb, var(--accent) 35%, transparent)",
             }}
           >
             <List className="w-7 h-7 text-white" />
@@ -207,6 +229,18 @@ export default function ListDetailPage() {
               getList(id).then(setList).catch(console.error);
             }
           }}
+        />
+      )}
+
+      {editing && list && (
+        <ListFormModal
+          title="Editar lista"
+          submitLabel="Guardar cambios"
+          initialName={list.name}
+          initialDescription={list.description ?? ""}
+          initialIsPublic={list.is_public}
+          onClose={() => setEditing(false)}
+          onSubmit={handleUpdate}
         />
       )}
     </div>

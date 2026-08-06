@@ -17,8 +17,8 @@ export default function SavePromptModal({ onClose }: SavePromptModalProps) {
         onClick={(e) => e.stopPropagation()}
         style={{
           backgroundColor: "var(--surface-1)",
-          borderColor: "rgba(139,92,246,0.35)",
-          boxShadow: "0 0 0 1px rgba(139,92,246,0.15), 0 40px 80px -20px rgba(139,92,246,0.5), 0 0 120px 20px rgba(139,92,246,0.15)",
+          borderColor: "color-mix(in srgb, var(--accent) 35%, transparent)",
+          boxShadow: "0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent), 0 40px 80px -20px color-mix(in srgb, var(--accent) 50%, transparent), 0 0 120px 20px color-mix(in srgb, var(--accent) 15%, transparent)",
         }}
       >
         {/* Glow orbs */}
@@ -44,13 +44,13 @@ export default function SavePromptModal({ onClose }: SavePromptModalProps) {
             <div className="absolute -inset-1 rounded-full"
               style={{ background: "var(--gradient-accent)" }} />
             <div className="relative w-20 h-20 rounded-full bg-[#0b0b14] flex items-center justify-center animate-float"
-              style={{ boxShadow: "0 20px 50px -10px rgba(139,92,246,0.6)" }}>
-              <Clapperboard className="w-8 h-8" style={{ color: "#c4b5fd" }} />
+              style={{ boxShadow: "0 20px 50px -10px color-mix(in srgb, var(--accent) 60%, transparent)" }}>
+              <Clapperboard className="w-8 h-8" style={{ color: "var(--accent-light)" }} />
             </div>
           </div>
 
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest mb-4"
-            style={{ backgroundColor: "var(--accent-soft)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.3)" }}>
+            style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
             <Sparkles className="w-3.5 h-3.5" /> ¡Buen ojo!
           </span>
 
@@ -66,13 +66,13 @@ export default function SavePromptModal({ onClose }: SavePromptModalProps) {
 
           <Link to="/"
             className="block w-full px-6 py-4 rounded-full text-sm font-bold transition-all hover:scale-[1.03]"
-            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px rgba(139,92,246,0.55)" }}>
+            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px color-mix(in srgb, var(--accent) 55%, transparent)" }}>
             Empezar ahora
           </Link>
 
           <Link to="/login"
             className="block mt-3 text-sm font-bold transition-opacity hover:opacity-70"
-            style={{ color: "#c4b5fd" }}>
+            style={{ color: "var(--accent-light)" }}>
             Ya tengo cuenta · Iniciar sesión
           </Link>
         </div>

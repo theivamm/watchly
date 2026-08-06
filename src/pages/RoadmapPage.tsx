@@ -123,9 +123,9 @@ const stages: Stage[] = [
 const priorityMeta = {
   inmediata: {
     label: "Prioridad inmediata",
-    color: "#c4b5fd",
-    bg: "rgba(139,92,246,0.14)",
-    border: "rgba(139,92,246,0.35)",
+    color: "var(--accent-light)",
+    bg: "color-mix(in srgb, var(--accent) 14%, transparent)",
+    border: "color-mix(in srgb, var(--accent) 35%, transparent)",
     desc: "El diferencial central de Watchly",
     flow: "Registrar → Entender → Elegir → Conectar",
   },
@@ -169,7 +169,7 @@ export default function RoadmapPage() {
           backgroundColor: scrolled ? "rgba(11,11,20,0.72)" : "transparent",
           backdropFilter: scrolled ? "blur(20px) saturate(140%)" : "none",
           WebkitBackdropFilter: scrolled ? "blur(20px) saturate(140%)" : "none",
-          borderBottom: scrolled ? "1px solid rgba(139,92,246,0.18)" : "1px solid transparent",
+          borderBottom: scrolled ? "1px solid color-mix(in srgb, var(--accent) 18%, transparent)" : "1px solid transparent",
           boxShadow: scrolled ? "0 12px 36px -16px rgba(0,0,0,0.6)" : "none",
         }}
       >
@@ -191,7 +191,7 @@ export default function RoadmapPage() {
                 </Link>
                 <Link to="/registro"
                   className="flex items-center gap-2 px-3 sm:px-5 h-11 rounded-full text-sm font-bold transition-all hover:scale-[1.04]"
-                  style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}>
+                  style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
                   <UserPlus className="w-4 h-4" />
                   <span className="hidden sm:inline">Crear cuenta</span>
                 </Link>
@@ -210,7 +210,7 @@ export default function RoadmapPage() {
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-7"
-            style={{ backgroundColor: "var(--accent-soft)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.3)" }}>
+            style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
             <Rocket className="w-3.5 h-3.5" />
             Roadmap de producto
           </div>
@@ -244,7 +244,7 @@ export default function RoadmapPage() {
       <section className="px-6 md:px-10 pb-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-xs font-extrabold uppercase tracking-[0.25em] mb-3" style={{ color: "#c4b5fd" }}>
+            <p className="text-xs font-extrabold uppercase tracking-[0.25em] mb-3" style={{ color: "var(--accent-light)" }}>
               Las etapas
             </p>
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4" style={{ color: "var(--text-primary)" }}>
@@ -296,7 +296,7 @@ export default function RoadmapPage() {
       <section className="px-6 md:px-10 pb-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-xs font-extrabold uppercase tracking-[0.25em] mb-3" style={{ color: "#c4b5fd" }}>
+            <p className="text-xs font-extrabold uppercase tracking-[0.25em] mb-3" style={{ color: "var(--accent-light)" }}>
               Prioridades
             </p>
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: "var(--text-primary)" }}>
@@ -339,12 +339,12 @@ export default function RoadmapPage() {
       {/* Next step */}
       <section className="px-6 md:px-10 pb-24">
         <div className="relative max-w-4xl mx-auto rounded-[2.5rem] border p-10 md:p-14 text-center overflow-hidden"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: "rgba(139,92,246,0.3)" }}>
+          style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 30%, transparent)" }}>
           <div className="absolute top-[-40%] left-1/2 -translate-x-1/2 w-[560px] h-[560px] rounded-full blur-[120px] animate-glow pointer-events-none"
             style={{ background: "var(--gradient-accent)", opacity: 0.35 }} />
           <div className="relative">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-6"
-              style={{ backgroundColor: "var(--accent-soft)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.3)" }}>
+              style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
               <Sparkles className="w-3.5 h-3.5" />
               Próximo paso
             </div>
@@ -357,7 +357,7 @@ export default function RoadmapPage() {
             </p>
             <Link to="/registro"
               className="inline-flex items-center gap-2.5 px-9 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 30px rgba(139,92,246,0.5)" }}>
+              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 30px color-mix(in srgb, var(--accent) 50%, transparent)" }}>
               Crear mi cuenta
               <ArrowRight className="w-5 h-5" />
             </Link>
@@ -367,7 +367,7 @@ export default function RoadmapPage() {
 
       {/* Footer */}
       <footer className="px-6 md:px-10 py-8 text-center text-sm border-t flex items-center justify-center gap-2"
-        style={{ color: "var(--text-secondary)", borderColor: "rgba(139,92,246,0.15)" }}>
+        style={{ color: "var(--text-secondary)", borderColor: "color-mix(in srgb, var(--accent) 15%, transparent)" }}>
         <HelpCircle className="w-4 h-4" />
         <span><span className="font-extrabold text-gradient">Watchly</span> — Roadmap basado en WATCHLY_ROADMAP.md</span>
       </footer>

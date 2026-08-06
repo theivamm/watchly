@@ -20,7 +20,7 @@ export default function MobileNavigation() {
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 flex items-stretch"
       style={{
         backgroundColor: "rgba(11,11,20,0.9)",
-        borderTop: "1px solid rgba(139,92,246,0.25)",
+        borderTop: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
         backdropFilter: "blur(16px)",
         WebkitBackdropFilter: "blur(16px)",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -30,11 +30,11 @@ export default function MobileNavigation() {
         return (
           <Link key={to} to={to}
             className="flex-1 flex flex-col items-center justify-center gap-1 py-3 text-[11px] font-semibold tracking-wide transition-colors"
-            style={{ color: active ? "#c4b5fd" : "var(--text-secondary)" }}>
+            style={{ color: active ? "var(--accent-light)" : "var(--text-secondary)" }}>
             <span className={`flex items-center justify-center rounded-full px-3 py-1 transition-all ${active ? "" : ""}`}
               style={{
                 backgroundColor: active ? "var(--accent-soft)" : "transparent",
-                boxShadow: active ? "0 0 16px rgba(139,92,246,0.4)" : "none",
+                boxShadow: active ? "0 0 16px color-mix(in srgb, var(--accent) 40%, transparent)" : "none",
               }}>
               <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} />
             </span>

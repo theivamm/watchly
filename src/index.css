@@ -23,6 +23,7 @@
   --accent-2: #a855f7;
   --accent-3: #c084fc;
   --accent-soft: rgba(139, 92, 246, 0.14);
+  --accent-light: #c4b5fd;
   --accent-contrast: #fff;
   --focus-ring: rgba(139, 92, 246, 0.4);
   --gradient-accent: linear-gradient(135deg, #8b5cf6 0%, #a855f7 55%, #c084fc 100%);
@@ -85,7 +86,7 @@ h1, h2, h3 {
   background: rgba(19, 19, 31, 0.55);
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
-  border: 1px solid rgba(139, 92, 246, 0.18);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 /* ===== Poster cards ===== */
@@ -103,6 +104,12 @@ h1, h2, h3 {
 }
 .animate-float { animation: float-slow 12s ease-in-out infinite; }
 .animate-float-delay { animation: float-slow 14s ease-in-out 2s infinite; }
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-slide-up { animation: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
 
 @keyframes glow-pulse {
   0%, 100% { opacity: 0.5; }

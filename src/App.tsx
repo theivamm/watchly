@@ -15,7 +15,6 @@ import ListsPage from "@/pages/ListsPage";
 import ListDetailPage from "@/pages/ListDetailPage";
 import PublicProfilePage from "@/pages/PublicProfilePage";
 import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
-import AppearanceSettingsPage from "@/pages/AppearanceSettingsPage";
 import AccountSettingsPage from "@/pages/AccountSettingsPage";
 import RoadmapPage from "@/pages/RoadmapPage";
 import NotFoundPage from "@/pages/NotFoundPage";
@@ -64,7 +63,6 @@ function AppRoutes() {
         <Route path="/listas" element={<ListsPage />} />
         <Route path="/listas/:id" element={<ListDetailPage />} />
         <Route path="/configuracion/perfil" element={<ProfileSettingsPage />} />
-        <Route path="/configuracion/apariencia" element={<AppearanceSettingsPage />} />
         <Route path="/configuracion/cuenta" element={<AccountSettingsPage />} />
       </Route>
 

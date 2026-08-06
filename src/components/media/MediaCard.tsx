@@ -93,7 +93,7 @@ export default function MediaCard({
         {showTmdb && (
           <span
             className="absolute top-2 right-2 px-2 py-1 rounded-lg text-[11px] font-extrabold backdrop-blur-md"
-            style={{ backgroundColor: "rgba(11,11,20,0.7)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.3)" }}
+            style={{ backgroundColor: "rgba(11,11,20,0.7)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}
           >
             {tmdbRating!.toFixed(1)}★
           </span>
@@ -127,7 +127,7 @@ export default function MediaCard({
               onAction();
             }}
             className="absolute inset-x-3 bottom-3 py-3 rounded-xl text-xs font-bold text-center opacity-0 md:group-hover:opacity-100 translate-y-2 md:group-hover:translate-y-0 transition-all duration-300 cursor-pointer"
-            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 20px rgba(139,92,246,0.5)" }}
+            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 20px color-mix(in srgb, var(--accent) 50%, transparent)" }}
           >
             {actionLabel}
           </button>
@@ -142,14 +142,14 @@ export default function MediaCard({
             }}
             aria-label={actionLabel}
             className="absolute bottom-3 right-3 w-9 h-9 rounded-full flex items-center justify-center md:hidden cursor-pointer"
-            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 6px 16px rgba(139,92,246,0.5)" }}
+            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 6px 16px color-mix(in srgb, var(--accent) 50%, transparent)" }}
           >
             <Plus className="w-4 h-4" strokeWidth={2.6} />
           </button>
         )}
       </div>
       <div className="relative z-10 px-1 pt-3 pb-1">
-        <p className="text-sm font-bold truncate transition-colors group-hover:text-[#c4b5fd]"
+        <p className="text-sm font-bold truncate transition-colors group-hover:text-[var(--accent-light)]"
           style={{ color: "var(--text-primary)" }}>
           {title}
         </p>

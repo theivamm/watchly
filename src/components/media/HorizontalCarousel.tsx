@@ -109,7 +109,7 @@ export default function HorizontalCarousel({
         {children}
         {onLoadMore && (
           <div ref={sentinelRef} className="shrink-0 w-10 flex items-center justify-center">
-            {loadingMore && <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#c4b5fd" }} />}
+            {loadingMore && <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--accent-light)" }} />}
           </div>
         )}
       </div>
