@@ -16,7 +16,13 @@ export default function RegisterPage() {
 
     // Definitive check: query auth.users directly via SECURITY DEFINER RPC.
     // Works for confirmed AND unconfirmed emails, regardless of GoTrue errors.
-    const { data: exists } = await supabase.rpc("email_exists", { email });
+    const { data: exists, error: rpcError } = await supabase.rpc("email_exists", { email });
+
+    if (rpcError) {
+      setError(`Error al verificar email: ${rpcError.message}`);
+      setLoading(false);
+      return;
+    }
 
     if (exists) {
       setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
