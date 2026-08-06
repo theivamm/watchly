@@ -14,21 +14,37 @@ export default function RegisterPage() {
     setLoading(true);
     setError("");
 
-    // First, check if the email is already registered by attempting sign-in
+    // First, check if the email already exists by attempting sign-in
     const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (!signInError && signInData?.session) {
-      // Sign-in succeeded → the email already exists and is confirmed
+    if (signInData?.session) {
+      // Sign-in succeeded → the email exists and is confirmed
       await supabase.auth.signOut();
       setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
       setLoading(false);
       return;
     }
 
-    // Email not registered (or password mismatch) → proceed with signUp
+    if (signInError) {
+      const msg = signInError.message.toLowerCase();
+      const emailNotConfirmed =
+        msg.includes("not confirmed") ||
+        msg.includes("not verified") ||
+        msg.includes("email not") ||
+        msg.includes("no confirmado") ||
+        msg.includes("verificado");
+      if (emailNotConfirmed) {
+        // The email exists in Supabase but was never confirmed
+        setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Email not registered → proceed with signUp
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
