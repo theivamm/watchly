@@ -60,9 +60,19 @@ export default function RegisterPage() {
             <CheckCircle className="w-8 h-8" style={{ color: "var(--accent)" }} />
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight mb-3" style={{ color: "var(--text-primary)" }}>Revisá tu email</h1>
-          <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-sm leading-relaxed mb-8" style={{ color: "var(--text-secondary)" }}>
             Te enviamos un enlace de confirmación a <strong>{email}</strong>.
           </p>
+          <div className="flex flex-col gap-3">
+            <a href="/login"
+              className="w-full h-12 flex items-center justify-center rounded-full text-sm font-bold transition-all hover:scale-[1.02]"
+              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}>
+              Iniciar sesión
+            </a>
+            <a href="/" className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>
+              Volver al inicio
+            </a>
+          </div>
         </div>
       </div>
     );
