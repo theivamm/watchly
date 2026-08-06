@@ -14,34 +14,14 @@ export default function RegisterPage() {
     setLoading(true);
     setError("");
 
-    // First, check if the email already exists by attempting sign-in
-    const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // Definitive check: query auth.users directly via SECURITY DEFINER RPC.
+    // Works for confirmed AND unconfirmed emails, regardless of GoTrue errors.
+    const { data: exists } = await supabase.rpc("email_exists", { email });
 
-    if (signInData?.session) {
-      // Sign-in succeeded → the email exists and is confirmed
-      await supabase.auth.signOut();
+    if (exists) {
       setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
       setLoading(false);
       return;
-    }
-
-    if (signInError) {
-      const msg = signInError.message.toLowerCase();
-      const emailNotConfirmed =
-        msg.includes("not confirmed") ||
-        msg.includes("not verified") ||
-        msg.includes("email not") ||
-        msg.includes("no confirmado") ||
-        msg.includes("verificado");
-      if (emailNotConfirmed) {
-        // The email exists in Supabase but was never confirmed
-        setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
-        setLoading(false);
-        return;
-      }
     }
 
     // Email not registered → proceed with signUp
@@ -54,34 +34,10 @@ export default function RegisterPage() {
     });
 
     if (error) {
-      const msg = error.message.toLowerCase();
-      const isDuplicate =
-        msg.includes("already registered") ||
-        msg.includes("already exists") ||
-        msg.includes("already used") ||
-        msg.includes("already in use") ||
-        msg.includes("user_already") ||
-        msg.includes("email_already") ||
-        msg.includes("duplicate") ||
-        msg.includes("registrado") ||
-        msg.includes("existe") ||
-        msg.includes("used");
-      if (isDuplicate) {
-        setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
-      } else {
-        setError(error.message);
-      }
-    } else if (data?.user) {
-      const emailConfirmed = !!data.user.email_confirmed_at;
-      const createdAt = data.user.created_at ? new Date(data.user.created_at).getTime() : 0;
-      const isExistingUser = emailConfirmed || Date.now() - createdAt > 30000;
-
-      if (isExistingUser) {
-        // signUp returned an existing user (confirmed or created before this attempt)
-        setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
-      } else {
-        setSuccess(true);
-      }
+      setError(error.message);
+    } else if (data?.user && data.user.email_confirmed_at) {
+      // signUp returned an already-confirmed existing user (fallback)
+      setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
     } else {
       setSuccess(true);
     }
