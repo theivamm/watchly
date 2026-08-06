@@ -19,6 +19,51 @@ export type WatchStatus =
   | "paused"
   | "dropped";
 
+export type DNAStatus = "locked" | "early" | "developing" | "solid" | "rich";
+
+export interface WeightedMetric {
+  key: string;
+  label: string;
+  weight: number;
+  percentage: number;
+}
+
+export interface CreatorMetric {
+  name: string;
+  count: number;
+}
+
+export interface UserDNA {
+  status: DNAStatus;
+  algorithmVersion: number;
+  validTitleCount: number;
+  ratedTitleCount: number;
+  confidenceScore: number;
+  summary: string | null;
+  topGenres: WeightedMetric[];
+  formatDistribution: { movie: number; tv: number };
+  decadeDistribution: WeightedMetric[];
+  countryDistribution: WeightedMetric[];
+  languageDistribution: WeightedMetric[];
+  runtimeProfile: {
+    averageMinutes: number | null;
+    label: string | null;
+    coverage: number;
+  };
+  ratingProfile: {
+    average: number | null;
+    median: number | null;
+    distribution: Record<string, number>;
+    label: string | null;
+    coverage: number;
+  };
+  recurringDirectors: CreatorMetric[];
+  recurringCast: CreatorMetric[];
+  tags: string[];
+  calculatedAt: string;
+  sourceUpdatedAt: string | null;
+}
+
 export interface Profile {
   id: string;
   username: string;
@@ -32,6 +77,8 @@ export interface Profile {
   theme_preference: Theme;
   accent_color: AccentColor;
   is_profile_public: boolean;
+  show_dna_publicly: boolean;
+  dna_dirty: boolean;
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string;

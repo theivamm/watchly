@@ -14,6 +14,8 @@ import LibraryPage from "@/pages/LibraryPage";
 import ListsPage from "@/pages/ListsPage";
 import ListDetailPage from "@/pages/ListDetailPage";
 import PublicProfilePage from "@/pages/PublicProfilePage";
+import PublicDNAPage from "@/pages/PublicDNAPage";
+import DNAPage from "@/pages/DNAPage";
 import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
 import AccountSettingsPage from "@/pages/AccountSettingsPage";
 import RoadmapPage from "@/pages/RoadmapPage";
@@ -52,12 +54,14 @@ function AppRoutes() {
 
       {/* Public profiles */}
       <Route path="/perfil/:username" element={<PublicProfilePage />} />
+      <Route path="/perfil/:username/adn" element={<PublicDNAPage />} />
       <Route path="/@:username" element={<LegacyProfileRedirect />} />
 
       {/* Private with AppShell */}
       <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/inicio" element={<HomePage />} />
+        <Route path="/adn" element={<DNAPage />} />
         <Route path="/buscar" element={<SearchPage />} />
         <Route path="/biblioteca" element={<LibraryPage />} />
         <Route path="/listas" element={<ListsPage />} />

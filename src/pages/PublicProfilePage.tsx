@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   Share2, Check, MapPin, Globe, Aperture, X, Lock, Film, List as ListIcon,
-  Clapperboard, Sparkles, Star, LayoutGrid, Tv, BookOpen, Eye, ChevronDown,
+  Clapperboard, Sparkles, Star, LayoutGrid, Tv, BookOpen, Eye, ChevronDown, Dna,
 } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { getProfileByUsername, getProfileLink } from "@/services/profile";
 import { getPublicLists, getList } from "@/services/lists";
 import { getPublicLibrary } from "@/services/library";
+import { getPublicDnaByUsername } from "@/services/dna";
 import MediaCard from "@/components/media/MediaCard";
 import SavePromptModal from "@/components/media/SavePromptModal";
 import EntryDetailModal from "@/components/media/EntryDetailModal";
@@ -15,7 +16,7 @@ import MediaDetailModal from "@/components/media/MediaDetailModal";
 import UserMenu from "@/components/layout/UserMenu";
 import { getPosterUrl } from "@/services/tmdb";
 import { getDominantColor, rgba, rgbString, lighten, DEFAULT_TINT, type RGB } from "@/lib/posterColor";
-import type { Profile, List, Entry, EntryStatus, TMDBSearchResult, ListItem } from "@/types";
+import type { Profile, List, Entry, EntryStatus, TMDBSearchResult, ListItem, UserDNA } from "@/types";
 
 type Section = "resumen" | "quierover" | "peliculas" | "series" | "listas";
 
@@ -44,6 +45,7 @@ export default function PublicProfilePage() {
   const [listPreviews, setListPreviews] = useState<Record<string, ListItem[]>>({});
   const [expandedListId, setExpandedListId] = useState<string | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [dna, setDna] = useState<UserDNA | null>(null);
   const [copied, setCopied] = useState(false);
   const [section, setSection] = useState<Section>("resumen");
   const [statusFilter, setStatusFilter] = useState<EntryStatus | "all">("all");
@@ -61,6 +63,7 @@ export default function PublicProfilePage() {
     setListPreviews({});
     setExpandedListId(null);
     setEntries([]);
+    setDna(null);
     setSection("resumen");
     setShowSavePrompt(false);
     setSelectedEntry(null);
@@ -70,12 +73,14 @@ export default function PublicProfilePage() {
       .then(async (p) => {
         setProfile(p);
         if (p && p.is_profile_public) {
-          const [l, e] = await Promise.all([
+          const [l, e, d] = await Promise.all([
             getPublicLists(p.id).catch(() => []),
             getPublicLibrary(p.id).catch(() => []),
+            p.show_dna_publicly ? getPublicDnaByUsername(username).catch(() => null) : Promise.resolve(null),
           ]);
           setLists(l);
           setEntries(e);
+          setDna(d);
         }
       })
       .catch(() => setProfile(null));
@@ -338,6 +343,39 @@ export default function PublicProfilePage() {
           </div>
         ))}
       </div>
+
+      {/* ADN block */}
+      {dna && dna.status !== "locked" && (
+        <Link to={`/perfil/${profile.username}/adn`}
+          className="group relative overflow-hidden rounded-3xl border p-6 md:p-8 block transition-all duration-300 hover:-translate-y-1"
+          style={{ backgroundColor: "var(--surface-1)", borderColor: accentBorder }}>
+          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-[80px] animate-glow pointer-events-none"
+            style={{ background: rgba(tint, 0.3) }} />
+          <div className="relative flex flex-col md:flex-row items-start md:items-center gap-5">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ background: tintGradient, boxShadow: `0 6px 18px ${rgba(tint, 0.45)}` }}>
+              <Dna className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: `rgb(${accentText})` }}>
+                ADN Audiovisual
+              </p>
+              <p className="text-lg font-extrabold tracking-tight mb-1" style={{ color: "var(--text-primary)" }}>
+                {dna.topGenres.slice(0, 3).map((g) => g.label).join(" · ")}
+              </p>
+              {dna.decadeDistribution[0] && (
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                  Década dominante: {dna.decadeDistribution[0].label}
+                </p>
+              )}
+            </div>
+            <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shrink-0 transition-transform group-hover:scale-[1.02]"
+              style={{ backgroundColor: "var(--surface-2)", color: "var(--text-primary)", border: "1.5px solid var(--border)" }}>
+              Ver ADN completo
+            </span>
+          </div>
+        </Link>
+      )}
 
       {/* Favorites */}
       {favorites.length > 0 && (

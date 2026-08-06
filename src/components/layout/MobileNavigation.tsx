@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, Film, BookOpen, List, Map, User } from "lucide-react";
+import { Search, Film, BookOpen, List, Map, User, Dna } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { to: "/buscar", label: "Buscar", icon: Search },
   { to: "/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/listas", label: "Listas", icon: List },
+  { to: "/adn", label: "Mi ADN", icon: Dna },
   { to: "/roadmap", label: "Roadmap", icon: Map },
   { to: "/configuracion/perfil", label: "Perfil", icon: User },
 ];

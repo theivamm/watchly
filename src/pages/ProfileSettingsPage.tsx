@@ -33,6 +33,7 @@ export default function ProfileSettingsPage() {
         instagram_url: form.instagram_url || null,
         x_url: form.x_url || null,
         is_profile_public: form.is_profile_public ?? true,
+        show_dna_publicly: form.show_dna_publicly ?? true,
       });
       await refreshProfile();
       setMessage({ type: "ok", text: "Perfil guardado correctamente." });
@@ -174,6 +175,19 @@ export default function ProfileSettingsPage() {
             </div>
             <input type="checkbox" checked={form.is_profile_public ?? true}
               onChange={(e) => set("is_profile_public", e.target.checked)}
+              className="w-5 h-5 accent-[var(--accent)]" />
+          </label>
+
+          <label className="flex items-center justify-between gap-4 rounded-2xl p-4 cursor-pointer"
+            style={{ backgroundColor: "var(--surface-2)", border: "1.5px solid var(--border)" }}>
+            <div>
+              <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>Mostrar mi ADN Audiovisual</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
+                Si está desactivado, tu ADN no aparece en tu perfil público
+              </p>
+            </div>
+            <input type="checkbox" checked={form.show_dna_publicly ?? true}
+              onChange={(e) => set("show_dna_publicly", e.target.checked)}
               className="w-5 h-5 accent-[var(--accent)]" />
           </label>
 
