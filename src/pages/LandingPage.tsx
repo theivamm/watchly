@@ -2,56 +2,35 @@ import { useEffect, useState } from "react";
 import { Search, BookOpen, Share2, Sparkles, ArrowRight, Play, Star, LogIn, UserPlus, HelpCircle, Clapperboard, Tv, HeartHandshake, Users } from "lucide-react";
 import { useTrending } from "@/hooks/useMedia";
 import { getPosterUrl } from "@/services/tmdb";
+import { getDominantColor, rgba, DEFAULT_TINT, type RGB } from "@/lib/posterColor";
 import { useAuth } from "@/app/auth-context";
 import UserMenu from "@/components/layout/UserMenu";
-import type { TMDBSearchResult } from "@/types";
-
-function PosterArt({ items }: { items: TMDBSearchResult[] }) {
-  const picks = items.filter((i) => i.posterPath).slice(0, 6);
-  const positions = [
-    "top-0 left-0 rotate-[-10deg] z-10",
-    "top-8 left-[30%] rotate-[4deg] z-20",
-    "top-0 right-0 rotate-[8deg] z-10",
-    "bottom-0 left-[8%] rotate-[6deg] z-30",
-    "bottom-4 right-[18%] rotate-[-6deg] z-20",
-    "bottom-[-4%] left-[40%] rotate-[10deg] z-10",
-  ];
-  const anims = ["animate-float", "animate-float-delay", "animate-float", "animate-float-delay", "animate-float", "animate-float-delay"];
-
-  return (
-    <div className="relative w-full max-w-[460px] h-[480px] mx-auto">
-      <div className="absolute inset-0 rounded-full blur-[100px] animate-glow"
-        style={{ background: "var(--gradient-accent)", opacity: 0.35 }} />
-      {picks.slice(0, 6).map((item, i) => (
-        <div
-          key={`${item.tmdbId}-${i}`}
-          className={`absolute w-28 md:w-32 aspect-[2/3] rounded-xl overflow-hidden border ${positions[i]} ${anims[i]}`}
-          style={{ borderColor: "color-mix(in srgb, var(--accent) 35%, transparent)", boxShadow: "0 20px 50px -12px rgba(0,0,0,0.7)" }}
-        >
-          <img src={getPosterUrl(item.posterPath, "w200")} alt={item.title}
-            className="w-full h-full object-cover" loading="lazy" />
-        </div>
-      ))}
-      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 glass rounded-2xl px-5 py-3 flex items-center gap-3 z-40"
-        style={{ boxShadow: "0 12px 40px -10px color-mix(in srgb, var(--accent) 50%, transparent)" }}>
-        <Star className="w-5 h-5 fill-[var(--accent-light)] stroke-[var(--accent-light)]" />
-        <div>
-          <p className="text-sm font-extrabold leading-none" style={{ color: "var(--text-primary)" }}>
-            Miles de títulos
-          </p>
-          <p className="text-[11px] mt-1" style={{ color: "var(--text-secondary)" }}>de TMDB al instante</p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function LandingPage() {
   const { user } = useAuth();
   const { data } = useTrending("all");
   const trending = data?.results || [];
+  const covers = trending.filter((i) => i.posterPath).map((i) => i.posterPath as string).slice(0, 6);
   const [scrolled, setScrolled] = useState(false);
   const [showDeletedBanner, setShowDeletedBanner] = useState(false);
+  const [bgIndex, setBgIndex] = useState(0);
+  const [tint, setTint] = useState<RGB>(DEFAULT_TINT);
+
+  useEffect(() => {
+    if (covers.length <= 1) return;
+    setBgIndex(0);
+    const t = setInterval(() => setBgIndex((i) => (i + 1) % covers.length), 4000);
+    return () => clearInterval(t);
+  }, [covers.length]);
+
+  const activeCover = covers[bgIndex];
+
+  useEffect(() => {
+    if (!activeCover) return;
+    getDominantColor(getPosterUrl(activeCover, "w200"))
+      .then(setTint)
+      .catch(() => setTint(DEFAULT_TINT));
+  }, [activeCover]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -124,100 +103,121 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* Hero */}
-      <section className="relative flex-1 flex items-center px-6 md:px-10 pt-12 pb-16 overflow-hidden">
+      {/* Hero banner with cycling blurred covers */}
+      <section className="relative flex-1 flex items-center overflow-hidden pt-12 pb-16">
+        {covers.length > 0 && (
+          <div className="absolute inset-0">
+            {covers.map((poster, i) => (
+              <img
+                key={i}
+                src={getPosterUrl(poster, "w500")}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2200ms] ease-in-out"
+                style={{
+                  opacity: i === bgIndex ? 1 : 0,
+                  filter: "blur(28px) saturate(1.25)",
+                  transform: "scale(1.2)",
+                }}
+              />
+            ))}
+            <div className="absolute inset-0"
+              style={{ background: "linear-gradient(180deg, rgba(11,11,20,0.92) 0%, rgba(11,11,20,0.55) 50%, rgba(11,11,20,0.96) 100%)" }} />
+          </div>
+        )}
+
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] h-[150%] rounded-full"
+          style={{ background: `radial-gradient(ellipse at center, ${rgba(tint, 0.42)} 0%, transparent 65%)` }}
+        />
         <div className="absolute top-[-10%] left-[-5%] w-[520px] h-[520px] rounded-full blur-[130px] animate-glow pointer-events-none"
           style={{ background: "var(--glow-violet)" }} />
-        <div className="absolute bottom-[-15%] right-[-8%] w-[480px] h-[480px] rounded-full blur-[130px] animate-glow pointer-events-none"
+        <div className="absolute bottom-[-15%] right-[-8%] w-[480px] h-[480px] rounded-full blur-[130px] pointer-events-none"
           style={{ background: "var(--glow-pink)" }} />
 
-        <div className="relative z-10 w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-8 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-7"
-              style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
-              <Sparkles className="w-3.5 h-3.5" />
-              Tu mundo de cine
-            </div>
-
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.02] mb-7"
-              style={{ color: "var(--text-primary)" }}>
-              Viví tu cine.
-              <br />
-              <span className="text-gradient">Compartí todo</span>
-              <br />
-              lo que ves.
-            </h1>
-
-            <p className="text-lg md:text-xl max-w-lg leading-relaxed mb-10" style={{ color: "var(--text-secondary)" }}>
-              Buscá, guardá, calificá y compartí películas y series. Tu biblioteca audiovisual personal — hermosa, simple, tuya.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <a href="/registro"
-                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
-                style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px color-mix(in srgb, var(--accent) 50%, transparent)" }}>
-                Crear mi perfil gratis
-                <ArrowRight className="w-5 h-5" />
-              </a>
-              <a href="/login"
-                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
-                style={{ backgroundColor: "var(--surface-2)", color: "var(--text-primary)", border: "1.5px solid var(--border)" }}>
-                <Play className="w-4 h-4" />
-                Ya tengo cuenta
-              </a>
-            </div>
-
-            <div className="flex items-center gap-6 mt-10">
-              {[
-                ["+10K", "títulos"],
-                ["5", "estados"],
-                ["∞", "listas"],
-              ].map(([n, l]) => (
-                <div key={l}>
-                  <p className="text-2xl font-extrabold text-gradient leading-none">{n}</p>
-                  <p className="text-xs mt-1.5" style={{ color: "var(--text-secondary)" }}>{l}</p>
-                </div>
-              ))}
-            </div>
+        <div className="relative z-10 w-full max-w-4xl mx-auto text-center px-6 md:px-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-7"
+            style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
+            <Sparkles className="w-3.5 h-3.5" />
+            Tu mundo de cine
           </div>
 
-          {/* Poster collage */}
-          <div className="hidden lg:block">
-            <PosterArt items={trending} />
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.02] mb-7"
+            style={{ color: "var(--text-primary)" }}>
+            Viví tu cine.
+            <br />
+            <span className="text-gradient">Compartí todo</span>
+            <br />
+            lo que ves.
+          </h1>
+
+          <p className="text-lg md:text-xl max-w-lg mx-auto leading-relaxed mb-10" style={{ color: "var(--text-secondary)" }}>
+            Buscá, guardá, calificá y compartí películas y series. Tu biblioteca audiovisual personal — hermosa, simple, tuya.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="/registro"
+              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
+              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px color-mix(in srgb, var(--accent) 50%, transparent)" }}>
+              Crear mi perfil gratis
+              <ArrowRight className="w-5 h-5" />
+            </a>
+            <a href="/login"
+              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
+              style={{ backgroundColor: "var(--surface-2)", color: "var(--text-primary)", border: "1.5px solid var(--border)" }}>
+              <Play className="w-4 h-4" />
+              Ya tengo cuenta
+            </a>
+          </div>
+
+          <div className="flex items-center justify-center gap-8 mt-10">
+            {[
+              ["+10K", "títulos"],
+              ["5", "estados"],
+              ["∞", "listas"],
+            ].map(([n, l]) => (
+              <div key={l} className="text-center">
+                <p className="text-2xl font-extrabold text-gradient leading-none">{n}</p>
+                <p className="text-xs mt-1.5" style={{ color: "var(--text-secondary)" }}>{l}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Trending marquee */}
+      {/* Trending marquee — full width with center spotlight */}
       {trending.length > 0 && (
-        <section className="relative px-6 md:px-10 py-10 overflow-hidden">
+        <section className="relative py-12 overflow-hidden">
+          <div className="pointer-events-none absolute inset-x-0 top-0 bottom-0 flex items-center justify-center overflow-hidden">
+            <div
+              className="w-[55%] h-[120%] rounded-full animate-glow"
+              style={{ background: "radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 30%, transparent) 0%, transparent 70%)" }}
+            />
+          </div>
           <div className="absolute top-1/2 -left-24 w-72 h-72 rounded-full blur-[110px] animate-glow pointer-events-none"
             style={{ background: "color-mix(in srgb, var(--accent) 35%, transparent)" }} />
           <div className="absolute -right-20 bottom-0 w-64 h-64 rounded-full blur-[100px] pointer-events-none"
             style={{ background: "rgba(236,72,153,0.22)" }} />
 
-          <div className="relative max-w-6xl mx-auto">
-            <div className="glass rounded-[2.5rem] px-6 md:px-10 py-8 overflow-hidden"
-              style={{ boxShadow: "0 24px 60px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
-              <div className="flex gap-3 mb-6 items-center">
-                <span className="text-xs font-extrabold uppercase tracking-[0.25em]" style={{ color: "var(--text-secondary)" }}>
-                  Tendencia de la semana
-                </span>
-                <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, color-mix(in srgb, var(--accent) 40%, transparent), transparent)" }} />
-              </div>
-              <div className="flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
-                <div className="flex gap-4 md:gap-6 animate-marquee shrink-0">
-                  {[...trending, ...trending].map((item, i) => (
-                    <div key={`${item.tmdbId}-${i}`} className="w-40 md:w-52 shrink-0">
-                      <div className="aspect-[2/3] rounded-2xl overflow-hidden border poster-card"
-                        style={{ borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)", boxShadow: "0 10px 30px -12px rgba(0,0,0,0.6)" }}>
-                        <img src={getPosterUrl(item.posterPath, "w342")} alt={item.title}
-                          className="w-full h-full object-cover" loading="lazy" />
-                      </div>
-                    </div>
-                  ))}
+          <div className="relative max-w-6xl mx-auto px-6 md:px-10">
+            <div className="flex gap-3 mb-6 items-center">
+              <span className="text-xs font-extrabold uppercase tracking-[0.25em]" style={{ color: "var(--text-secondary)" }}>
+                Tendencia de la semana
+              </span>
+              <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, color-mix(in srgb, var(--accent) 40%, transparent), transparent)" }} />
+            </div>
+          </div>
+
+          <div className="relative z-10 flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
+            <div className="flex gap-4 md:gap-6 animate-marquee shrink-0">
+              {[...trending, ...trending].map((item, i) => (
+                <div key={`${item.tmdbId}-${i}`} className="w-40 md:w-52 shrink-0">
+                  <div className="aspect-[2/3] rounded-2xl overflow-hidden border poster-card"
+                    style={{ borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)", boxShadow: "0 10px 30px -12px rgba(0,0,0,0.6)" }}>
+                    <img src={getPosterUrl(item.posterPath, "w342")} alt={item.title}
+                      className="w-full h-full object-cover" loading="lazy" />
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
