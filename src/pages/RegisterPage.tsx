@@ -42,18 +42,30 @@ export default function RegisterPage() {
       const isDuplicate =
         msg.includes("already registered") ||
         msg.includes("already exists") ||
+        msg.includes("already used") ||
+        msg.includes("already in use") ||
         msg.includes("user_already") ||
+        msg.includes("email_already") ||
         msg.includes("duplicate") ||
-        msg.includes("ya está registrada") ||
-        msg.includes("ya existe");
+        msg.includes("registrado") ||
+        msg.includes("existe") ||
+        msg.includes("used");
       if (isDuplicate) {
         setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
       } else {
         setError(error.message);
       }
-    } else if (data?.user?.email_confirmed_at) {
-      // signUp returned an existing confirmed user
-      setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
+    } else if (data?.user) {
+      const emailConfirmed = !!data.user.email_confirmed_at;
+      const createdAt = data.user.created_at ? new Date(data.user.created_at).getTime() : 0;
+      const isExistingUser = emailConfirmed || Date.now() - createdAt > 30000;
+
+      if (isExistingUser) {
+        // signUp returned an existing user (confirmed or created before this attempt)
+        setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
+      } else {
+        setSuccess(true);
+      }
     } else {
       setSuccess(true);
     }
