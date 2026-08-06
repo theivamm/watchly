@@ -1,5 +1,5 @@
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import { Search, Film, BookOpen, List, User, LogOut } from "lucide-react";
+import { Search, Film, BookOpen, List, Map, User, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/auth-context";
 
@@ -8,6 +8,7 @@ const navItems = [
   { to: "/buscar", label: "Buscar", icon: Search },
   { to: "/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/listas", label: "Listas", icon: List },
+  { to: "/roadmap", label: "Roadmap", icon: Map },
 ];
 
 export default function Sidebar() {

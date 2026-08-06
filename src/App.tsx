@@ -17,6 +17,7 @@ import PublicProfilePage from "@/pages/PublicProfilePage";
 import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
 import AppearanceSettingsPage from "@/pages/AppearanceSettingsPage";
 import AccountSettingsPage from "@/pages/AccountSettingsPage";
+import RoadmapPage from "@/pages/RoadmapPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -43,6 +44,7 @@ function AppRoutes() {
     <Routes>
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
+      <Route path="/roadmap" element={<RoadmapPage />} />
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/registro" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/confirmar-email" element={<ConfirmEmailPage />} />

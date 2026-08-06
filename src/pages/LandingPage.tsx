@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { Search, BookOpen, Share2, Sparkles, ArrowRight, Play, Star, LogIn, UserPlus } from "lucide-react";
+import { Search, BookOpen, Share2, Sparkles, ArrowRight, Play, Star, LogIn, UserPlus, HelpCircle, Clapperboard, Tv, HeartHandshake, Users } from "lucide-react";
 import { useTrending } from "@/hooks/useMedia";
 import { getPosterUrl } from "@/services/tmdb";
+import { useAuth } from "@/app/auth-context";
+import UserMenu from "@/components/layout/UserMenu";
 import type { TMDBSearchResult } from "@/types";
 
 function PosterArt({ items }: { items: TMDBSearchResult[] }) {
@@ -45,6 +47,7 @@ function PosterArt({ items }: { items: TMDBSearchResult[] }) {
 }
 
 export default function LandingPage() {
+  const { user } = useAuth();
   const { data } = useTrending("all");
   const trending = data?.results || [];
   const [scrolled, setScrolled] = useState(false);
@@ -87,18 +90,29 @@ export default function LandingPage() {
             Watchly
           </span>
           <div className="flex items-center gap-2">
-            <a href="/login"
-              className="flex items-center gap-2 px-3 sm:px-5 h-11 rounded-full text-sm font-semibold transition-all hover:opacity-80"
-              style={{ color: "var(--text-primary)", backgroundColor: "var(--surface-2)", border: "1px solid var(--border)" }}>
-              <LogIn className="w-4 h-4" />
-              <span className="hidden sm:inline">Iniciar sesión</span>
+            <a href="/roadmap" title="Roadmap"
+              className="w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-105 hover:opacity-80"
+              style={{ backgroundColor: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text-secondary)" }}>
+              <HelpCircle className="w-5 h-5" />
             </a>
-            <a href="/registro"
-              className="flex items-center gap-2 px-3 sm:px-5 h-11 rounded-full text-sm font-bold transition-all hover:scale-[1.04]"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}>
-              <UserPlus className="w-4 h-4" />
-              <span className="hidden sm:inline">Crear cuenta</span>
-            </a>
+            {user ? (
+              <UserMenu />
+            ) : (
+              <>
+                <a href="/login"
+                  className="flex items-center gap-2 px-3 sm:px-5 h-11 rounded-full text-sm font-semibold transition-all hover:opacity-80"
+                  style={{ color: "var(--text-primary)", backgroundColor: "var(--surface-2)", border: "1px solid var(--border)" }}>
+                  <LogIn className="w-4 h-4" />
+                  <span className="hidden sm:inline">Iniciar sesión</span>
+                </a>
+                <a href="/registro"
+                  className="flex items-center gap-2 px-3 sm:px-5 h-11 rounded-full text-sm font-bold transition-all hover:scale-[1.04]"
+                  style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px rgba(139,92,246,0.45)" }}>
+                  <UserPlus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Crear cuenta</span>
+                </a>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -232,6 +246,61 @@ export default function LandingPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Roadmap */}
+      <section className="px-6 md:px-10 py-20">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <HelpCircle className="w-4 h-4" style={{ color: "#c4b5fd" }} />
+            <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-center" style={{ color: "#c4b5fd" }}>
+              Roadmap
+            </p>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-center mb-4"
+            style={{ color: "var(--text-primary)" }}>
+            Lo que se viene <span className="text-gradient">en Watchly</span>
+          </h2>
+          <p className="text-base max-w-2xl mx-auto text-center mb-14" style={{ color: "var(--text-secondary)" }}>
+            Una función diferencial por etapa, medida y consolidada antes de avanzar. Esto es lo que está en camino
+            para tu identidad audiovisual.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {[
+              { icon: Sparkles, title: "ADN Audiovisual", desc: "Tu biblioteca se convierte en un perfil visual de gustos: géneros, décadas y directores. Preliminar desde 5 títulos." },
+              { icon: Tv, title: "¿Qué vemos hoy?", desc: "Decinos cómo es tu momento y Watchly elige entre lo que ya querías ver. Sin discusiones y sin IA." },
+              { icon: HeartHandshake, title: "Compatibilidad", desc: "Al visitar un perfil público: cuánto comparten sus pantallas y una película para ver juntos." },
+              { icon: Users, title: "Modo pareja o grupo", desc: "Una sala con 2 a 8 personas, votación de portadas y una decisión sin discusiones eternas." },
+              { icon: Clapperboard, title: "Cápsula y rewatch", desc: "Guardá lo que te dejó cada historia y mirá cómo cambió tu relación con ella con el tiempo." },
+              { icon: Star, title: "Créditos del año", desc: "Tus créditos finales: primera y última película del año, mejor calificada y países recorridos." },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div key={title}
+                className="group relative rounded-3xl border p-7 overflow-hidden transition-all duration-300 hover:-translate-y-2"
+                style={{ backgroundColor: "var(--surface-1)", borderColor: "var(--border)" }}>
+                <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[80px] opacity-0 group-hover:opacity-60 transition-opacity duration-500"
+                  style={{ background: "var(--gradient-accent)" }} />
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+                    style={{ background: "var(--gradient-accent)", boxShadow: "0 6px 20px rgba(139,92,246,0.4)" }}>
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>{title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <a href="/roadmap"
+              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
+              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px rgba(139,92,246,0.5)" }}>
+              Ver el roadmap completo
+              <ArrowRight className="w-5 h-5" />
+            </a>
           </div>
         </div>
       </section>
