@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function RecoverPasswordPage() {
+  usePageTitle("Recuperar contraseña | Watchly");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);

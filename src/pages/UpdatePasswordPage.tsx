@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function UpdatePasswordPage() {
+  usePageTitle("Actualizar contraseña | Watchly");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

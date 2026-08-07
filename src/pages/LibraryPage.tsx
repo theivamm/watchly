@@ -5,6 +5,7 @@ import { getUserLibrary } from "@/services/library";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import type { Entry, EntryStatus, TMDBSearchResult } from "@/types";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const STATUS_TABS: { value: EntryStatus | "all"; label: string }[] = [
   { value: "all", label: "Todos" },
@@ -16,6 +17,7 @@ const STATUS_TABS: { value: EntryStatus | "all"; label: string }[] = [
 ];
 
 export default function LibraryPage() {
+  usePageTitle("Mi biblioteca | Watchly");
   const { user } = useAuth();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);

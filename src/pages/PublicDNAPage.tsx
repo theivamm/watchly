@@ -12,6 +12,7 @@ import { getDominantColor, rgba, rgbString, lighten, DEFAULT_TINT, type RGB } fr
 import UserMenu from "@/components/layout/UserMenu";
 import type { Profile, UserDNA, Entry } from "@/types";
 import { GenreLegend } from "@/components/dna/GenreFingerprint";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 function Row({ icon: Icon, title, children, accentBorder, iconBg }: {
   icon: typeof Star;
@@ -53,6 +54,7 @@ export default function PublicDNAPage() {
   const { username = "" } = useParams();
   const { pathname } = useLocation();
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
+  usePageTitle(`ADN Audiovisual de ${profile?.display_name || `@${username}`} | Watchly`);
   const [dna, setDna] = useState<UserDNA | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loaded, setLoaded] = useState(false);

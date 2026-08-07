@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/auth-context";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function OnboardingPage() {
+  usePageTitle("Bienvenido a Watchly");
   const { user } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Sparkles, ArrowRight, HelpCircle, ChevronRight, LogIn, UserPlus, Rocket, Layers } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import UserMenu from "@/components/layout/UserMenu";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 interface Stage {
   n: number;
@@ -148,6 +149,7 @@ const priorityMeta = {
 } as const;
 
 export default function RoadmapPage() {
+  usePageTitle("Roadmap | Watchly");
   const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 

@@ -2,8 +2,10 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Link, useLocation } from "react-router-dom";
 import { Mail, Lock, CheckCircle, ArrowLeft } from "lucide-react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function RegisterPage() {
+  usePageTitle("Crear cuenta | Watchly");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

@@ -5,8 +5,10 @@ import { useDebounce } from "@/hooks/useDebounce";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import type { TMDBSearchResult } from "@/types";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function SearchPage() {
+  usePageTitle("Buscar | Watchly");
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "movie" | "tv">("all");
   const [selectedResult, setSelectedResult] = useState<TMDBSearchResult | null>(null);

@@ -5,8 +5,10 @@ import { getPosterUrl } from "@/services/tmdb";
 import { getDominantColor, rgba, DEFAULT_TINT, type RGB } from "@/lib/posterColor";
 import { useAuth } from "@/app/auth-context";
 import UserMenu from "@/components/layout/UserMenu";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function LandingPage() {
+  usePageTitle("Watchly — Tu biblioteca de películas y series", "Organizá tu biblioteca, calificá y compartí lo que ves. Descubrí tu ADN audiovisual.");
   const { user } = useAuth();
   const { data } = useTrending("all");
   const trending = data?.results || [];

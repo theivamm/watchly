@@ -15,6 +15,7 @@ import UserMenu from "@/components/layout/UserMenu";
 import { getPosterUrl } from "@/services/tmdb";
 import { getDominantColor, rgba, rgbString, lighten, DEFAULT_TINT, type RGB } from "@/lib/posterColor";
 import type { Profile, List, Entry, EntryStatus, TMDBSearchResult, ListItem, UserDNA } from "@/types";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 type Section = "resumen" | "quierover" | "peliculas" | "series" | "listas";
 
@@ -39,6 +40,10 @@ export default function PublicProfilePage() {
   const { username = "" } = useParams();
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
+  usePageTitle(
+    `Perfil de ${profile?.display_name || `@${username}`} | Watchly`,
+    `${profile?.bio || `Biblioteca pública de ${profile?.display_name || `@${username}`}`} — películas, series y listas en Watchly.`,
+  );
   const [lists, setLists] = useState<List[]>([]);
   const [listPreviews, setListPreviews] = useState<Record<string, ListItem[]>>({});
   const [expandedListId, setExpandedListId] = useState<string | null>(null);

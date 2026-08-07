@@ -3,8 +3,10 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/auth-context";
 import { AlertTriangle, Trash2, Check } from "lucide-react";
 import SettingsNav from "@/components/layout/SettingsNav";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function AccountSettingsPage() {
+  usePageTitle("Configuración de cuenta | Watchly");
   const { user } = useAuth();
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmText, setConfirmText] = useState("");

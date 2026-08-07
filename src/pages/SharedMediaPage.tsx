@@ -8,6 +8,7 @@ import { getPosterUrl, getBackdropUrl, getMediaDetails } from "@/services/tmdb";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import UserMenu from "@/components/layout/UserMenu";
 import type { Profile, Entry, EntryStatus, MediaType, TMDBSearchResult, TMDBMediaDetails } from "@/types";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const STATUS_LABELS: Record<EntryStatus, string> = {
   want_to_watch: "Quiero ver",
@@ -38,6 +39,8 @@ export default function SharedMediaPage() {
   const id = Number(tmdbId);
   const valid = type !== null && Number.isFinite(id) && id > 0;
   const shareUrl = valid && profile ? getMediaShareLink(profile.username, type as MediaType, id) : null;
+  const mediaTitle = details?.title || entry?.title;
+  usePageTitle(mediaTitle ? `${mediaTitle} | Watchly` : "Título compartido | Watchly");
 
   useEffect(() => {
     setProfile(undefined);

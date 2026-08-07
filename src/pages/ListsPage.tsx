@@ -6,6 +6,7 @@ import { getUserLists, createList, deleteList, updateList, getList } from "@/ser
 import { getPosterUrl } from "@/services/tmdb";
 import ListFormModal from "@/components/lists/ListFormModal";
 import type { List as ListType } from "@/types";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 interface ListPreview {
   posters: string[];
@@ -14,6 +15,7 @@ interface ListPreview {
 }
 
 export default function ListsPage() {
+  usePageTitle("Mis listas | Watchly");
   const { user } = useAuth();
   const [lists, setLists] = useState<ListType[]>([]);
   const [previews, setPreviews] = useState<Record<string, ListPreview>>({});

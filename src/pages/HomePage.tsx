@@ -11,8 +11,10 @@ import { getUserLibrary, removeFromLibrary } from "@/services/library";
 import { getUserLists } from "@/services/lists";
 import { getPosterUrl } from "@/services/tmdb";
 import type { TMDBSearchResult, Entry } from "@/types";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function HomePage() {
+  usePageTitle("Inicio | Watchly");
   const { user, profile } = useAuth();
   const name = profile?.display_name || user?.email?.split("@")[0] || "usuario";
   const trendingInf = useInfiniteTrending("all");

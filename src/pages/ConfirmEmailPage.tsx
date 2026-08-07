@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function ConfirmEmailPage() {
+  usePageTitle("Confirmá tu email | Watchly");
   const [message, setMessage] = useState("Verificando...");
 
   useEffect(() => {

@@ -4,8 +4,10 @@ import { useAuth } from "@/app/auth-context";
 import { updateProfile, getProfileLink } from "@/services/profile";
 import type { Profile } from "@/types";
 import SettingsNav from "@/components/layout/SettingsNav";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function ProfileSettingsPage() {
+  usePageTitle("Configuración de perfil | Watchly");
   const { user, profile, refreshProfile } = useAuth();
   const [form, setForm] = useState<Partial<Profile>>({});
   const [saving, setSaving] = useState(false);

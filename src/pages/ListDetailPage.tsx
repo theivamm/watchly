@@ -6,11 +6,13 @@ import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import ListFormModal from "@/components/lists/ListFormModal";
 import type { ListWithItems, TMDBSearchResult, MediaType } from "@/types";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function ListDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [list, setList] = useState<ListWithItems | null>(null);
+  usePageTitle(list ? `${list.name} | Watchly` : "Lista | Watchly");
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);

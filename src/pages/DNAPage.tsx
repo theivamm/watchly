@@ -11,6 +11,7 @@ import DNAHero from "@/components/dna/DNAHero";
 import DNAConfidence from "@/components/dna/DNAConfidence";
 import DNATags from "@/components/dna/DNATags";
 import { GenreLegend } from "@/components/dna/GenreFingerprint";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 function StatCard({ icon: Icon, title, children }: {
   icon: typeof Clapperboard;
@@ -231,6 +232,7 @@ function LockedState({ dna }: { dna: UserDNA }) {
 }
 
 export default function DNAPage() {
+  usePageTitle("Mi ADN Audiovisual | Watchly");
   const { user, profile, refreshProfile } = useAuth();
   const [dna, setDna] = useState<UserDNA | null>(null);
   const [loading, setLoading] = useState(true);
