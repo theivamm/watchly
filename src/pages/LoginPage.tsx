@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Mail, Lock } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Mail, Lock, ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const location = useLocation();
+  const from = new URLSearchParams(location.search).get("from");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,6 +23,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-5 py-12 relative overflow-hidden" style={{ backgroundColor: "transparent" }}>
+      {from && (
+        <Link to={from}
+          className="absolute top-5 left-5 z-10 inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-all hover:scale-[1.02]"
+          style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--text-primary)", backdropFilter: "blur(8px)" }}>
+          <ArrowLeft className="w-3.5 h-3.5" /> Volver
+        </Link>
+      )}
       <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full blur-[130px] animate-glow pointer-events-none"
         style={{ background: "var(--glow-violet)" }} />
       <div className="relative w-full max-w-[420px]">

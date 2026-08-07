@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import {
   Sparkles, Clapperboard, Tv, Calendar, Globe, Languages, Star,
   Tags, ShieldCheck, User, Lock, AlertTriangle, ArrowLeft,
@@ -51,6 +51,7 @@ function Chips({ items }: { items: { label: string; percentage: number; key: str
 
 export default function PublicDNAPage() {
   const { username = "" } = useParams();
+  const { pathname } = useLocation();
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
   const [dna, setDna] = useState<UserDNA | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -298,7 +299,7 @@ export default function PublicDNAPage() {
           <p className="text-sm font-bold mb-5" style={{ color: "var(--text-secondary)" }}>
             ¿Qué dice tu biblioteca de vos? Descubrilo en Watchly.
           </p>
-          <Link to="/registro"
+          <Link to={`/registro?from=${encodeURIComponent(pathname)}`}
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-bold transition-all hover:scale-[1.02]"
             style={{ background: tintGradient, color: "#fff", boxShadow: `0 4px 18px ${tintGlow}` }}>
             <User className="w-4 h-4" /> Crear mi ADN Audiovisual
