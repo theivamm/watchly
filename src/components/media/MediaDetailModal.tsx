@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Star, ListPlus, ChevronDown, Check, Sparkles, Quote } from "lucide-react";
+import { X, Star, ListPlus, ChevronDown, Check, Sparkles, Quote, Share2 } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { getPosterUrl, getMediaDetails } from "@/services/tmdb";
 import { addToLibrary, updateEntry, removeFromLibrary, getEntry } from "@/services/library";
@@ -10,6 +10,7 @@ interface MediaDetailModalProps {
   result: TMDBSearchResult;
   onClose: () => void;
   onSaved?: (entry: Entry) => void;
+  shareUrl?: string | null;
 }
 
 const STATUSES: { value: EntryStatus; label: string }[] = [
@@ -28,7 +29,7 @@ const STATUS_COLORS: Record<EntryStatus, string> = {
   dropped: "#f87171",
 };
 
-export default function MediaDetailModal({ result, onClose, onSaved }: MediaDetailModalProps) {
+export default function MediaDetailModal({ result, onClose, onSaved, shareUrl }: MediaDetailModalProps) {
   const { user } = useAuth();
   const [status, setStatus] = useState<EntryStatus>("want_to_watch");
   const [rating, setRating] = useState<number>(0);
@@ -44,6 +45,7 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
   const [addingToList, setAddingToList] = useState<string | null>(null);
   const [addedToListId, setAddedToListId] = useState<string | null>(null);
   const [fetchingDesc, setFetchingDesc] = useState(false);
+  const [copied, setCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -108,6 +110,17 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showListDropdown]);
+
+  const handleShare = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -210,7 +223,23 @@ export default function MediaDetailModal({ result, onClose, onSaved }: MediaDeta
 
         {/* Scrollable content */}
         <div className="relative z-10 max-h-[90vh] overflow-y-auto p-6 md:p-8 pb-24">
-        <div className="flex justify-end sticky top-0 mb-4">
+        <div className="flex justify-end sticky top-0 mb-4 gap-2">
+          {shareUrl && (
+            <button
+              onClick={handleShare}
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
+              style={{
+                backgroundColor: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                color: copied ? "#4ade80" : "var(--accent-light)",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+              }}
+              title={copied ? "¡Link copiado!" : "Copiar link para compartir"}
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+            </button>
+          )}
           <button
             onClick={onClose}
             className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"

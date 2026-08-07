@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import type { Profile } from "@/types";
+import type { Profile, MediaType } from "@/types";
 
 export async function getProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
@@ -52,4 +52,9 @@ export async function updateProfile(
 export function getProfileLink(username: string): string {
   const base = import.meta.env.VITE_APP_URL || window.location.origin;
   return `${base}/perfil/${username}`;
+}
+
+export function getMediaShareLink(username: string, mediaType: MediaType, tmdbId: number): string {
+  const base = import.meta.env.VITE_APP_URL || window.location.origin;
+  return `${base}/ver/${encodeURIComponent(username)}/${mediaType}/${tmdbId}`;
 }

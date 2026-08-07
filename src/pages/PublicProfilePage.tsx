@@ -5,9 +5,9 @@ import {
   Clapperboard, Sparkles, Star, LayoutGrid, Tv, BookOpen, Eye, ChevronDown, Dna,
 } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
-import { getProfileByUsername, getProfileLink } from "@/services/profile";
+import { getProfileByUsername, getProfileLink, getMediaShareLink } from "@/services/profile";
 import { getPublicLists, getList } from "@/services/lists";
-import { getPublicLibrary } from "@/services/library";
+import { getPublicLibrary, removeFromLibrary } from "@/services/library";
 import { getPublicDnaByUsername } from "@/services/dna";
 import MediaCard from "@/components/media/MediaCard";
 import SavePromptModal from "@/components/media/SavePromptModal";
@@ -52,6 +52,7 @@ export default function PublicProfilePage() {
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [viewResult, setViewResult] = useState<TMDBSearchResult | null>(null);
+  const [activeShareUrl, setActiveShareUrl] = useState<string | null>(null);
   const [bgIndex, setBgIndex] = useState(0);
   const [tint, setTint] = useState<RGB>(DEFAULT_TINT);
 
@@ -68,6 +69,7 @@ export default function PublicProfilePage() {
     setShowSavePrompt(false);
     setSelectedEntry(null);
     setViewResult(null);
+    setActiveShareUrl(null);
     setBgIndex(0);
     getProfileByUsername(username)
       .then(async (p) => {
@@ -247,11 +249,22 @@ export default function PublicProfilePage() {
           rating={e.rating}
           notes={e.notes}
           onClick={() => openCard(e)}
-          onAction={() => openAction(e)}
+          {...(isOwner
+            ? { onRemove: () => handleRemoveEntry(e) }
+            : { onAction: () => openAction(e) })}
         />
       ))}
     </div>
   );
+
+  const handleRemoveEntry = async (entry: Entry) => {
+    try {
+      await removeFromLibrary(entry.id);
+      setEntries((prev) => prev.filter((x) => x.id !== entry.id));
+    } catch (err) {
+      console.error("Failed to remove entry:", err);
+    }
+  };
 
   const toResult = (entry: Entry): TMDBSearchResult => ({
     tmdbId: entry.tmdb_id,
@@ -268,11 +281,13 @@ export default function PublicProfilePage() {
   });
 
   const openCard = (entry: Entry) => {
+    setActiveShareUrl(profile ? getMediaShareLink(profile.username, entry.media_type, entry.tmdb_id) : null);
     if (user) setViewResult(toResult(entry));
     else setSelectedEntry(entry);
   };
 
   const openListItem = (item: ListItem) => {
+    setActiveShareUrl(profile ? getMediaShareLink(profile.username, item.media_type, item.tmdb_id) : null);
     setViewResult({
       tmdbId: item.tmdb_id,
       mediaType: item.media_type,
@@ -746,9 +761,14 @@ export default function PublicProfilePage() {
       {selectedEntry && (
         <EntryDetailModal
           entry={selectedEntry}
-          onClose={() => setSelectedEntry(null)}
+          shareUrl={activeShareUrl}
+          onClose={() => {
+            setSelectedEntry(null);
+            setActiveShareUrl(null);
+          }}
           onAction={() => {
             setSelectedEntry(null);
+            setActiveShareUrl(null);
             setShowSavePrompt(true);
           }}
         />
@@ -757,9 +777,14 @@ export default function PublicProfilePage() {
       {viewResult && (
         <MediaDetailModal
           result={viewResult}
-          onClose={() => setViewResult(null)}
+          shareUrl={activeShareUrl}
+          onClose={() => {
+            setViewResult(null);
+            setActiveShareUrl(null);
+          }}
           onSaved={() => {
             setViewResult(null);
+            setActiveShareUrl(null);
             if (profile) getPublicLibrary(profile.id).then(setEntries).catch(console.error);
           }}
         />

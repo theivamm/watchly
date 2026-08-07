@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, Star, Film, Tv, Plus, Quote } from "lucide-react";
+import { X, Star, Film, Tv, Plus, Quote, Share2, Check } from "lucide-react";
 import { getPosterUrl, getMediaDetails } from "@/services/tmdb";
 import type { Entry, EntryStatus, TMDBMediaDetails } from "@/types";
 
@@ -7,6 +7,7 @@ interface EntryDetailModalProps {
   entry: Entry;
   onClose: () => void;
   onAction?: () => void;
+  shareUrl?: string | null;
 }
 
 const STATUS_LABELS: Record<EntryStatus, string> = {
@@ -25,8 +26,9 @@ const STATUS_COLORS: Record<EntryStatus, string> = {
   dropped: "#f87171",
 };
 
-export default function EntryDetailModal({ entry, onClose, onAction }: EntryDetailModalProps) {
+export default function EntryDetailModal({ entry, onClose, onAction, shareUrl }: EntryDetailModalProps) {
   const [details, setDetails] = useState<TMDBMediaDetails | null>(null);
+  const [copied, setCopied] = useState(false);
   const rating = entry.rating;
 
   useEffect(() => {
@@ -40,6 +42,17 @@ export default function EntryDetailModal({ entry, onClose, onAction }: EntryDeta
       active = false;
     };
   }, [entry.media_type, entry.tmdb_id]);
+
+  const handleShare = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
 
   const description = details?.overview || entry.description;
   const year = details?.year ?? null;
@@ -59,14 +72,26 @@ export default function EntryDetailModal({ entry, onClose, onAction }: EntryDeta
           boxShadow: "0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent), 0 40px 80px -20px color-mix(in srgb, var(--accent) 50%, transparent), 0 0 120px 20px color-mix(in srgb, var(--accent) 15%, transparent)",
         }}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
-          style={{ backgroundColor: "rgba(11,11,20,0.6)", border: "1px solid var(--border)", color: "#fff", backdropFilter: "blur(6px)" }}
-          aria-label="Cerrar"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          {shareUrl && (
+            <button
+              onClick={handleShare}
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
+              style={{ backgroundColor: "rgba(11,11,20,0.6)", border: "1px solid var(--border)", color: copied ? "#4ade80" : "var(--accent-light)", backdropFilter: "blur(6px)" }}
+              title={copied ? "¡Link copiado!" : "Copiar link para compartir"}
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
+            style={{ backgroundColor: "rgba(11,11,20,0.6)", border: "1px solid var(--border)", color: "#fff", backdropFilter: "blur(6px)" }}
+            aria-label="Cerrar"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
         <div className="flex flex-col sm:flex-row">
           {/* Poster */}

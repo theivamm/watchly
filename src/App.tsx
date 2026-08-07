@@ -15,6 +15,7 @@ import ListsPage from "@/pages/ListsPage";
 import ListDetailPage from "@/pages/ListDetailPage";
 import PublicProfilePage from "@/pages/PublicProfilePage";
 import PublicDNAPage from "@/pages/PublicDNAPage";
+import SharedMediaPage from "@/pages/SharedMediaPage";
 import DNAPage from "@/pages/DNAPage";
 import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
 import AccountSettingsPage from "@/pages/AccountSettingsPage";
@@ -55,6 +56,7 @@ function AppRoutes() {
       {/* Public profiles */}
       <Route path="/perfil/:username" element={<PublicProfilePage />} />
       <Route path="/perfil/:username/adn" element={<PublicDNAPage />} />
+      <Route path="/ver/:username/:mediaType/:tmdbId" element={<SharedMediaPage />} />
       <Route path="/@:username" element={<LegacyProfileRedirect />} />
 
       {/* Private with AppShell */}
