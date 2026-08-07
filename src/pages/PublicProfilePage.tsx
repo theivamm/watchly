@@ -10,8 +10,6 @@ import { getPublicLists, getList } from "@/services/lists";
 import { getPublicLibrary, removeFromLibrary } from "@/services/library";
 import { getPublicDnaByUsername } from "@/services/dna";
 import MediaCard from "@/components/media/MediaCard";
-import SavePromptModal from "@/components/media/SavePromptModal";
-import EntryDetailModal from "@/components/media/EntryDetailModal";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import UserMenu from "@/components/layout/UserMenu";
 import { getPosterUrl } from "@/services/tmdb";
@@ -49,8 +47,7 @@ export default function PublicProfilePage() {
   const [copied, setCopied] = useState(false);
   const [section, setSection] = useState<Section>("resumen");
   const [statusFilter, setStatusFilter] = useState<EntryStatus | "all">("all");
-  const [showSavePrompt, setShowSavePrompt] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
+  const [readOnlyEntry, setReadOnlyEntry] = useState<Entry | null>(null);
   const [viewResult, setViewResult] = useState<TMDBSearchResult | null>(null);
   const [activeShareUrl, setActiveShareUrl] = useState<string | null>(null);
   const [bgIndex, setBgIndex] = useState(0);
@@ -66,8 +63,7 @@ export default function PublicProfilePage() {
     setEntries([]);
     setDna(null);
     setSection("resumen");
-    setShowSavePrompt(false);
-    setSelectedEntry(null);
+    setReadOnlyEntry(null);
     setViewResult(null);
     setActiveShareUrl(null);
     setBgIndex(0);
@@ -282,8 +278,8 @@ export default function PublicProfilePage() {
 
   const openCard = (entry: Entry) => {
     setActiveShareUrl(profile ? getMediaShareLink(profile.username, entry.media_type, entry.tmdb_id) : null);
-    if (user) setViewResult(toResult(entry));
-    else setSelectedEntry(entry);
+    setReadOnlyEntry(user ? null : entry);
+    setViewResult(toResult(entry));
   };
 
   const openListItem = (item: ListItem) => {
@@ -304,8 +300,7 @@ export default function PublicProfilePage() {
   };
 
   const openAction = (entry: Entry) => {
-    if (!user) setShowSavePrompt(true);
-    else setViewResult(toResult(entry));
+    openCard(entry);
   };
 
   const SectionTitle = ({ eyebrow, title, subtitle, icon: Icon }: {
@@ -756,34 +751,19 @@ export default function PublicProfilePage() {
         )}
       </div>
 
-      {showSavePrompt && <SavePromptModal onClose={() => setShowSavePrompt(false)} />}
-
-      {selectedEntry && (
-        <EntryDetailModal
-          entry={selectedEntry}
-          shareUrl={activeShareUrl}
-          onClose={() => {
-            setSelectedEntry(null);
-            setActiveShareUrl(null);
-          }}
-          onAction={() => {
-            setSelectedEntry(null);
-            setActiveShareUrl(null);
-            setShowSavePrompt(true);
-          }}
-        />
-      )}
-
       {viewResult && (
         <MediaDetailModal
           result={viewResult}
           shareUrl={activeShareUrl}
+          readOnlyEntry={readOnlyEntry}
           onClose={() => {
             setViewResult(null);
+            setReadOnlyEntry(null);
             setActiveShareUrl(null);
           }}
           onSaved={() => {
             setViewResult(null);
+            setReadOnlyEntry(null);
             setActiveShareUrl(null);
             if (profile) getPublicLibrary(profile.id).then(setEntries).catch(console.error);
           }}

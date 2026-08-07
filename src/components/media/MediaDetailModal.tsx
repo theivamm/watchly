@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { X, Star, ListPlus, ChevronDown, Check, Sparkles, Quote, Share2 } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { getPosterUrl, getMediaDetails } from "@/services/tmdb";
 import { addToLibrary, updateEntry, removeFromLibrary, getEntry } from "@/services/library";
 import { getUserLists, addItemToList } from "@/services/lists";
-import type { TMDBSearchResult, Entry, EntryStatus, MediaType, List } from "@/types";
+import type { TMDBSearchResult, Entry, EntryStatus, MediaType, List, TMDBMediaDetails } from "@/types";
 
 interface MediaDetailModalProps {
   result: TMDBSearchResult;
   onClose: () => void;
   onSaved?: (entry: Entry) => void;
   shareUrl?: string | null;
+  readOnlyEntry?: Entry | null;
 }
 
 const STATUSES: { value: EntryStatus; label: string }[] = [
@@ -21,6 +23,14 @@ const STATUSES: { value: EntryStatus; label: string }[] = [
   { value: "dropped", label: "Abandonado" },
 ];
 
+const STATUS_LABELS: Record<EntryStatus, string> = {
+  want_to_watch: "Quiero ver",
+  watching: "Viendo",
+  completed: "Completado",
+  paused: "Pausado",
+  dropped: "Abandonado",
+};
+
 const STATUS_COLORS: Record<EntryStatus, string> = {
   want_to_watch: "var(--accent)",
   watching: "#4ade80",
@@ -29,7 +39,7 @@ const STATUS_COLORS: Record<EntryStatus, string> = {
   dropped: "#f87171",
 };
 
-export default function MediaDetailModal({ result, onClose, onSaved, shareUrl }: MediaDetailModalProps) {
+export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, readOnlyEntry }: MediaDetailModalProps) {
   const { user } = useAuth();
   const [status, setStatus] = useState<EntryStatus>("want_to_watch");
   const [rating, setRating] = useState<number>(0);
@@ -46,7 +56,10 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl }:
   const [addedToListId, setAddedToListId] = useState<string | null>(null);
   const [fetchingDesc, setFetchingDesc] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [details, setDetails] = useState<TMDBMediaDetails | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const isReadOnly = !!readOnlyEntry;
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -59,7 +72,10 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl }:
   const posterUrl = getPosterUrl(result.posterPath, "w500");
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || isReadOnly) {
+      setLoading(false);
+      return;
+    }
     getEntry(user.id, result.tmdbId, result.mediaType as MediaType)
       .then((entry) => {
         if (entry) {
@@ -71,11 +87,26 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl }:
         }
       })
       .finally(() => setLoading(false));
-  }, [user, result.tmdbId, result.mediaType]);
+  }, [user, result.tmdbId, result.mediaType, isReadOnly]);
 
   useEffect(() => {
-    setDescription(result.overview || "");
-  }, [result.overview]);
+    if (!isReadOnly) {
+      setDescription(result.overview || "");
+      return;
+    }
+    setDescription(readOnlyEntry!.description || "");
+    let active = true;
+    getMediaDetails(readOnlyEntry!.media_type, readOnlyEntry!.tmdb_id)
+      .then((d) => {
+        if (!active) return;
+        setDetails(d);
+        if (!readOnlyEntry!.description) setDescription(d.overview);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [readOnlyEntry, isReadOnly, result.overview]);
 
   const fillDescription = async () => {
     if (fetchingDesc) return;
@@ -95,9 +126,9 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl }:
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || isReadOnly) return;
     getUserLists(user.id).then(setLists).catch(console.error);
-  }, [user]);
+  }, [user, isReadOnly]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -275,10 +306,71 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl }:
                 {result.title}
               </h2>
               <p className="text-sm font-semibold mb-4" style={{ color: "var(--text-secondary)" }}>
-                {result.year || "Sin año"} · {result.mediaType === "movie" ? "Película" : "Serie"}
+                {(isReadOnly ? details?.year : result.year) || "Sin año"} · {result.mediaType === "movie" ? "Película" : "Serie"}
               </p>
 
-              <div className="space-y-6">
+              {isReadOnly && readOnlyEntry ? (
+                <div className="space-y-6">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className="inline-flex items-center px-3 py-1.5 rounded-lg text-[11px] font-bold"
+                        style={{ backgroundColor: STATUS_COLORS[readOnlyEntry.status], color: "#000" }}
+                      >
+                        {STATUS_LABELS[readOnlyEntry.status]}
+                      </span>
+                      {readOnlyEntry.rating != null && readOnlyEntry.rating > 0 && (
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star key={star} className="w-4 h-4"
+                              style={{
+                                fill: readOnlyEntry.rating! >= star ? "var(--accent)" : "none",
+                                color: readOnlyEntry.rating! >= star ? "var(--accent)" : "var(--text-secondary)",
+                              }} />
+                          ))}
+                          <span className="ml-1 text-sm font-bold" style={{ color: "var(--accent-light)" }}>
+                            {readOnlyEntry.rating}/5
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider mb-2.5" style={{ color: "var(--text-secondary)" }}>
+                        Descripción
+                      </p>
+                      <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                        {description || "Sin descripción disponible."}
+                      </p>
+                    </div>
+
+                    {readOnlyEntry.notes && (
+                      <div className="rounded-xl border p-3"
+                        style={{ backgroundColor: "var(--surface-2)", borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)" }}>
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <Quote className="w-3.5 h-3.5" style={{ color: "var(--accent-light)" }} />
+                          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                            Comentario
+                          </p>
+                        </div>
+                        <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>{readOnlyEntry.notes}</p>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <Link to="/login"
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all hover:scale-[1.02]"
+                        style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--text-primary)", border: "1.5px solid var(--border)" }}>
+                        Iniciar sesión
+                      </Link>
+                      <Link to="/registro"
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all hover:scale-[1.02]"
+                        style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
+                        Crear cuenta
+                      </Link>
+                    </div>
+                </div>
+                ) : (
+                <div className="space-y-6">
                 {/* Description */}
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-2.5">
@@ -492,10 +584,11 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl }:
                   )}
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
     </div>
+  </div>
   );
 }
