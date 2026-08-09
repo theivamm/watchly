@@ -30,6 +30,7 @@ ALTER TABLE public.profiles
 ALTER TABLE public.avatars ENABLE ROW LEVEL SECURITY;
 
 -- Lectura pública de avatares activos
+DROP POLICY IF EXISTS "Active avatars are readable by everyone" ON public.avatars;
 CREATE POLICY "Active avatars are readable by everyone"
   ON public.avatars FOR SELECT
   USING (is_active = true);
@@ -42,31 +43,31 @@ CREATE POLICY "Active avatars are readable by everyone"
 -- Índice para lookups por slug
 CREATE INDEX IF NOT EXISTS avatars_slug_idx ON public.avatars(slug);
 
--- Sembrado inicial: 24 avatares fijos, estilo avataaars, semillas predefinidas.
+-- Sembrado inicial: 24 avatares fijos, estilo open-peeps, semillas predefinidas.
 INSERT INTO public.avatars (name, slug, style, seed, category, is_active, sort_order)
 VALUES
-  ('Cine Ícono',            'cine-icono',            'avataaars', 'cinema-icon',  'face', true, 1),
-  ('Trama Nocturna',       'trama-nocturna',       'avataaars', 'plot-night',   'face', true, 2),
-  ('Remake Solar',         'remake-solar',         'avataaars', 'remake-sun',   'face', true, 3),
-  ('Spin Off',             'spin-off',             'avataaars', 'spinoff',      'face', true, 4),
-  ('B-Side',               'b-side',               'avataaars', 'b-side',       'face', true, 5),
-  ('Corte Final',          'corte-final',          'avataaars', 'final-cut',    'face', true, 6),
-  ('Narrativa',            'narrativa',            'avataaars', 'narrativa',    'face', true, 7),
-  ('Pixel de Noche',       'pixel-noche',          'avataaars', 'pixel-night',  'face', true, 8),
-  ('Doblaje Rápido',       'doblaje-rapido',       'avataaars', 'dub-fast',     'face', true, 9),
-  ('Calle de Película',    'calle-pelicula',       'avataaars', 'movie-street', 'face', true, 10),
-  ('Cámara Lenta',         'camara-lenta',         'avataaars', 'slow-motion',  'face', true, 11),
-  ('Guion de Humo',        'guion-humo',           'avataaars', 'smoke-script', 'face', true, 12),
-  ('Mar de Medianoche',    'mar-mediodia',         'avataaars', 'midnight-sea', 'face', true, 13),
-  ('Reflejo en Pantalla',  'reflejo-pantalla',     'avataaars', 'screen-reflection', 'face', true, 14),
-  ('Apertura en Rosado',   'apertura-rosada',      'avataaars', 'pink-opening', 'face', true, 15),
-  ('Créditos Felices',     'creditos-felices',     'avataaars', 'happy-credits', 'face', true, 16),
-  ('Sonido en Silencio',   'sonido-silencio',      'avataaars', 'sound-silence', 'face', true, 17),
-  ('Luz de Reflector',     'luz-reflector',        'avataaars', 'spotlight',  'face', true, 18),
-  ('Escena de Apertura',   'escena-apertura',      'avataaars', 'opening-scene', 'face', true, 19),
-  ('Plano Detalle',        'plano-detalle',        'avataaars', 'close-up',   'face', true, 20),
-  ('Montaje de Humo',      'montaje-humo',         'avataaars', 'smoke-edit',   'face', true, 21),
-  ('Corte Musical',        'corte-musical',        'avataaars', 'musical-cut',  'face', true, 22),
-  ('Día de Estreno',       'dia-estreno',          'avataaars', 'premiere-day',  'face', true, 23),
-  ('Entrada en Oscuridad', 'entrada-oscuridad',    'avataaars', 'dark-entrance', 'face', true, 24)
+  ('Cine Ícono',            'cine-icono',            'open-peeps', 'cinema-icon',  'face', true, 1),
+  ('Trama Nocturna',       'trama-nocturna',       'open-peeps', 'plot-night',   'face', true, 2),
+  ('Remake Solar',         'remake-solar',         'open-peeps', 'remake-sun',   'face', true, 3),
+  ('Spin Off',             'spin-off',             'open-peeps', 'spinoff',      'face', true, 4),
+  ('B-Side',               'b-side',               'open-peeps', 'b-side',       'face', true, 5),
+  ('Corte Final',          'corte-final',          'open-peeps', 'final-cut',    'face', true, 6),
+  ('Narrativa',            'narrativa',            'open-peeps', 'narrativa',    'face', true, 7),
+  ('Pixel de Noche',       'pixel-noche',          'open-peeps', 'pixel-night',  'face', true, 8),
+  ('Doblaje Rápido',       'doblaje-rapido',       'open-peeps', 'dub-fast',     'face', true, 9),
+  ('Calle de Película',    'calle-pelicula',       'open-peeps', 'movie-street', 'face', true, 10),
+  ('Cámara Lenta',         'camara-lenta',         'open-peeps', 'slow-motion',  'face', true, 11),
+  ('Guion de Humo',        'guion-humo',           'open-peeps', 'smoke-script', 'face', true, 12),
+  ('Mar de Medianoche',    'mar-mediodia',         'open-peeps', 'midnight-sea', 'face', true, 13),
+  ('Reflejo en Pantalla',  'reflejo-pantalla',     'open-peeps', 'screen-reflection', 'face', true, 14),
+  ('Apertura en Rosado',   'apertura-rosada',      'open-peeps', 'pink-opening', 'face', true, 15),
+  ('Créditos Felices',     'creditos-felices',     'open-peeps', 'happy-credits', 'face', true, 16),
+  ('Sonido en Silencio',   'sonido-silencio',      'open-peeps', 'sound-silence', 'face', true, 17),
+  ('Luz de Reflector',     'luz-reflector',        'open-peeps', 'spotlight',    'face', true, 18),
+  ('Escena de Apertura',   'escena-apertura',      'open-peeps', 'opening-scene',  'face', true, 19),
+  ('Plano Detalle',        'plano-detalle',        'open-peeps', 'close-up',     'face', true, 20),
+  ('Montaje de Humo',      'montaje-humo',         'open-peeps', 'smoke-edit',    'face', true, 21),
+  ('Corte Musical',        'corte-musical',        'open-peeps', 'musical-cut',   'face', true, 22),
+  ('Día de Estreno',       'dia-estreno',          'open-peeps', 'premiere-day',  'face', true, 23),
+  ('Entrada en Oscuridad', 'entrada-oscuridad',    'open-peeps', 'dark-entrance', 'face', true, 24)
 ON CONFLICT (slug) DO NOTHING;
