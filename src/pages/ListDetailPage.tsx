@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Lock, List, Pencil } from "lucide-react";
-import { getList, deleteList, updateList } from "@/services/lists";
+import { ArrowLeft, Globe, Lock, List, Pencil, Trash2 } from "lucide-react";
+import { getList, deleteList, updateList, removeItemFromList } from "@/services/lists";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import ListFormModal from "@/components/lists/ListFormModal";
@@ -16,6 +16,7 @@ export default function ListDetailPage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [selected, setSelected] = useState<TMDBSearchResult | null>(null);
 
   useEffect(() => {
@@ -44,6 +45,21 @@ export default function ListDetailPage() {
     const updated = await updateList(list.id, { name, description, is_public: isPublic });
     setList((prev) => (prev ? { ...prev, ...updated } : prev));
     setEditing(false);
+  };
+
+  const handleRemoveItem = async (itemId: string) => {
+    if (!list || !confirm("¿Sacar este título de la lista?")) return;
+    setRemovingId(itemId);
+    try {
+      await removeItemFromList(itemId);
+      setList((prev) =>
+        prev ? { ...prev, items: prev.items.filter((i) => i.id !== itemId) } : prev
+      );
+    } catch (err) {
+      console.error("Failed to remove item:", err);
+    } finally {
+      setRemovingId(null);
+    }
   };
 
   const toSearchResult = (item: ListWithItems["items"][0]): TMDBSearchResult => ({
@@ -191,18 +207,36 @@ export default function ListDetailPage() {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {list.items.map((item) => (
-            <MediaCard
-              key={item.id}
-              tmdbId={item.tmdb_id}
-              title={item.title}
-              posterPath={item.poster_path}
-              year={null}
-              mediaType={item.media_type as MediaType}
-              rating={null}
-              tmdbRating={null}
-              status={undefined}
-              onClick={() => setSelected(toSearchResult(item))}
-            />
+            <div key={item.id} className="relative group">
+              <MediaCard
+                tmdbId={item.tmdb_id}
+                title={item.title}
+                posterPath={item.poster_path}
+                year={null}
+                mediaType={item.media_type as MediaType}
+                rating={null}
+                tmdbRating={null}
+                status={undefined}
+                onClick={() => setSelected(toSearchResult(item))}
+              />
+              <button
+                onClick={() => handleRemoveItem(item.id)}
+                disabled={removingId === item.id}
+                title="Sacar de la lista"
+                className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 disabled:opacity-40"
+                style={{
+                  backgroundColor: "rgba(15,15,23,0.8)",
+                  border: "1px solid rgba(248,113,113,0.4)",
+                  color: "#f87171",
+                }}
+              >
+                {removingId === item.id ? (
+                  <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+              </button>
+            </div>
           ))}
         </div>
       )}

@@ -128,6 +128,25 @@ export async function removeItemFromList(itemId: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function removeItemFromListByTmdb(
+  listId: string,
+  tmdbId: number,
+  mediaType: "movie" | "tv"
+): Promise<void> {
+  const { data, error } = await supabase
+    .from("list_items")
+    .select("id")
+    .eq("list_id", listId)
+    .eq("tmdb_id", tmdbId)
+    .eq("media_type", mediaType)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return;
+
+  await removeItemFromList(data.id);
+}
+
 export async function getListItemCount(listId: string): Promise<number> {
   const { count, error } = await supabase
     .from("list_items")

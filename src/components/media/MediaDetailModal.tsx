@@ -4,7 +4,7 @@ import { X, Star, ListPlus, ListIcon, ChevronDown, Check, Sparkles, Quote, Share
 import { useAuth } from "@/app/auth-context";
 import { getPosterUrl, getBackdropUrl, getMediaDetails } from "@/services/tmdb";
 import { addToLibrary, updateEntry, removeFromLibrary, getEntry } from "@/services/library";
-import { getUserLists, addItemToList, createList, getListsContainingItem } from "@/services/lists";
+import { getUserLists, addItemToList, removeItemFromListByTmdb, createList, getListsContainingItem } from "@/services/lists";
 import { addViewingSession, getViewingSessions, removeViewingSession, updateViewingSession } from "@/services/viewingSessions";
 import { getReactionTags, getSessionReactions, addReaction, removeReaction } from "@/services/reactions";
 import { VENUE_PILLS, PLATFORM_PILLS, COMPANIONSHIP_PILLS, LANGUAGE_MODE_PILLS, REWATCH_PILLS, HABIT_GROUPS, HOW_YOU_WATCHED_HELP, VENUE_LABELS, PLATFORM_LABELS, COMPANIONSHIP_LABELS, LANGUAGE_MODE_LABELS, type ViewingPill } from "@/lib/viewingLabels";
@@ -416,22 +416,34 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
   };
 
   const handleAddToList = async (listId: string) => {
+    const alreadyIn = listsContaining.has(listId);
     setAddingToList(listId);
     try {
-      await addItemToList(listId, {
-        tmdb_id: result.tmdbId,
-        media_type: result.mediaType as MediaType,
-        title: result.title,
-        poster_path: result.posterPath,
-      });
-      setAddedToListId(listId);
-      setListsContaining((prev) => new Set(prev).add(listId));
-      setTimeout(() => {
-        setShowListDropdown(false);
+      if (alreadyIn) {
+        await removeItemFromListByTmdb(listId, result.tmdbId, result.mediaType as MediaType);
+        setListsContaining((prev) => {
+          const next = new Set(prev);
+          next.delete(listId);
+          return next;
+        });
         setAddedToListId(null);
-      }, 1200);
+        setShowListDropdown(false);
+      } else {
+        await addItemToList(listId, {
+          tmdb_id: result.tmdbId,
+          media_type: result.mediaType as MediaType,
+          title: result.title,
+          poster_path: result.posterPath,
+        });
+        setAddedToListId(listId);
+        setListsContaining((prev) => new Set(prev).add(listId));
+        setTimeout(() => {
+          setShowListDropdown(false);
+          setAddedToListId(null);
+        }, 1200);
+      }
     } catch (err) {
-      console.error("Failed to add to list:", err);
+      console.error("Failed to toggle list membership:", err);
     } finally {
       setAddingToList(null);
     }
