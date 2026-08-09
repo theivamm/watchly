@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, Film, BookOpen, List, Map, Dna } from "lucide-react";
+import { Search, Film, BookOpen, List, Map, Dna, Settings, User } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
-import UserMenu from "./UserMenu";
+import Avatar from "@/components/ui/Avatar";
 
 const navItems = [
   { to: "/inicio", label: "Inicio", icon: Film },
@@ -13,10 +13,14 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const location = useLocation();
 
   if (!user) return null;
+
+  const profileHref = profile?.username ? `/perfil/${profile.username}` : "/configuracion/perfil";
+  const iconBtn =
+    "w-11 h-11 rounded-2xl flex items-center justify-center text-sm transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[var(--accent-light)] focus:ring-offset-2 focus:ring-offset-[#0b0b14]";
 
   return (
     <aside
@@ -68,9 +72,24 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Avatar + dropdown */}
-      <div className="px-3 pb-5 shrink-0">
-        <UserMenu compact />
+      {/* Avatar + icon strip (sin dropdown) */}
+      <div className="px-3 pb-5 shrink-0 flex flex-col items-center gap-3">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+          style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 16px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
+          <Avatar profile={profile ?? null} size={36} />
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <Link to="/configuracion/perfil" title="Configuración" aria-label="Configuración"
+            className={iconBtn}
+            style={{ backgroundColor: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text-primary)" }}>
+            <Settings className="w-5 h-5" />
+          </Link>
+          <Link to={profileHref} title="Ver mi perfil" aria-label="Ver mi perfil"
+            className={iconBtn}
+            style={{ backgroundColor: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text-primary)" }}>
+            <User className="w-5 h-5" />
+          </Link>
+        </div>
       </div>
     </aside>
   );
