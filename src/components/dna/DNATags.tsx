@@ -1,10 +1,11 @@
 import { Tags } from "lucide-react";
+import { dnaGlass } from "@/lib/dnaStyles";
 
 export default function DNATags({ tags }: { tags: string[] }) {
   if (tags.length === 0) return null;
   return (
     <div className="rounded-3xl border p-6 md:p-8"
-      style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+      style={dnaGlass}>
       <div className="flex items-center gap-3 mb-5">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
           style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent)" }}>

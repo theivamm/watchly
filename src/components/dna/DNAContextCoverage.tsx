@@ -1,5 +1,6 @@
 import { Gauge } from "lucide-react";
 import type { UserDNA, ContextCoverage } from "@/types";
+import { dnaGlass } from "@/lib/dnaStyles";
 
 const DIMENSION_LABELS: Record<string, string> = {
   venue: "Lugar",
@@ -19,7 +20,7 @@ export default function DNAContextCoverage({ dna }: { dna: UserDNA }) {
 
   return (
     <div className="rounded-3xl border p-6 md:p-8"
-      style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+      style={dnaGlass}>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
           style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent)" }}>

@@ -1,12 +1,17 @@
 import { Sparkles } from "lucide-react";
 import type { UserDNA } from "@/types";
+import { dnaGlass } from "@/lib/dnaStyles";
 
 export default function DNAContextTags({ dna }: { dna: UserDNA }) {
-  if (dna.contextTags.length === 0) return null;
+  const hasContextData = Object.values(dna.contextCoverage ?? {}).some(
+    (c) => (c?.sessions ?? 0) > 0
+  );
+
+  if (dna.contextTags.length === 0 && !hasContextData) return null;
 
   return (
     <div className="rounded-3xl border p-6 md:p-8"
-      style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+      style={dnaGlass}>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
           style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent)" }}>
@@ -22,32 +27,45 @@ export default function DNAContextTags({ dna }: { dna: UserDNA }) {
         </div>
       </div>
 
-      <div className="space-y-4">
-        {dna.contextTags.map((tag) => (
-          <div key={tag.slug} className="rounded-2xl p-4"
-            style={{ backgroundColor: "var(--surface-2)", border: "1px solid var(--border)" }}>
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm font-bold"
-                style={{
-                  backgroundColor: "var(--accent-soft)",
-                  color: "var(--accent-light)",
-                  border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)",
-                }}>
-                {tag.label}
-              </span>
-              <span className="text-xs font-extrabold" style={{ color: "var(--accent-light)" }}>
-                {Math.round(tag.score * 100)}%
-              </span>
+      {dna.contextTags.length === 0 ? (
+        <div className="flex flex-wrap gap-2.5">
+          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold"
+            style={{
+              backgroundColor: "var(--surface-2)",
+              color: "var(--text-secondary)",
+              border: "1px solid var(--border)",
+            }}>
+            <Sparkles className="w-3.5 h-3.5" style={{ color: "var(--accent-light)" }} /> Tendencia inicial
+          </span>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {dna.contextTags.map((tag) => (
+            <div key={tag.slug} className="rounded-2xl p-4"
+              style={{ backgroundColor: "var(--surface-2)", border: "1px solid var(--border)" }}>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm font-bold"
+                  style={{
+                    backgroundColor: "var(--accent-soft)",
+                    color: "var(--accent-light)",
+                    border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)",
+                  }}>
+                  {tag.label}
+                </span>
+                <span className="text-xs font-extrabold" style={{ color: "var(--accent-light)" }}>
+                  {Math.round(tag.score * 100)}%
+                </span>
+              </div>
+              <p className="text-sm mt-2.5 leading-relaxed" style={{ color: "var(--text-primary)" }}>
+                {tag.explanation}
+              </p>
+              <p className="text-[11px] font-semibold mt-2" style={{ color: "var(--text-secondary)" }}>
+                Basado en {tag.sampleSize} {tag.sampleSize === 1 ? "sesión" : "sesiones"}
+              </p>
             </div>
-            <p className="text-sm mt-2.5 leading-relaxed" style={{ color: "var(--text-primary)" }}>
-              {tag.explanation}
-            </p>
-            <p className="text-[11px] font-semibold mt-2" style={{ color: "var(--text-secondary)" }}>
-              Basado en {tag.sampleSize} {tag.sampleSize === 1 ? "sesión" : "sesiones"}
-            </p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

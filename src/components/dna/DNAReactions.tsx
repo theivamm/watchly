@@ -1,5 +1,6 @@
 import { HeartPulse } from "lucide-react";
 import type { UserDNA } from "@/types";
+import { dnaGlass } from "@/lib/dnaStyles";
 
 export default function DNAReactions({ dna }: { dna: UserDNA }) {
   const { reactionDistribution, contextCoverage } = dna;
@@ -7,7 +8,7 @@ export default function DNAReactions({ dna }: { dna: UserDNA }) {
 
   return (
     <div className="rounded-3xl border p-6 md:p-8"
-      style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+      style={dnaGlass}>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
           style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent)" }}>
@@ -22,6 +23,10 @@ export default function DNAReactions({ dna }: { dna: UserDNA }) {
           </p>
         </div>
       </div>
+
+      <p className="text-xs leading-relaxed mb-5" style={{ color: "var(--text-secondary)" }}>
+        Los porcentajes representan la distribución de las reacciones elegidas. Una sesión puede tener hasta tres.
+      </p>
 
       {reactionDistribution.length === 0 ? (
         <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>

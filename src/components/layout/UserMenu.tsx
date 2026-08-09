@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ChevronDown, User, LayoutDashboard, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/auth-context";
+import Avatar from "@/components/ui/Avatar";
 
 export default function UserMenu({ compact = false }: { compact?: boolean }) {
   const { user, profile } = useAuth();
@@ -20,7 +21,6 @@ export default function UserMenu({ compact = false }: { compact?: boolean }) {
 
   if (!user) return null;
 
-  const initial = (profile?.display_name || user.email || "W").charAt(0).toUpperCase();
   const profileHref = profile?.username ? `/perfil/${profile.username}` : "/configuracion/perfil";
 
   const handleLogout = async () => {
@@ -38,12 +38,7 @@ export default function UserMenu({ compact = false }: { compact?: boolean }) {
           : "flex items-center gap-2 h-11 pl-1 pr-3 rounded-full transition-all hover:scale-[1.03] cursor-pointer"}
         style={compact ? undefined : { backgroundColor: "var(--surface-2)", border: "1px solid var(--border)" }}
       >
-        <div
-          className="w-9 h-9 rounded-full bg-[#0b0b14] flex items-center justify-center"
-          style={{ boxShadow: "0 0 14px color-mix(in srgb, var(--accent) 35%, transparent)" }}
-        >
-          <span className="text-sm font-extrabold text-gradient">{initial}</span>
-        </div>
+        <Avatar profile={profile ?? null} size={36} />
         {!compact && (
           <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
             style={{ color: "var(--text-secondary)" }} />

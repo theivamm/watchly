@@ -4,6 +4,8 @@ import { useAuth } from "@/app/auth-context";
 import { updateProfile, getProfileLink } from "@/services/profile";
 import type { Profile } from "@/types";
 import SettingsNav from "@/components/layout/SettingsNav";
+import Avatar from "@/components/ui/Avatar";
+import AvatarPicker from "@/components/profile/AvatarPicker";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function ProfileSettingsPage() {
@@ -36,6 +38,7 @@ export default function ProfileSettingsPage() {
         x_url: form.x_url || null,
         is_profile_public: form.is_profile_public ?? true,
         show_dna_publicly: form.show_dna_publicly ?? true,
+        avatar_id: form.avatar_id ?? null,
       });
       await refreshProfile();
       setMessage({ type: "ok", text: "Perfil guardado correctamente." });
@@ -78,10 +81,7 @@ export default function ProfileSettingsPage() {
         <div className="lg:col-span-2 rounded-3xl border p-6 md:p-8 space-y-5"
           style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-              style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 16px color-mix(in srgb, var(--accent) 40%, transparent)" }}>
-              <User className="w-7 h-7 text-white" />
-            </div>
+            <Avatar profile={form as Profile} size={64} />
             <div>
               <p className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
                 {form.display_name || user?.email?.split("@")[0]}
@@ -204,6 +204,21 @@ export default function ProfileSettingsPage() {
             style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
             {saving ? "Guardando..." : "Guardar perfil"}
           </button>
+        </div>
+
+        {/* Avatar selector card */}
+        <div className="rounded-3xl border p-6 space-y-4 h-fit"
+          style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+          <h2 className="text-base font-extrabold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+            <User className="w-4 h-4" style={{ color: "var(--accent-light)" }} /> Elegí tu avatar
+          </h2>
+          {user && (
+            <AvatarPicker
+              userId={user.id}
+              currentId={form.avatar_id ?? null}
+              onChange={(id) => setForm((f) => ({ ...f, avatar_id: id }))}
+            />
+          )}
         </div>
 
         {/* Share card */}

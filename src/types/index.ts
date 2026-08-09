@@ -112,9 +112,23 @@ export interface Profile {
   is_profile_public: boolean;
   show_dna_publicly: boolean;
   dna_dirty: boolean;
+  avatar_id: number | null;
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserAvatar {
+  id: number;
+  name: string;
+  slug: string;
+  style: string;
+  seed: string;
+  image_url: string | null;
+  category: string | null;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface Media {

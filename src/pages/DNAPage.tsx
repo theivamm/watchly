@@ -17,6 +17,7 @@ import DNAContextTags from "@/components/dna/DNAContextTags";
 import DNAContextCoverage from "@/components/dna/DNAContextCoverage";
 import { GenreLegend } from "@/components/dna/GenreFingerprint";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { dnaGlass } from "@/lib/dnaStyles";
 
 function StatCard({ icon: Icon, title, children }: {
   icon: typeof Clapperboard;
@@ -25,7 +26,7 @@ function StatCard({ icon: Icon, title, children }: {
 }) {
   return (
     <div className="rounded-3xl border p-6 md:p-7"
-      style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+      style={dnaGlass}>
       <div className="flex items-center gap-3 mb-4">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
           style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent)" }}>
@@ -148,7 +149,7 @@ function CreatorsCard({ dna }: { dna: UserDNA }) {
     ));
   return (
     <div className="rounded-3xl border p-6 md:p-7"
-      style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+      style={dnaGlass}>
       <div className="flex items-center gap-3 mb-5">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
           style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent)" }}>
@@ -180,7 +181,7 @@ function LockedState({ dna }: { dna: UserDNA }) {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="relative overflow-hidden rounded-[2rem] border p-8 md:p-12 text-center"
-        style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)" }}>
+        style={dnaGlass}>
         <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full blur-[90px] animate-glow pointer-events-none"
           style={{ background: "color-mix(in srgb, var(--accent) 30%, transparent)" }} />
         <div className="relative">
@@ -275,15 +276,19 @@ export default function DNAPage() {
   }, [load]);
 
   const handleRecalc = async () => {
+    if (recalculating) return;
     setRecalculating(true);
     setError("");
-    await load(true);
-    setRecalculating(false);
+    try {
+      await load(true);
+    } finally {
+      setRecalculating(false);
+    }
   };
 
   if (loading && !dna) {
     return (
-      <div className="w-full px-5 md:px-8 py-8 md:py-12 max-w-6xl mx-auto space-y-6">
+      <div className="w-full px-5 md:px-8 py-8 md:py-12 max-w-7xl mx-auto space-y-6">
         <div className="h-72 rounded-[2rem] border animate-pulse" style={{ backgroundColor: "var(--surface-1)", borderColor: "var(--border)" }} />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -297,7 +302,7 @@ export default function DNAPage() {
   if (error && !dna) {
     return (
       <div className="w-full px-5 md:px-8 py-8 md:py-12 max-w-3xl mx-auto">
-        <div className="rounded-3xl border p-8 text-center" style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+        <div className="rounded-3xl border p-8 text-center" style={dnaGlass}>
           <AlertTriangle className="w-10 h-10 mx-auto mb-4" style={{ color: "var(--accent-light)" }} />
           <h1 className="text-xl font-extrabold mb-2" style={{ color: "var(--text-primary)" }}>No pudimos actualizar tu ADN en este momento</h1>
           <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
@@ -317,7 +322,7 @@ export default function DNAPage() {
 
   if (dna.status === "locked") {
     return (
-      <div className="w-full px-5 md:px-8 py-8 md:py-12 max-w-6xl mx-auto">
+      <div className="w-full px-5 md:px-8 py-8 md:py-12 max-w-7xl mx-auto">
         <LockedState dna={dna} />
       </div>
     );
@@ -328,22 +333,26 @@ export default function DNAPage() {
     dna.validTitleCount >= 5 &&
     (dna.decadeDistribution.length === 0 || dna.countryDistribution.length === 0);
 
+  const showUpdateButton = stale || profile?.dna_dirty === true;
+
   return (
-    <div className="w-full px-5 md:px-8 py-8 md:py-12 max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        {stale && (
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold"
-            style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)" }}>
-            Resultado desactualizado
-          </span>
-        )}
-        <button onClick={handleRecalc} disabled={recalculating}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50"
-          style={{ backgroundColor: "var(--surface-2)", color: "var(--text-primary)", border: "1.5px solid var(--border)" }}>
-          <RotateCw className={`w-4 h-4 ${recalculating ? "animate-spin" : ""}`} />
-          {recalculating ? "Calculando..." : "Recalcular"}
-        </button>
-      </div>
+    <div className="w-full px-5 md:px-8 py-8 md:py-12 max-w-7xl mx-auto space-y-6">
+      {showUpdateButton && (
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          {stale && (
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold"
+              style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)" }}>
+              Resultado desactualizado
+            </span>
+          )}
+          <button onClick={handleRecalc} disabled={recalculating}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
+            style={{ backgroundColor: "var(--surface-2)", color: "var(--text-primary)", border: "1.5px solid var(--border)" }}>
+            <RotateCw className={`w-4 h-4 ${recalculating ? "animate-spin" : ""}`} />
+            {recalculating ? "Actualizando..." : "Actualizar ADN"}
+          </button>
+        </div>
+      )}
 
       {isEarly && (
         <div className="rounded-3xl border p-5 md:p-6"
@@ -358,7 +367,7 @@ export default function DNAPage() {
 
       {showIncompleteNotice && (
         <div className="rounded-3xl border p-5"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: "var(--border)" }}>
+          style={dnaGlass}>
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
             Algunos datos todavía no están disponibles. Tu ADN se completará automáticamente.
           </p>
@@ -366,7 +375,7 @@ export default function DNAPage() {
       )}
 
       <div className="rounded-3xl border p-6 md:p-8"
-        style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+        style={dnaGlass}>
         <div className="flex items-center gap-3 mb-6">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center"
             style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent)" }}>

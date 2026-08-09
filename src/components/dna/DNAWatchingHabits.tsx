@@ -1,6 +1,8 @@
 import { MonitorPlay, MapPin, Clock, Users, Languages, TabletSmartphone } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserDNA, WeightedMetric, ContextCoverageItem } from "@/types";
+import { buildWatchingHabitsPhrase } from "@/lib/dnaPhrase";
+import { dnaGlass } from "@/lib/dnaStyles";
 
 function Bars({ items, empty }: { items: WeightedMetric[]; empty: string }) {
   if (items.length === 0) {
@@ -38,7 +40,7 @@ function HabitsCard({
 }) {
   return (
     <div className="rounded-3xl border p-6"
-      style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+      style={dnaGlass}>
       <div className="flex items-center gap-3 mb-4">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
           style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent)" }}>
@@ -73,9 +75,11 @@ export default function DNAWatchingHabits({ dna }: { dna: UserDNA }) {
     languageModeDistribution.length > 0 ||
     platformDistribution.length > 0;
 
+  const phrase = buildWatchingHabitsPhrase(dna);
+
   return (
     <div className="rounded-3xl border p-6 md:p-8"
-      style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+      style={dnaGlass}>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
           style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent)" }}>
@@ -97,43 +101,57 @@ export default function DNAWatchingHabits({ dna }: { dna: UserDNA }) {
           quién, y esta sección se va a ir completando sola.
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          <HabitsCard
-            icon={MapPin}
-            title="Dónde lo ves"
-            items={venueDistribution}
-            empty="Sin datos de lugar todavía."
-            coverage={contextCoverage.venue}
-          />
-          <HabitsCard
-            icon={Clock}
-            title="Cuándo lo ves"
-            items={timeDistribution}
-            empty="Sin datos de horario todavía."
-            coverage={contextCoverage.time}
-          />
-          <HabitsCard
-            icon={Users}
-            title="Con quién"
-            items={companionshipDistribution}
-            empty="Sin datos de compañía todavía."
-            coverage={contextCoverage.companionship}
-          />
-          <HabitsCard
-            icon={Languages}
-            title="Idioma en que lo ves"
-            items={languageModeDistribution}
-            empty="Sin datos de idioma todavía."
-            coverage={contextCoverage.language}
-          />
-          <HabitsCard
-            icon={TabletSmartphone}
-            title="Cómo lo ves"
-            items={platformDistribution}
-            empty="Sin datos de plataforma todavía."
-            coverage={contextCoverage.platform}
-          />
-        </div>
+        <>
+          {phrase && (
+            <div className="rounded-2xl p-5 mb-6"
+              style={{ backgroundColor: "var(--accent-soft)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
+              <p className="text-sm leading-relaxed font-bold" style={{ color: "var(--text-primary)" }}>
+                {phrase.text}
+              </p>
+              <p className="text-xs font-semibold mt-1.5" style={{ color: "var(--text-secondary)" }}>
+                {phrase.disclaimer}
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <HabitsCard
+              icon={MapPin}
+              title="Dónde lo ves"
+              items={venueDistribution}
+              empty="Sin datos de lugar todavía."
+              coverage={contextCoverage.venue}
+            />
+            <HabitsCard
+              icon={Clock}
+              title="Cuándo lo ves"
+              items={timeDistribution}
+              empty="Sin datos de horario todavía."
+              coverage={contextCoverage.time}
+            />
+            <HabitsCard
+              icon={Users}
+              title="Con quién"
+              items={companionshipDistribution}
+              empty="Sin datos de compañía todavía."
+              coverage={contextCoverage.companionship}
+            />
+            <HabitsCard
+              icon={Languages}
+              title="Idioma en que lo ves"
+              items={languageModeDistribution}
+              empty="Sin datos de idioma todavía."
+              coverage={contextCoverage.language}
+            />
+            <HabitsCard
+              icon={TabletSmartphone}
+              title="Cómo lo ves"
+              items={platformDistribution}
+              empty="Sin datos de plataforma todavía."
+              coverage={contextCoverage.platform}
+            />
+          </div>
+        </>
       )}
     </div>
   );

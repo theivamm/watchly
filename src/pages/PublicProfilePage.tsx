@@ -11,6 +11,7 @@ import { getPublicLibrary } from "@/services/library";
 import { getPublicDnaByUsername } from "@/services/dna";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
+import Avatar from "@/components/ui/Avatar";
 import { getPosterUrl } from "@/services/tmdb";
 import { getDominantColor, rgba, rgbString, lighten, DEFAULT_TINT, type RGB } from "@/lib/posterColor";
 import type { Profile, List, Entry, EntryStatus, TMDBSearchResult, ListItem, UserDNA } from "@/types";
@@ -212,7 +213,6 @@ export default function PublicProfilePage() {
     );
   }
 
-  const initial = (profile.display_name || profile.username || "W").charAt(0).toUpperCase();
   const socials = [
     profile.website_url && { icon: Globe, href: profile.website_url, key: "web" },
     profile.instagram_url && { icon: Aperture, href: `https://instagram.com/${profile.instagram_url.replace(/^@/, "")}`, key: "ig" },
@@ -437,9 +437,9 @@ export default function PublicProfilePage() {
             <div className="absolute -inset-3 rounded-full opacity-60 blur-2xl animate-pulse"
               style={{ background: rgba(tint, 0.6) }} />
             <div className="absolute -inset-1 rounded-full" style={{ background: tintGradient }} />
-            <div className="relative w-28 h-28 rounded-full bg-[#0b0b14] flex items-center justify-center animate-float"
+            <div className="relative w-28 h-28 rounded-full flex items-center justify-center animate-float"
               style={{ boxShadow: `0 20px 50px -10px ${rgba(tint, 0.6)}` }}>
-              <span className="text-5xl font-extrabold text-gradient">{initial}</span>
+              <Avatar profile={profile} size={104} />
             </div>
           </div>
 

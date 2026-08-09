@@ -1,18 +1,13 @@
 import { ShieldCheck, Info } from "lucide-react";
 import type { UserDNA } from "@/types";
-
-function labelFor(score: number): string {
-  if (score < 25) return "Inicial";
-  if (score < 50) return "En desarrollo";
-  if (score < 75) return "Consistente";
-  return "Muy representativo";
-}
+import { classifyDna } from "@/lib/dnaStatus";
+import { dnaGlass } from "@/lib/dnaStyles";
 
 export default function DNAConfidence({ dna }: { dna: UserDNA }) {
-  const label = labelFor(dna.confidenceScore);
+  const cls = classifyDna(dna.status);
   return (
     <div className="rounded-3xl border p-6 md:p-8"
-      style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+      style={dnaGlass}>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
           style={{ background: "var(--gradient-accent)", boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent)" }}>
@@ -24,10 +19,10 @@ export default function DNAConfidence({ dna }: { dna: UserDNA }) {
       </div>
 
       <div className="flex items-center gap-5 mb-4">
-        <p className="text-4xl font-extrabold text-gradient">{dna.confidenceScore}</p>
+        <p className="text-4xl font-extrabold text-gradient">{dna.confidenceScore}/100</p>
         <span className="px-3 py-1.5 rounded-full text-xs font-bold"
           style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)" }}>
-          {label}
+          {cls.label}
         </span>
       </div>
 
