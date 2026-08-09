@@ -537,6 +537,23 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
           <div className="absolute inset-0 bg-white/[0.04] backdrop-blur-2xl" />
         </div>
 
+        {/* Floating close button (mobile, always visible) */}
+        <button
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="lg:hidden absolute top-4 right-4 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-90"
+          style={{
+            backgroundColor: "rgba(15,15,25,0.65)",
+            border: "1px solid rgba(255,255,255,0.18)",
+            color: "#fff",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
+          }}
+        >
+          <X className="w-4 h-4" />
+        </button>
+
         <div className="relative z-10 flex h-full">
           {/* Left: big poster (fixed) */}
           <div className="absolute inset-y-0 left-0 hidden lg:flex flex-col items-center justify-start gap-4 w-[380px] px-6 pt-12 border-r border-white/[0.08]">
@@ -558,26 +575,33 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
             </div>
           </div>
 
-          <div className="relative flex-1 min-w-0 flex flex-col lg:pl-[380px]">
-          {/* Header: title + actions */}
-          <div className="flex items-start gap-4 p-5 sm:p-6 pb-4">
-            <div className="lg:hidden relative w-20 shrink-0">
-              <div
-                className="absolute -inset-3 rounded-full opacity-40 blur-2xl"
-                style={{ background: "color-mix(in srgb, var(--accent) 45%, transparent)" }}
-              />
+          <div className="relative flex-1 min-w-0 flex flex-col lg:pl-[380px] lg:overflow-hidden overflow-y-auto">
+          {/* Mobile hero poster (single column) */}
+          <div className="lg:hidden relative w-full shrink-0">
+            <div
+              className="absolute -inset-6 rounded-full opacity-40 blur-3xl pointer-events-none"
+              style={{ background: "color-mix(in srgb, var(--accent) 50%, transparent)" }}
+            />
+            <div className="relative w-full max-h-[52vh] overflow-hidden">
               <img
                 src={posterUrl}
                 alt={result.title}
-                className="relative w-full aspect-[2/3] object-cover rounded-xl animate-breathe"
+                className="w-full h-full object-cover object-top animate-breathe"
                 style={{
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  boxShadow: "0 20px 50px -12px rgba(0,0,0,0.7)",
+                  borderBottom: "1px solid rgba(255,255,255,0.12)",
+                  boxShadow: "0 30px 80px -15px rgba(0,0,0,0.85)",
                 }}
                 loading="lazy"
               />
+              <div
+                className="absolute inset-0"
+                style={{ background: "linear-gradient(180deg, rgba(12,12,22,0.1) 0%, rgba(12,12,22,0.55) 100%)" }}
+              />
             </div>
+          </div>
 
+          {/* Header: title + actions */}
+          <div className="flex items-start gap-4 p-5 sm:p-6 pb-4">
             <div className="flex-1 min-w-0 pt-0.5">
               <div className="flex items-center gap-3 flex-wrap">
                 <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight leading-tight" style={{ color: "var(--text-primary)" }}>
@@ -803,7 +827,7 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                 )}
                 <button
                   onClick={onClose}
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90"
+                  className="hidden lg:flex w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90"
                   style={{
                     backgroundColor: "rgba(255,255,255,0.07)",
                     border: "1px solid rgba(255,255,255,0.15)",
@@ -824,7 +848,7 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
           </div>
 
           {/* Body */}
-          <div className="relative z-10 flex-1 min-h-0 overflow-y-auto px-5 sm:px-6 pb-6">
+          <div className="relative z-10 lg:flex-1 lg:min-h-0 lg:overflow-y-auto px-5 sm:px-6 pb-6">
             <div className="space-y-5">
               <div className="min-w-0 space-y-5">
           {isReadOnly && readOnlyEntry ? (
