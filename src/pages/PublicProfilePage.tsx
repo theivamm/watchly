@@ -11,7 +11,6 @@ import { getPublicLibrary } from "@/services/library";
 import { getPublicDnaByUsername } from "@/services/dna";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
-import UserMenu from "@/components/layout/UserMenu";
 import { getPosterUrl } from "@/services/tmdb";
 import { getDominantColor, rgba, rgbString, lighten, DEFAULT_TINT, type RGB } from "@/lib/posterColor";
 import type { Profile, List, Entry, EntryStatus, TMDBSearchResult, ListItem, UserDNA } from "@/types";
@@ -404,9 +403,6 @@ export default function PublicProfilePage() {
 
   return (
     <div className="w-full px-5 md:px-8 py-8 md:py-12 max-w-7xl mx-auto">
-      <div className="fixed top-4 right-4 z-50">
-        <UserMenu />
-      </div>
 
       {/* ===== Profile banner with cycling blurred covers ===== */}
       <section className="relative overflow-hidden rounded-[2rem] border mb-8"

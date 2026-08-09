@@ -53,8 +53,10 @@ function AppRoutes() {
       <Route path="/recuperar-password" element={<RecoverPasswordPage />} />
       <Route path="/actualizar-password" element={<UpdatePasswordPage />} />
 
-      {/* Public profiles */}
-      <Route path="/perfil/:username" element={<PublicProfilePage />} />
+      {/* Public profiles with app navigation */}
+      <Route element={<AppShell />}>
+        <Route path="/perfil/:username" element={<PublicProfilePage />} />
+      </Route>
       <Route path="/perfil/:username/adn" element={<PublicDNAPage />} />
       <Route path="/ver/:username/:mediaType/:tmdbId" element={<SharedMediaPage />} />
       <Route path="/@:username" element={<LegacyProfileRedirect />} />

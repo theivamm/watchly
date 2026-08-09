@@ -576,7 +576,7 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
             </div>
           </div>
 
-          <div className="relative flex-1 min-w-0 flex flex-col lg:pl-[380px] lg:overflow-hidden overflow-y-auto">
+          <div className="relative flex-1 min-w-0 flex flex-col lg:pl-[380px] lg:overflow-hidden overflow-y-auto overflow-x-hidden">
           {/* Mobile hero poster (single column) */}
           <div className="lg:hidden relative w-full shrink-0">
             <div
