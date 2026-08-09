@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { X, Star, ListPlus, ChevronDown, Check, Sparkles, Quote, Share2, CalendarDays, MapPin, Users, Languages, MonitorPlay, Repeat, Trash2, Pencil, Plus } from "lucide-react";
+import { X, Star, ListPlus, ListIcon, ChevronDown, Check, Sparkles, Quote, Share2, CalendarDays, MapPin, Users, Languages, MonitorPlay, Repeat, Trash2, Pencil, Plus } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { getPosterUrl, getMediaDetails } from "@/services/tmdb";
 import { addToLibrary, updateEntry, removeFromLibrary, getEntry } from "@/services/library";
@@ -182,6 +182,7 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isReadOnly = !!readOnlyEntry;
+  const memberLists = lists.filter((list) => listsContaining.has(list.id));
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -641,6 +642,27 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                   </span>
                 )}
               </div>
+              {memberLists.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                    En:
+                  </span>
+                  {memberLists.map((list) => (
+                    <span
+                      key={list.id}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                      style={{
+                        backgroundColor: "color-mix(in srgb, var(--accent) 15%, transparent)",
+                        color: "var(--accent-light)",
+                        border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)",
+                      }}
+                    >
+                      <ListIcon className="w-2.5 h-2.5" />
+                      {list.name}
+                    </span>
+                  ))}
+                </div>
+              )}
               <p className="text-xs font-semibold mt-1.5 mb-2" style={{ color: "var(--text-secondary)" }}>
                 {(isReadOnly ? details?.year : result.year) || "Sin año"} · {result.mediaType === "movie" ? "Película" : "Serie"}
               </p>
@@ -959,116 +981,6 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                   </div>
                 </div>
 
-                {/* Viewing sessions */}
-                <div className="rounded-2xl p-5" style={glass}>
-                  <div className="flex items-center justify-between gap-2 text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-                    <span className="inline-flex items-center gap-2">
-                      <CalendarDays className="w-4 h-4" style={{ color: "var(--accent-light)" }} />
-                      ¿Cómo lo viste?
-                      {sessions.length > 0 && (
-                        <span
-                          className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                          style={{
-                            backgroundColor: "color-mix(in srgb, var(--accent) 20%, transparent)",
-                            color: "var(--accent-light)",
-                          }}
-                        >
-                          {sessions.length}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-
-                    <div className="mt-3 space-y-3">
-                      <p className="text-[11px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                        Contanos dónde y cómo lo viste: ayuda a tu ADN Audiovisual a entender tu forma de consumir.
-                      </p>
-
-                      {sessions.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {sessions.map((session) => (
-                            <div
-                              key={session.id}
-                              className="rounded-2xl p-3.5"
-                              style={{
-                                backgroundColor: "rgba(255,255,255,0.04)",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-                              }}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex items-center gap-2 flex-wrap min-w-0">
-                                  {session.watched_date && (
-                                    <span className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
-                                      {session.watched_date}
-                                    </span>
-                                  )}
-                                  {session.is_rewatch && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-                                      style={{
-                                        backgroundColor: "color-mix(in srgb, var(--accent) 20%, transparent)",
-                                        color: "var(--accent-light)",
-                                      }}
-                                    >
-                                      <Repeat className="w-3 h-3" /> Re-ver
-                                    </span>
-                                  )}
-                                  {session.rating != null && session.rating > 0 && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-                                      style={{
-                                        backgroundColor: "color-mix(in srgb, var(--accent) 20%, transparent)",
-                                        color: "var(--accent-light)",
-                                      }}
-                                    >
-                                      <Star className="w-3 h-3" fill="var(--accent)" /> {session.rating}/5
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-1 flex-shrink-0">
-                                  <button
-                                    onClick={() => startEditSession(session)}
-                                    disabled={savingSession}
-                                    className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 disabled:opacity-50"
-                                    style={{ color: "var(--text-secondary)" }}
-                                    title="Editar"
-                                  >
-                                    <Pencil className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteSession(session.id)}
-                                    disabled={savingSession}
-                                    className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 disabled:opacity-50"
-                                    style={{ color: "#f87171" }}
-                                    title="Eliminar"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 flex-wrap mt-2.5 text-[11px]" style={{ color: "var(--text-secondary)" }}>
-                                <span className="inline-flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" /> {VENUE_LABELS[session.venue]}
-                                </span>
-                                <span className="inline-flex items-center gap-1">
-                                  <Users className="w-3 h-3" /> {COMPANIONSHIP_LABELS[session.companionship]}
-                                </span>
-                                {session.platform !== "unknown" && (
-                                  <span className="inline-flex items-center gap-1">
-                                    <MonitorPlay className="w-3 h-3" /> {PLATFORM_LABELS[session.platform]}
-                                  </span>
-                                )}
-                                {session.language_mode !== "unknown" && (
-                                  <span className="inline-flex items-center gap-1">
-                                    <Languages className="w-3 h-3" /> {LANGUAGE_MODE_LABELS[session.language_mode]}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                </div>
               </div>
             )}
               </div>
@@ -1083,6 +995,114 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                       border: "1.5px solid color-mix(in srgb, var(--accent) 30%, transparent)",
                     }}
                   >
+                    <div className="flex items-center justify-between gap-2 text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+                      <span className="inline-flex items-center gap-2">
+                        <CalendarDays className="w-4 h-4" style={{ color: "var(--accent-light)" }} />
+                        ¿Cómo lo viste?
+                        {sessions.length > 0 && (
+                          <span
+                            className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            style={{
+                              backgroundColor: "color-mix(in srgb, var(--accent) 20%, transparent)",
+                              color: "var(--accent-light)",
+                            }}
+                          >
+                            {sessions.length}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                      Contanos dónde y cómo lo viste: ayuda a tu ADN Audiovisual a entender tu forma de consumir.
+                    </p>
+
+                    {sessions.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {sessions.map((session) => (
+                          <div
+                            key={session.id}
+                            className="rounded-2xl p-3.5"
+                            style={{
+                              backgroundColor: "rgba(255,255,255,0.04)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+                            }}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                                {session.watched_date && (
+                                  <span className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
+                                    {session.watched_date}
+                                  </span>
+                                )}
+                                {session.is_rewatch && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                    style={{
+                                      backgroundColor: "color-mix(in srgb, var(--accent) 20%, transparent)",
+                                      color: "var(--accent-light)",
+                                    }}
+                                  >
+                                    <Repeat className="w-3 h-3" /> Re-ver
+                                  </span>
+                                )}
+                                {session.rating != null && session.rating > 0 && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                    style={{
+                                      backgroundColor: "color-mix(in srgb, var(--accent) 20%, transparent)",
+                                      color: "var(--accent-light)",
+                                    }}
+                                  >
+                                    <Star className="w-3 h-3" fill="var(--accent)" /> {session.rating}/5
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                <button
+                                  onClick={() => startEditSession(session)}
+                                  disabled={savingSession}
+                                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 disabled:opacity-50"
+                                  style={{ color: "var(--text-secondary)" }}
+                                  title="Editar"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteSession(session.id)}
+                                  disabled={savingSession}
+                                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 disabled:opacity-50"
+                                  style={{ color: "#f87171" }}
+                                  title="Eliminar"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap mt-2.5 text-[11px]" style={{ color: "var(--text-secondary)" }}>
+                              <span className="inline-flex items-center gap-1">
+                                <MapPin className="w-3 h-3" /> {VENUE_LABELS[session.venue]}
+                              </span>
+                              <span className="inline-flex items-center gap-1">
+                                <Users className="w-3 h-3" /> {COMPANIONSHIP_LABELS[session.companionship]}
+                              </span>
+                              {session.platform !== "unknown" && (
+                                <span className="inline-flex items-center gap-1">
+                                  <MonitorPlay className="w-3 h-3" /> {PLATFORM_LABELS[session.platform]}
+                                </span>
+                              )}
+                              {session.language_mode !== "unknown" && (
+                                <span className="inline-flex items-center gap-1">
+                                  <Languages className="w-3 h-3" /> {LANGUAGE_MODE_LABELS[session.language_mode]}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="h-px" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
+
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
                         {editingSessionId ? "Editar sesión" : "Agregar sesión"}
