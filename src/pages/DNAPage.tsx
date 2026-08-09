@@ -10,6 +10,11 @@ import type { UserDNA, WeightedMetric } from "@/types";
 import DNAHero from "@/components/dna/DNAHero";
 import DNAConfidence from "@/components/dna/DNAConfidence";
 import DNATags from "@/components/dna/DNATags";
+import DNAWatchingHabits from "@/components/dna/DNAWatchingHabits";
+import DNAReactions from "@/components/dna/DNAReactions";
+import DNARewatch from "@/components/dna/DNARewatch";
+import DNAContextTags from "@/components/dna/DNAContextTags";
+import DNAContextCoverage from "@/components/dna/DNAContextCoverage";
 import { GenreLegend } from "@/components/dna/GenreFingerprint";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
@@ -426,6 +431,11 @@ export default function DNAPage() {
 
       <CreatorsCard dna={dna} />
       <DNATags tags={dna.tags} />
+      <DNAContextTags dna={dna} />
+      <DNAWatchingHabits dna={dna} />
+      <DNARewatch dna={dna} />
+      <DNAReactions dna={dna} />
+      <DNAContextCoverage dna={dna} />
       <DNAConfidence dna={dna} />
     </div>
   );

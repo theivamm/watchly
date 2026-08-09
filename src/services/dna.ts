@@ -1,6 +1,44 @@
 import { supabase } from "@/lib/supabase";
 import { getProfileByUsername, updateProfile } from "@/services/profile";
-import type { UserDNA } from "@/types";
+import type { UserDNA, WeightedMetric, ContextCoverage } from "@/types";
+
+function asArr<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function asNum(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+export function normalizeDna(dna: UserDNA): UserDNA {
+  return {
+    ...dna,
+    topGenres: asArr<WeightedMetric>(dna.topGenres),
+    decadeDistribution: asArr<WeightedMetric>(dna.decadeDistribution),
+    countryDistribution: asArr<WeightedMetric>(dna.countryDistribution),
+    languageDistribution: asArr<WeightedMetric>(dna.languageDistribution),
+    recurringDirectors: asArr(dna.recurringDirectors),
+    recurringCast: asArr(dna.recurringCast),
+    tags: asArr(dna.tags),
+    venueDistribution: asArr<WeightedMetric>(dna.venueDistribution),
+    timeDistribution: asArr<WeightedMetric>(dna.timeDistribution),
+    companionshipDistribution: asArr<WeightedMetric>(dna.companionshipDistribution),
+    languageModeDistribution: asArr<WeightedMetric>(dna.languageModeDistribution),
+    platformDistribution: asArr<WeightedMetric>(dna.platformDistribution),
+    reactionDistribution: asArr<WeightedMetric>(dna.reactionDistribution),
+    contextTags: asArr(dna.contextTags),
+    rewatchProfile: {
+      totalSessions: asNum(dna.rewatchProfile?.totalSessions),
+      uniqueTitles: asNum(dna.rewatchProfile?.uniqueTitles),
+      rewatchSessions: asNum(dna.rewatchProfile?.rewatchSessions),
+      rewatchRate: asNum(dna.rewatchProfile?.rewatchRate),
+    },
+    contextCoverage:
+      dna.contextCoverage && typeof dna.contextCoverage === "object" && !Array.isArray(dna.contextCoverage)
+        ? (dna.contextCoverage as ContextCoverage)
+        : {},
+  };
+}
 
 export interface UserDNARow {
   status: string;
@@ -19,6 +57,15 @@ export interface UserDNARow {
   recurring_directors: UserDNA["recurringDirectors"];
   recurring_cast: UserDNA["recurringCast"];
   tags: UserDNA["tags"];
+  venue_distribution: UserDNA["venueDistribution"];
+  time_distribution: UserDNA["timeDistribution"];
+  companionship_distribution: UserDNA["companionshipDistribution"];
+  language_mode_distribution: UserDNA["languageModeDistribution"];
+  platform_distribution: UserDNA["platformDistribution"];
+  reaction_distribution: UserDNA["reactionDistribution"];
+  rewatch_profile: UserDNA["rewatchProfile"];
+  context_tags: UserDNA["contextTags"];
+  context_coverage: UserDNA["contextCoverage"];
   calculated_at: string;
   source_updated_at: string | null;
 }
@@ -41,6 +88,15 @@ export function mapDnaRow(row: UserDNARow): UserDNA {
     recurringDirectors: row.recurring_directors ?? [],
     recurringCast: row.recurring_cast ?? [],
     tags: row.tags ?? [],
+    venueDistribution: row.venue_distribution ?? [],
+    timeDistribution: row.time_distribution ?? [],
+    companionshipDistribution: row.companionship_distribution ?? [],
+    languageModeDistribution: row.language_mode_distribution ?? [],
+    platformDistribution: row.platform_distribution ?? [],
+    reactionDistribution: row.reaction_distribution ?? [],
+    rewatchProfile: row.rewatch_profile ?? { totalSessions: 0, uniqueTitles: 0, rewatchSessions: 0, rewatchRate: 0 },
+    contextTags: row.context_tags ?? [],
+    contextCoverage: row.context_coverage ?? {},
     calculatedAt: row.calculated_at,
     sourceUpdatedAt: row.source_updated_at,
   };
@@ -55,7 +111,7 @@ export async function getMyDna(userId: string): Promise<UserDNA | null> {
 
   if (error) throw error;
   if (!data) return null;
-  return mapDnaRow(data as UserDNARow);
+  return normalizeDna(mapDnaRow(data as UserDNARow));
 }
 
 export async function calculateDna(force = false): Promise<UserDNA> {
@@ -77,7 +133,7 @@ export async function calculateDna(force = false): Promise<UserDNA> {
   if (!res.ok) {
     throw new Error(body?.error ?? "No pudimos actualizar tu ADN en este momento.");
   }
-  return body as UserDNA;
+  return normalizeDna(body as UserDNA);
 }
 
 export async function getPublicDnaByUsername(username: string): Promise<UserDNA | null> {
@@ -92,7 +148,7 @@ export async function getPublicDnaByUsername(username: string): Promise<UserDNA 
 
   if (error) throw error;
   if (!data) return null;
-  return mapDnaRow(data as UserDNARow);
+  return normalizeDna(mapDnaRow(data as UserDNARow));
 }
 
 export async function setDnaPublicVisibility(userId: string, visible: boolean): Promise<void> {

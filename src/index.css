@@ -154,6 +154,18 @@ h1, h2, h3 {
 }
 .animate-breathe-cover { animation: breathe-cover 9s ease-in-out infinite; }
 
+/* ===== Session saved flash ===== */
+@keyframes saved-flash {
+  0% { box-shadow: 0 0 0 0 rgba(255,255,255,0); transform: translateY(0) scale(1); }
+  35% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 85%, transparent),
+      0 0 36px 10px color-mix(in srgb, var(--accent) 55%, transparent);
+    transform: translateY(-6px) scale(1.02);
+  }
+  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); transform: translateY(0) scale(1); }
+}
+.animate-saved-flash { animation: saved-flash 1.6s ease-out 1; }
+
 /* ===== Base form controls ===== */
 input, textarea, select {
   font-family: inherit;

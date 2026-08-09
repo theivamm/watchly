@@ -1,11 +1,15 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  ALGORITHM_VERSION,
+  computeContext,
   computeDna,
   userDnaFromRow,
   type UserDNA,
   type ValidEntry,
   type MediaMetadata,
   type MediaType,
+  type SessionRow,
+  type ReactionRow,
 } from "./_lib/dna.ts";
 import { fetchMediaMetadata } from "./_lib/tmdb.ts";
 
@@ -162,6 +166,44 @@ Deno.serve(async (req) => {
 
     const dna = computeDna(validEntries, metadataMap);
 
+    const { data: sessionRows, error: sessionsError } = await db
+      .from("viewing_sessions")
+      .select("id, tmdb_id, media_type, watched_at, timezone, venue, platform, companionship, language_mode, is_rewatch, rating")
+      .eq("user_id", userId);
+    if (sessionsError) throw sessionsError;
+
+    const rawSessions = (sessionRows ?? []) as Record<string, unknown>[];
+    const sessions: SessionRow[] = rawSessions.map((r) => ({
+      tmdb_id: r.tmdb_id as number,
+      media_type: r.media_type as MediaType,
+      watched_at: (r.watched_at as string | null) ?? null,
+      timezone: (r.timezone as string | null) ?? null,
+      venue: (r.venue as string) ?? "unknown",
+      platform: (r.platform as string) ?? "unknown",
+      companionship: (r.companionship as string) ?? "unknown",
+      language_mode: (r.language_mode as string) ?? "unknown",
+      is_rewatch: (r.is_rewatch as boolean) ?? false,
+      rating: (r.rating as number | null) ?? null,
+    }));
+
+    let reactions: ReactionRow[] = [];
+    if (rawSessions.length > 0) {
+      const sessionIds = rawSessions.map((r) => r.id as string);
+      const { data: reactionRows, error: reactionsError } = await db
+        .from("viewing_session_reactions")
+        .select("viewing_session_id, reaction_tags(slug, name)")
+        .in("viewing_session_id", sessionIds);
+      if (reactionsError) throw reactionsError;
+      reactions = (reactionRows ?? []).flatMap((r) => {
+        const tag = r.reaction_tags as { slug?: string; name?: string } | null;
+        if (!tag?.slug) return [];
+        return [{ viewing_session_id: r.viewing_session_id as string, slug: tag.slug, name: tag.name ?? tag.slug }] as ReactionRow[];
+      });
+    }
+
+    const context = computeContext(sessions, reactions);
+    const merged: UserDNA = { ...dna, ...context, algorithmVersion: ALGORITHM_VERSION };
+
     const { error: writeError } = await db.from("user_dna").upsert(
       {
         user_id: userId,
@@ -181,6 +223,15 @@ Deno.serve(async (req) => {
         recurring_directors: dna.recurringDirectors,
         recurring_cast: dna.recurringCast,
         tags: dna.tags,
+        venue_distribution: context.venueDistribution,
+        time_distribution: context.timeDistribution,
+        companionship_distribution: context.companionshipDistribution,
+        language_mode_distribution: context.languageModeDistribution,
+        platform_distribution: context.platformDistribution,
+        reaction_distribution: context.reactionDistribution,
+        rewatch_profile: context.rewatchProfile,
+        context_tags: context.contextTags,
+        context_coverage: context.contextCoverage,
         source_updated_at: dna.sourceUpdatedAt,
         calculated_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -195,7 +246,7 @@ Deno.serve(async (req) => {
       .eq("id", userId)
       .maybeSingle();
 
-    return json(dna as UserDNA);
+    return json(merged as UserDNA);
   } catch (err) {
     console.error("calculate-user-dna error", err);
     return json({ error: "No pudimos actualizar tu ADN en este momento." }, 500);

@@ -1,4 +1,4 @@
-export const ALGORITHM_VERSION = 1;
+export const ALGORITHM_VERSION = 1.1;
 
 export type DNAStatus = "locked" | "early" | "developing" | "solid" | "rich";
 export type MediaType = "movie" | "tv";
@@ -65,8 +65,72 @@ export interface UserDNA {
   recurringDirectors: CreatorMetric[];
   recurringCast: CreatorMetric[];
   tags: string[];
+  venueDistribution: WeightedMetric[];
+  timeDistribution: WeightedMetric[];
+  companionshipDistribution: WeightedMetric[];
+  languageModeDistribution: WeightedMetric[];
+  platformDistribution: WeightedMetric[];
+  reactionDistribution: WeightedMetric[];
+  rewatchProfile: RewatchProfile;
+  contextTags: ContextTag[];
+  contextCoverage: ContextCoverage;
   calculatedAt: string;
   sourceUpdatedAt: string | null;
+}
+
+export interface RewatchProfile {
+  totalSessions: number;
+  uniqueTitles: number;
+  rewatchSessions: number;
+  rewatchRate: number;
+}
+
+export interface ContextTag {
+  slug: string;
+  label: string;
+  score: number;
+  sampleSize: number;
+  ruleVersion: string;
+  explanation: string;
+}
+
+export interface ContextCoverageItem {
+  sessions: number;
+  label: string;
+  level: string;
+}
+
+export type ContextCoverage = Record<string, ContextCoverageItem>;
+
+export interface DnaContext {
+  venueDistribution: WeightedMetric[];
+  timeDistribution: WeightedMetric[];
+  companionshipDistribution: WeightedMetric[];
+  languageModeDistribution: WeightedMetric[];
+  platformDistribution: WeightedMetric[];
+  reactionDistribution: WeightedMetric[];
+  rewatchProfile: RewatchProfile;
+  contextTags: ContextTag[];
+  contextCoverage: ContextCoverage;
+}
+
+export interface SessionRow {
+  tmdb_id: number;
+  media_type: MediaType;
+  watched_at: string | null;
+  timezone: string | null;
+  venue: string;
+  platform: string;
+  companionship: string;
+  language_mode: string;
+  is_rewatch: boolean;
+  rating: number | null;
+}
+
+export interface ReactionRow {
+  viewing_session_id: string;
+  slug: string;
+  name: string;
 }
 
 const STATUS_WEIGHTS: Record<string, number> = {
@@ -249,6 +313,15 @@ export function userDnaFromRow(row: Record<string, unknown> | null): UserDNA | n
     recurringDirectors: (row.recurring_directors as CreatorMetric[]) ?? [],
     recurringCast: (row.recurring_cast as CreatorMetric[]) ?? [],
     tags: (row.tags as string[]) ?? [],
+    venueDistribution: (row.venue_distribution as WeightedMetric[]) ?? [],
+    timeDistribution: (row.time_distribution as WeightedMetric[]) ?? [],
+    companionshipDistribution: (row.companionship_distribution as WeightedMetric[]) ?? [],
+    languageModeDistribution: (row.language_mode_distribution as WeightedMetric[]) ?? [],
+    platformDistribution: (row.platform_distribution as WeightedMetric[]) ?? [],
+    reactionDistribution: (row.reaction_distribution as WeightedMetric[]) ?? [],
+    rewatchProfile: (row.rewatch_profile as RewatchProfile) ?? { totalSessions: 0, uniqueTitles: 0, rewatchSessions: 0, rewatchRate: 0 },
+    contextTags: (row.context_tags as ContextTag[]) ?? [],
+    contextCoverage: (row.context_coverage as ContextCoverage) ?? {},
     calculatedAt: (row.calculated_at as string) ?? new Date().toISOString(),
     sourceUpdatedAt: (row.source_updated_at as string) ?? null,
   };
@@ -328,6 +401,15 @@ export function computeDna(entries: ValidEntry[], metadata: Map<string, MediaMet
     recurringDirectors: [],
     recurringCast: [],
     tags: [],
+    venueDistribution: [],
+    timeDistribution: [],
+    companionshipDistribution: [],
+    languageModeDistribution: [],
+    platformDistribution: [],
+    reactionDistribution: [],
+    rewatchProfile: { totalSessions: 0, uniqueTitles: 0, rewatchSessions: 0, rewatchRate: 0 },
+    contextTags: [],
+    contextCoverage: {},
     calculatedAt: now,
     sourceUpdatedAt,
   });
@@ -562,7 +644,290 @@ export function computeDna(entries: ValidEntry[], metadata: Map<string, MediaMet
     recurringDirectors,
     recurringCast,
     tags,
+    venueDistribution: [],
+    timeDistribution: [],
+    companionshipDistribution: [],
+    languageModeDistribution: [],
+    platformDistribution: [],
+    reactionDistribution: [],
+    rewatchProfile: { totalSessions: 0, uniqueTitles: 0, rewatchSessions: 0, rewatchRate: 0 },
+    contextTags: [],
+    contextCoverage: {},
     calculatedAt: now,
     sourceUpdatedAt,
+  };
+}
+
+// ----------------------------------------------------------------
+// Fase 3: contexto de consumo (hábitos, reacciones y etiquetas)
+// ----------------------------------------------------------------
+
+const CONTEXT_RULE_VERSION = "1.1.0";
+
+const TIME_BUCKETS = [
+  { key: "morning", label: "Mañana", from: 6, to: 11 },
+  { key: "afternoon", label: "Tarde", from: 12, to: 18 },
+  { key: "night", label: "Noche", from: 19, to: 23 },
+  { key: "late_night", label: "Madrugada", from: 0, to: 5 },
+];
+
+const VENUE_CONTEXT_LABELS: Record<string, string> = {
+  cinema: "Cine",
+  home: "Casa",
+  friend_home: "Casa de amigos",
+  travel: "Viaje",
+  other: "Otro",
+};
+
+const COMPANIONSHIP_CONTEXT_LABELS: Record<string, string> = {
+  alone: "Solo/a",
+  partner: "En pareja",
+  friends: "Con amigos",
+  family: "Con familia",
+  children: "Con niños",
+  other: "Otro",
+};
+
+const LANGUAGE_MODE_CONTEXT_LABELS: Record<string, string> = {
+  original_subtitled: "Original con subtítulos",
+  original_no_subtitles: "Original sin subtítulos",
+  dubbed: "Doblado",
+};
+
+const PLATFORM_CONTEXT_LABELS: Record<string, string> = {
+  streaming: "Streaming",
+  television: "Televisión",
+  rental: "Alquiler",
+  physical: "Físico",
+  download: "Descarga",
+  other: "Otro",
+};
+
+const TIME_CONTEXT_LABELS = Object.fromEntries(TIME_BUCKETS.map((b) => [b.key, b.label])) as Record<string, string>;
+
+function hourInTimezone(watchedAt: string, timezone: string | null): number | null {
+  try {
+    const tz = timezone && timezone.trim() ? timezone : "UTC";
+    const dtf = new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", hourCycle: "h23" });
+    const parts = dtf.formatToParts(new Date(watchedAt));
+    const hour = Number(parts.find((p) => p.type === "hour")?.value);
+    return Number.isNaN(hour) ? null : hour;
+  } catch {
+    return null;
+  }
+}
+
+function timeBucketKey(hour: number): string {
+  for (const b of TIME_BUCKETS) {
+    if (hour >= b.from && hour <= b.to) return b.key;
+  }
+  return "night";
+}
+
+function distributionFromCounts(counts: Map<string, number>, labels: Record<string, string>): WeightedMetric[] {
+  const items = [...counts.entries()]
+    .map(([key, count]) => ({ key, label: labels[key] ?? key, weight: count }))
+    .sort((a, b) => b.weight - a.weight);
+  return withPercentages(items);
+}
+
+function coverageLevel(sessions: number): { label: string; level: string } {
+  if (sessions <= 0) return { label: "Sin datos", level: "none" };
+  if (sessions < 5) return { label: "Primeros registros", level: "early" };
+  if (sessions < 10) return { label: "Tendencias iniciales", level: "initial" };
+  if (sessions < 25) return { label: "En desarrollo", level: "developing" };
+  if (sessions < 50) return { label: "Consistente", level: "consistent" };
+  return { label: "Muy representativo", level: "rich" };
+}
+
+function pctText(ratio: number): string {
+  return `${Math.round(ratio * 100)}%`;
+}
+
+export function computeContext(sessions: SessionRow[], reactions: ReactionRow[]): DnaContext {
+  const totalSessions = sessions.length;
+
+  const venueCounts = new Map<string, number>();
+  const timeCounts = new Map<string, number>();
+  const companionshipCounts = new Map<string, number>();
+  const languageCounts = new Map<string, number>();
+  const platformCounts = new Map<string, number>();
+  let timeSessions = 0;
+
+  for (const s of sessions) {
+    if (s.venue !== "unknown") venueCounts.set(s.venue, (venueCounts.get(s.venue) ?? 0) + 1);
+    if (s.companionship !== "unknown") companionshipCounts.set(s.companionship, (companionshipCounts.get(s.companionship) ?? 0) + 1);
+    if (s.language_mode !== "unknown") languageCounts.set(s.language_mode, (languageCounts.get(s.language_mode) ?? 0) + 1);
+    if (s.platform !== "unknown") platformCounts.set(s.platform, (platformCounts.get(s.platform) ?? 0) + 1);
+    if (s.watched_at) {
+      const hour = hourInTimezone(s.watched_at, s.timezone);
+      if (hour != null) {
+        timeCounts.set(timeBucketKey(hour), (timeCounts.get(timeBucketKey(hour)) ?? 0) + 1);
+        timeSessions += 1;
+      }
+    }
+  }
+
+  const bySession = new Map<string, ReactionRow[]>();
+  for (const r of reactions) {
+    const list = bySession.get(r.viewing_session_id) ?? [];
+    list.push(r);
+    bySession.set(r.viewing_session_id, list);
+  }
+  const reactionSessions = bySession.size;
+  const reactionCounts = new Map<string, number>();
+  for (const list of bySession.values()) {
+    for (const r of list) reactionCounts.set(r.slug, (reactionCounts.get(r.slug) ?? 0) + 1);
+  }
+  const reactionTotal = [...reactionCounts.values()].reduce((sum, c) => sum + c, 0);
+  const reactionNames: Record<string, string> = {};
+  for (const r of reactions) reactionNames[r.slug] = r.name;
+  const reactionDistribution = reactionTotal > 0 ? distributionFromCounts(reactionCounts, reactionNames) : [];
+
+  const uniqueTitles = new Set(sessions.map((s) => `${s.media_type}:${s.tmdb_id}`)).size;
+  const rewatchSessions = sessions.filter((s) => s.is_rewatch).length;
+  const rewatchRate = totalSessions > 0 ? round2(rewatchSessions / totalSessions) : 0;
+
+  const venueSessions = [...venueCounts.values()].reduce((sum, c) => sum + c, 0);
+  const companionshipSessions = [...companionshipCounts.values()].reduce((sum, c) => sum + c, 0);
+  const languageSessions = [...languageCounts.values()].reduce((sum, c) => sum + c, 0);
+  const platformSessions = [...platformCounts.values()].reduce((sum, c) => sum + c, 0);
+
+  const contextCoverage: ContextCoverage = {
+    venue: { sessions: venueSessions, ...coverageLevel(venueSessions) },
+    time: { sessions: timeSessions, ...coverageLevel(timeSessions) },
+    companionship: { sessions: companionshipSessions, ...coverageLevel(companionshipSessions) },
+    language: { sessions: languageSessions, ...coverageLevel(languageSessions) },
+    platform: { sessions: platformSessions, ...coverageLevel(platformSessions) },
+    reactions: { sessions: reactionSessions, ...coverageLevel(reactionSessions) },
+  };
+
+  const venueCount = (key: string) => venueCounts.get(key) ?? 0;
+  const companionshipCount = (key: string) => companionshipCounts.get(key) ?? 0;
+  const languageCount = (key: string) => languageCounts.get(key) ?? 0;
+  const timeCount = (key: string) => timeCounts.get(key) ?? 0;
+  const reactionCount = (key: string) => reactionCounts.get(key) ?? 0;
+
+  const nightRatio = timeSessions > 0 ? (timeCount("night") + timeCount("late_night")) / timeSessions : 0;
+  const cinemaRatio = venueSessions > 0 ? venueCount("cinema") / venueSessions : 0;
+  const originalRatio = languageSessions > 0 ? (languageCount("original_subtitled") + languageCount("original_no_subtitles")) / languageSessions : 0;
+  const aloneRatio = companionshipSessions > 0 ? companionshipCount("alone") / companionshipSessions : 0;
+  const sharedRatio = companionshipSessions > 0 ? 1 - aloneRatio : 0;
+  const movedRatio = reactionTotal > 0 ? (reactionCount("moved_me") + reactionCount("made_me_nostalgic")) / reactionTotal : 0;
+  const thinkRatio = reactionTotal > 0 ? reactionCount("made_me_think") / reactionTotal : 0;
+
+  const tagRules: { slug: string; label: string; axis?: string; min: number; minSample: number; ratio: number; sample: number; explanation: string }[] = [
+    {
+      slug: "night_owl",
+      label: "Noctámbulo audiovisual",
+      min: 0.6,
+      minSample: 10,
+      ratio: nightRatio,
+      sample: timeSessions,
+      explanation: `El ${pctText(nightRatio)} de tus sesiones con horario ocurrieron de noche o madrugada.`,
+    },
+    {
+      slug: "big_screen",
+      label: "Experiencia de pantalla grande",
+      min: 0.3,
+      minSample: 10,
+      ratio: cinemaRatio,
+      sample: venueSessions,
+      explanation: `El ${pctText(cinemaRatio)} de tus sesiones fueron en el cine.`,
+    },
+    {
+      slug: "original_language",
+      label: "Mirada en idioma original",
+      min: 0.7,
+      minSample: 10,
+      ratio: originalRatio,
+      sample: languageSessions,
+      explanation: `El ${pctText(originalRatio)} de tus sesiones fueron en idioma original.`,
+    },
+    {
+      slug: "rewatch_spirit",
+      label: "Espíritu de rewatch",
+      min: 0.25,
+      minSample: 12,
+      ratio: rewatchRate,
+      sample: totalSessions,
+      explanation: `Revisitaste el ${pctText(rewatchRate)} de tus sesiones.`,
+    },
+    {
+      slug: "solo_viewer",
+      label: "Cinéfilo solitario",
+      axis: "companionship",
+      min: 0.65,
+      minSample: 10,
+      ratio: aloneRatio,
+      sample: companionshipSessions,
+      explanation: `El ${pctText(aloneRatio)} de tus sesiones las viste solo/a.`,
+    },
+    {
+      slug: "shared_screen",
+      label: "Pantalla compartida",
+      axis: "companionship",
+      min: 0.6,
+      minSample: 10,
+      ratio: sharedRatio,
+      sample: companionshipSessions,
+      explanation: `El ${pctText(sharedRatio)} de tus sesiones fueron acompañado/a.`,
+    },
+    {
+      slug: "tender_heart",
+      label: "Corazón sensible",
+      min: 0.4,
+      minSample: 10,
+      ratio: movedRatio,
+      sample: reactionSessions,
+      explanation: `El ${pctText(movedRatio)} de tus reacciones fueron emoción o nostalgia.`,
+    },
+    {
+      slug: "curious_mind",
+      label: "Mente inquieta",
+      min: 0.4,
+      minSample: 10,
+      ratio: thinkRatio,
+      sample: reactionSessions,
+      explanation: `El ${pctText(thinkRatio)} de tus reacciones fueron “me dejó pensando”.`,
+    },
+  ];
+
+  const qualifying = tagRules
+    .filter((t) => t.sample >= t.minSample && t.ratio >= t.min)
+    .map((t) => ({
+      ...t,
+      evidence: t.ratio * Math.min(1, t.sample / t.minSample),
+    }))
+    .sort((a, b) => b.evidence - a.evidence);
+
+  const kept: typeof qualifying = [];
+  const usedAxes = new Set<string>();
+  for (const tag of qualifying) {
+    if (kept.length >= 5) break;
+    if (tag.axis && usedAxes.has(tag.axis)) continue;
+    if (tag.axis) usedAxes.add(tag.axis);
+    kept.push(tag);
+  }
+
+  const contextTags: ContextTag[] = kept.map((t) => ({
+    slug: t.slug,
+    label: t.label,
+    score: Math.round(t.ratio * 100) / 100,
+    sampleSize: t.sample,
+    ruleVersion: CONTEXT_RULE_VERSION,
+    explanation: t.explanation,
+  }));
+
+  return {
+    venueDistribution: distributionFromCounts(venueCounts, VENUE_CONTEXT_LABELS),
+    timeDistribution: distributionFromCounts(timeCounts, TIME_CONTEXT_LABELS),
+    companionshipDistribution: distributionFromCounts(companionshipCounts, COMPANIONSHIP_CONTEXT_LABELS),
+    languageModeDistribution: distributionFromCounts(languageCounts, LANGUAGE_MODE_CONTEXT_LABELS),
+    platformDistribution: distributionFromCounts(platformCounts, PLATFORM_CONTEXT_LABELS),
+    reactionDistribution,
+    rewatchProfile: { totalSessions, uniqueTitles, rewatchSessions, rewatchRate },
+    contextTags,
+    contextCoverage,
   };
 }

@@ -33,6 +33,30 @@ export interface CreatorMetric {
   count: number;
 }
 
+export interface RewatchProfile {
+  totalSessions: number;
+  uniqueTitles: number;
+  rewatchSessions: number;
+  rewatchRate: number;
+}
+
+export interface ContextTag {
+  slug: string;
+  label: string;
+  score: number;
+  sampleSize: number;
+  ruleVersion: string;
+  explanation: string;
+}
+
+export interface ContextCoverageItem {
+  sessions: number;
+  label: string;
+  level: string;
+}
+
+export type ContextCoverage = Record<string, ContextCoverageItem>;
+
 export interface UserDNA {
   status: DNAStatus;
   algorithmVersion: number;
@@ -60,6 +84,15 @@ export interface UserDNA {
   recurringDirectors: CreatorMetric[];
   recurringCast: CreatorMetric[];
   tags: string[];
+  venueDistribution: WeightedMetric[];
+  timeDistribution: WeightedMetric[];
+  companionshipDistribution: WeightedMetric[];
+  languageModeDistribution: WeightedMetric[];
+  platformDistribution: WeightedMetric[];
+  reactionDistribution: WeightedMetric[];
+  rewatchProfile: RewatchProfile;
+  contextTags: ContextTag[];
+  contextCoverage: ContextCoverage;
   calculatedAt: string;
   sourceUpdatedAt: string | null;
 }
