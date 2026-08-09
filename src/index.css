@@ -141,6 +141,19 @@ h1, h2, h3 {
   100% { background-position: 200% 0; }
 }
 
+/* ===== Breathing images (modal) ===== */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.animate-breathe { animation: breathe 9s ease-in-out infinite; }
+
+@keyframes breathe-cover {
+  0%, 100% { transform: scale(1.25); }
+  50% { transform: scale(1.3); }
+}
+.animate-breathe-cover { animation: breathe-cover 9s ease-in-out infinite; }
+
 /* ===== Base form controls ===== */
 input, textarea, select {
   font-family: inherit;

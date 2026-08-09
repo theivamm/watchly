@@ -7,7 +7,7 @@ import HorizontalMediaCard from "@/components/media/HorizontalMediaCard";
 import MediaCard from "@/components/media/MediaCard";
 import HorizontalCarousel from "@/components/media/HorizontalCarousel";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
-import { getUserLibrary, removeFromLibrary } from "@/services/library";
+import { getUserLibrary } from "@/services/library";
 import { getUserLists } from "@/services/lists";
 import { getPosterUrl } from "@/services/tmdb";
 import type { TMDBSearchResult, Entry } from "@/types";
@@ -169,14 +169,6 @@ export default function HomePage() {
                   status={entry.status}
                   rating={entry.rating}
                   notes={entry.notes}
-                  actionLabel="Quitar"
-                  onAction={() => {
-                    removeFromLibrary(entry.id)
-                      .then(() => {
-                        if (user) getUserLibrary(user.id).then(setEntries).catch(console.error);
-                      })
-                      .catch(console.error);
-                  }}
                   onClick={() => setSelected({
                     tmdbId: entry.tmdb_id,
                     mediaType: entry.media_type,

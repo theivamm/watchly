@@ -1,15 +1,13 @@
-import { Plus, Star, Play, Trash2 } from "lucide-react";
+import { Star } from "lucide-react";
 import { getBackdropUrl, getPosterUrl } from "@/services/tmdb";
 import type { TMDBSearchResult } from "@/types";
 
 interface HorizontalMediaCardProps {
   item: TMDBSearchResult;
   onClick?: () => void;
-  added?: boolean;
-  onRemove?: () => void;
 }
 
-export default function HorizontalMediaCard({ item, onClick, added = false, onRemove }: HorizontalMediaCardProps) {
+export default function HorizontalMediaCard({ item, onClick }: HorizontalMediaCardProps) {
   const imgUrl =
     item.backdropPath != null
       ? getBackdropUrl(item.backdropPath, "w780")
@@ -86,47 +84,6 @@ export default function HorizontalMediaCard({ item, onClick, added = false, onRe
           style={{ color: "var(--text-primary)" }}>
           {item.title}
         </h3>
-        <div className="flex items-center gap-2 mt-3">
-          {added ? (
-            <span
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove?.();
-              }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[11px] font-bold cursor-pointer transition-all duration-300 hover:scale-[1.03]"
-              style={{
-                backgroundColor: "rgba(248,113,113,0.15)",
-                border: "1px solid rgba(248,113,113,0.45)",
-                color: "#fca5a5",
-              }}
-            >
-              <Trash2 className="w-3 h-3" strokeWidth={2.6} />
-              Quitar
-            </span>
-          ) : (
-            <span
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold transition-all duration-300"
-              style={{
-                background: "var(--gradient-accent)",
-                color: "#fff",
-                boxShadow: "0 6px 20px color-mix(in srgb, var(--accent) 55%, transparent)",
-              }}
-            >
-              <Plus className="w-3.5 h-3.5" strokeWidth={2.6} />
-              Agregar
-            </span>
-          )}
-          <span
-            className="flex items-center justify-center w-9 h-9 rounded-full transition-all duration-300"
-            style={{
-              backgroundColor: "rgba(255,255,255,0.1)",
-              border: "1px solid rgba(255,255,255,0.22)",
-              color: "#fff",
-            }}
-          >
-            <Play className="w-4 h-4 fill-current ml-0.5" />
-          </span>
-        </div>
       </div>
     </button>
   );

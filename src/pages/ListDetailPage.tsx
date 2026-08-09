@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Globe, Lock, List, Pencil } from "lucide-react";
-import { getList, removeItemFromList, deleteList, updateList } from "@/services/lists";
+import { getList, deleteList, updateList } from "@/services/lists";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import ListFormModal from "@/components/lists/ListFormModal";
@@ -26,19 +26,6 @@ export default function ListDetailPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [id]);
-
-  const handleRemoveItem = async (itemId: string) => {
-    try {
-      await removeItemFromList(itemId);
-      setList((prev) =>
-        prev
-          ? { ...prev, items: prev.items.filter((i) => i.id !== itemId) }
-          : prev
-      );
-    } catch (err) {
-      console.error("Failed to remove item:", err);
-    }
-  };
 
   const handleDeleteList = async () => {
     if (!id || !confirm("¿Eliminar esta lista?")) return;
@@ -215,8 +202,6 @@ export default function ListDetailPage() {
               tmdbRating={null}
               status={undefined}
               onClick={() => setSelected(toSearchResult(item))}
-              onAction={() => handleRemoveItem(item.id)}
-              actionLabel="Quitar"
             />
           ))}
         </div>

@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import type { List, ListItem, ListWithItems } from "@/types";
+import type { List, ListItem, ListWithItems, MediaType } from "@/types";
 
 interface CreateListParams {
   name: string;
@@ -136,4 +136,20 @@ export async function getListItemCount(listId: string): Promise<number> {
 
   if (error) throw error;
   return count ?? 0;
+}
+
+export async function getListsContainingItem(
+  userId: string,
+  tmdbId: number,
+  mediaType: MediaType
+): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("list_items")
+    .select("list_id, lists!inner(id, user_id)")
+    .eq("tmdb_id", tmdbId)
+    .eq("media_type", mediaType)
+    .eq("lists.user_id", userId);
+
+  if (error) throw error;
+  return (data ?? []).map((row) => (row as unknown as { list_id: string }).list_id);
 }

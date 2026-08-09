@@ -213,6 +213,115 @@ export interface Entry {
   updated_at: string;
 }
 
+export type ViewingVenue =
+  | "cinema"
+  | "home"
+  | "friend_home"
+  | "travel"
+  | "other"
+  | "unknown";
+
+export type ViewingPlatform =
+  | "streaming"
+  | "television"
+  | "rental"
+  | "physical"
+  | "download"
+  | "other"
+  | "unknown";
+
+export type ViewingCompanionship =
+  | "alone"
+  | "partner"
+  | "friends"
+  | "family"
+  | "children"
+  | "other"
+  | "unknown";
+
+export type ViewingLanguageMode =
+  | "original_subtitled"
+  | "dubbed"
+  | "original_no_subtitles"
+  | "unknown";
+
+export type ViewingScope = "full_title" | "season" | "viewing_session";
+
+export interface ViewingSession {
+  id: string;
+  user_id: string;
+  tmdb_id: number;
+  media_type: MediaType;
+  watched_at: string | null;
+  watched_date: string | null;
+  timezone: string | null;
+  venue: ViewingVenue;
+  platform: ViewingPlatform;
+  provider_id: string | null;
+  companionship: ViewingCompanionship;
+  language_mode: ViewingLanguageMode;
+  is_rewatch: boolean;
+  scope: ViewingScope;
+  season_number: number | null;
+  episode_number: number | null;
+  rating: number | null;
+  notes: string | null;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ViewingSessionInput {
+  tmdbId: number;
+  mediaType: MediaType;
+  watchedAt?: string | null;
+  watchedDate?: string | null;
+  timezone?: string | null;
+  venue?: ViewingVenue;
+  platform?: ViewingPlatform;
+  providerId?: string | null;
+  companionship?: ViewingCompanionship;
+  languageMode?: ViewingLanguageMode;
+  isRewatch?: boolean;
+  scope?: ViewingScope;
+  seasonNumber?: number | null;
+  episodeNumber?: number | null;
+  rating?: number | null;
+  notes?: string | null;
+  isPublic?: boolean;
+}
+
+export interface ReactionTag {
+  id: string;
+  slug: string;
+  name: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export const REACTION_TAGS: ReactionTag[] = [
+  { id: "made_me_laugh", slug: "made_me_laugh", name: "Me hizo reír", is_active: true, created_at: "" },
+  { id: "moved_me", slug: "moved_me", name: "Me emocionó", is_active: true, created_at: "" },
+  { id: "surprised_me", slug: "surprised_me", name: "Me sorprendió", is_active: true, created_at: "" },
+  { id: "made_me_think", slug: "made_me_think", name: "Me dejó pensando", is_active: true, created_at: "" },
+  { id: "unsettled_me", slug: "unsettled_me", name: "Me inquietó", is_active: true, created_at: "" },
+  { id: "disappointed_me", slug: "disappointed_me", name: "Me decepcionó", is_active: true, created_at: "" },
+  { id: "made_me_nostalgic", slug: "made_me_nostalgic", name: "Me dio nostalgia", is_active: true, created_at: "" },
+  { id: "hooked_me", slug: "hooked_me", name: "Me atrapó", is_active: true, created_at: "" },
+  { id: "hard_to_finish", slug: "hard_to_finish", name: "Me costó terminarla", is_active: true, created_at: "" },
+  { id: "want_to_rewatch", slug: "want_to_rewatch", name: "Quiero volver a verla", is_active: true, created_at: "" },
+];
+
+export type ReactionSlug = (typeof REACTION_TAGS)[number]["slug"];
+
+export interface SessionReaction {
+  viewing_session_id: string;
+  reaction_tag_id: string;
+  reaction_slug: string;
+  reaction_name: string;
+  created_at: string;
+}
+
 export const RESERVED_USERNAMES = [
   "admin",
   "login",

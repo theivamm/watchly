@@ -7,7 +7,7 @@ import {
 import { useAuth } from "@/app/auth-context";
 import { getProfileByUsername, getProfileLink, getMediaShareLink } from "@/services/profile";
 import { getPublicLists, getList } from "@/services/lists";
-import { getPublicLibrary, removeFromLibrary } from "@/services/library";
+import { getPublicLibrary } from "@/services/library";
 import { getPublicDnaByUsername } from "@/services/dna";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
@@ -250,22 +250,10 @@ export default function PublicProfilePage() {
           rating={e.rating}
           notes={e.notes}
           onClick={() => openCard(e)}
-          {...(isOwner
-            ? { onRemove: () => handleRemoveEntry(e) }
-            : { onAction: () => openAction(e) })}
         />
       ))}
     </div>
   );
-
-  const handleRemoveEntry = async (entry: Entry) => {
-    try {
-      await removeFromLibrary(entry.id);
-      setEntries((prev) => prev.filter((x) => x.id !== entry.id));
-    } catch (err) {
-      console.error("Failed to remove entry:", err);
-    }
-  };
 
   const toResult = (entry: Entry): TMDBSearchResult => ({
     tmdbId: entry.tmdb_id,
@@ -302,10 +290,6 @@ export default function PublicProfilePage() {
       genreIds: [],
       tmdbRating: null,
     });
-  };
-
-  const openAction = (entry: Entry) => {
-    openCard(entry);
   };
 
   const SectionTitle = ({ eyebrow, title, subtitle, icon: Icon }: {

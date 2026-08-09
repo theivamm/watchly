@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { Plus, X } from "lucide-react";
 import { getPosterUrl } from "@/services/tmdb";
 import type { MediaType, EntryStatus } from "@/types";
 
@@ -13,11 +11,8 @@ interface MediaCardProps {
   tmdbRating?: number | null;
   status?: EntryStatus;
   onClick?: () => void;
-  onAction?: () => void;
-  onRemove?: () => void;
   badge?: string;
   notes?: string | null;
-  actionLabel?: string;
 }
 
 const STATUS_LABELS: Record<EntryStatus, string> = {
@@ -45,13 +40,9 @@ export default function MediaCard({
   tmdbRating,
   status,
   onClick,
-  onAction,
-  onRemove,
   badge,
   notes,
-  actionLabel = "Agregar",
 }: MediaCardProps) {
-  const [confirming, setConfirming] = useState(false);
   const posterUrl = getPosterUrl(posterPath);
   const showTmdb = tmdbRating != null && tmdbRating > 0;
 
@@ -121,98 +112,6 @@ export default function MediaCard({
           >
             {badge}
           </span>
-        )}
-
-        {/* Remove action (owner, desktop hover + mobile) */}
-        {onRemove && !confirming && (
-          <>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setConfirming(true);
-              }}
-              className="absolute inset-x-3 bottom-3 py-3 rounded-xl text-xs font-bold text-center opacity-0 md:group-hover:opacity-100 translate-y-2 md:group-hover:translate-y-0 transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5"
-              style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)", color: "#fff", boxShadow: "0 8px 20px rgba(239,68,68,0.4)" }}
-            >
-              <X className="w-4 h-4" strokeWidth={2.6} /> Quitar
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setConfirming(true);
-              }}
-              aria-label="Quitar de la biblioteca"
-              className="absolute bottom-3 right-3 w-9 h-9 rounded-full flex items-center justify-center md:hidden cursor-pointer"
-              style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)", color: "#fff", boxShadow: "0 6px 16px rgba(239,68,68,0.45)" }}
-            >
-              <X className="w-4 h-4" strokeWidth={2.6} />
-            </button>
-          </>
-        )}
-
-        {/* Inline confirm on the card (no popups) */}
-        {confirming && (
-          <div
-            className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 rounded-xl"
-            style={{ backgroundColor: "rgba(5,5,12,0.9)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-[11px] font-bold text-center px-4" style={{ color: "#fff" }}>
-              ¿Quitar de tu biblioteca?
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setConfirming(false);
-                  onRemove?.();
-                }}
-                className="px-4 py-2 rounded-full text-[11px] font-bold cursor-pointer transition-transform hover:scale-105"
-                style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)", color: "#fff" }}
-              >
-                Sí, quitar
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setConfirming(false);
-                }}
-                className="px-4 py-2 rounded-full text-[11px] font-bold cursor-pointer transition-transform hover:scale-105"
-                style={{ backgroundColor: "rgba(255,255,255,0.14)", color: "#fff" }}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Action overlay (desktop hover) */}
-        {onAction && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAction();
-            }}
-            className="absolute inset-x-3 bottom-3 py-3 rounded-xl text-xs font-bold text-center opacity-0 md:group-hover:opacity-100 translate-y-2 md:group-hover:translate-y-0 transition-all duration-300 cursor-pointer"
-            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 20px color-mix(in srgb, var(--accent) 50%, transparent)" }}
-          >
-            {actionLabel}
-          </button>
-        )}
-
-        {/* Mobile + */}
-        {onAction && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAction();
-            }}
-            aria-label={actionLabel}
-            className="absolute bottom-3 right-3 w-9 h-9 rounded-full flex items-center justify-center md:hidden cursor-pointer"
-            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 6px 16px color-mix(in srgb, var(--accent) 50%, transparent)" }}
-          >
-            <Plus className="w-4 h-4" strokeWidth={2.6} />
-          </button>
         )}
       </div>
       <div className="relative z-10 px-1 pt-3 pb-1">

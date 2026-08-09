@@ -94,7 +94,6 @@ export default function LibraryPage() {
               status={entry.status}
               rating={entry.rating}
               notes={entry.notes}
-              actionLabel="Editar"
               onClick={() => setSelected(entry)}
             />
           ))}
