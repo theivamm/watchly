@@ -65,13 +65,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
 
+  useEffect(() => {
+    if (!user) {
+      setProfile(null);
+      return;
+    }
+    let cancelled = false;
+    getProfile(user.id).catch(() => null).then((p) => {
+      if (cancelled) return;
+      setProfile(p);
+    });
+
+    // Realtime: refleja cambios de perfil (p. ej. avatar_id) sin recargar.
+    const channel = supabase
+      .channel(`public:profiles:id=eq.${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
+        (payload) => {
+          if (cancelled) return;
+          setProfile((prev) => {
+            const next = { ...(prev ?? null), ...(payload.new as Partial<Profile>) } as Profile | null;
+            return next;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const refreshProfile = async () => {
     if (!user) {
       setProfile(null);
       return;
     }
     const p = await getProfile(user.id).catch(() => null);
-    setProfile(p);
+    setProfile(p ?? null);
   };
 
   useEffect(() => {

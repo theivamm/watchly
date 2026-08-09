@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { Check, AlertCircle } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check } from "lucide-react";
 import type { UserAvatar } from "@/types";
-import { avatarDataUri } from "@/lib/avatars";
-import { getAvatars } from "@/services/avatar";
+import { listAvatars } from "@/lib/avatar-registry";
 import { updateProfile } from "@/services/profile";
 
 export interface AvatarPickerProps {
@@ -12,36 +11,12 @@ export interface AvatarPickerProps {
 }
 
 export default function AvatarPicker({ userId, currentId, onChange }: AvatarPickerProps) {
-  const [avatars, setAvatars] = useState<UserAvatar[] | null>(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-    getAvatars()
-      .then((list) => {
-        if (!cancelled) setAvatars(list);
-      })
-      .catch(() => {
-        if (!cancelled) setError("No se pudieron cargar los avatares.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const previews = useMemo(
-    () =>
-      (avatars ?? []).map((a) => ({
-        ...a,
-        src: a.image_url || avatarDataUri(a.seed),
-      })),
-    [avatars]
-  );
+  // Los 40 avatares vienen del bundle de Vite (imágenes estáticas en
+  // src/assets/avatar/). No se hace fetch a la base ni generación on-the-fly.
+  const previews = useMemo(() => listAvatars(), []);
 
   const handleSelect = async (id: number) => {
     if (saving) return;
@@ -57,38 +32,16 @@ export default function AvatarPicker({ userId, currentId, onChange }: AvatarPick
     }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-3">
-        <p className="text-xs font-semibold" style={{ color: "var(--text-secondary)" }}>Cargando avatares…</p>
-        <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 gap-3">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="w-11 h-11 rounded-full animate-pulse" style={{ backgroundColor: "var(--surface-2)" }} />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-start gap-2.5 text-sm" style={{ color: "var(--text-secondary)" }}>
-        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#f87171" }} />
-        <span>{error}</span>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-3">
       <p className="text-xs font-semibold" style={{ color: "var(--text-secondary)" }}>
-        24 avatares para elegir. No podés subir imágenes ni ingresar URLs.
+        {previews.length} avatares para elegir. No podés subir imágenes ni ingresar URLs.
       </p>
       <div
         className="grid gap-3"
         style={{ gridTemplateColumns: "repeat(auto-fill, minmax(48px, 1fr))" }}
       >
-        {previews.map((a) => {
+        {previews.map((a: UserAvatar) => {
           const selected = a.id === currentId;
           return (
             <button
@@ -102,7 +55,7 @@ export default function AvatarPicker({ userId, currentId, onChange }: AvatarPick
               style={{ width: 48, height: 48 }}
             >
               <img
-                src={a.src}
+                src={a.image_url as string}
                 alt={a.name}
                 className="rounded-full object-cover"
                 style={{

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Profile, UserAvatar } from "@/types";
-import { getAvatarById } from "@/services/avatar";
-import { avatarDataUri } from "@/lib/avatars";
+import { getAvatarById } from "@/lib/avatar-registry";
 
 export interface AvatarProps {
   profile: Profile | null | undefined;
@@ -11,6 +10,8 @@ export interface AvatarProps {
   alt?: string;
 }
 
+// Los avatares vienen del bundle (src/assets/avatar/) y se resuelven por
+// avatar_id mediante el registro estático. No se hace fetch ni generación.
 export default function Avatar({ profile, size = 40, border, className, alt }: AvatarProps) {
   const [avatar, setAvatar] = useState<UserAvatar | null>(null);
 
@@ -20,22 +21,15 @@ export default function Avatar({ profile, size = 40, border, className, alt }: A
       setAvatar(null);
       return;
     }
-    let cancelled = false;
-    getAvatarById(id).then((a) => {
-      if (!cancelled) setAvatar(a ?? null);
-    });
-    return () => {
-      cancelled = true;
-    };
+    setAvatar(getAvatarById(id) ?? null);
   }, [profile?.avatar_id]);
 
   const initial = (profile?.display_name || profile?.username || "W").charAt(0).toUpperCase();
 
-  if (avatar?.seed) {
-    const src = avatar.image_url || avatarDataUri(avatar.seed);
+  if (avatar?.image_url) {
     return (
       <img
-        src={src}
+        src={avatar.image_url}
         alt={alt ?? (profile?.display_name || profile?.username || "Avatar")}
         width={size}
         height={size}
