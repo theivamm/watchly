@@ -2,6 +2,7 @@ import {
   Room,
   RoomEvent,
   ConnectionState,
+  TrackEvent,
   type RemoteParticipant,
   type RemoteTrackPublication,
   type RemoteTrack,
@@ -9,6 +10,7 @@ import {
   type RemoteAudioTrack,
   type LocalTrack,
   type LocalTrackPublication,
+  type TrackPublication,
   createLocalScreenTracks,
   type TrackPublishOptions,
   DataPacket_Kind,
@@ -60,6 +62,7 @@ export interface LiveKitRoomState {
   screenShareTrack: LocalTrack | null;
   remoteScreenTrack: RemoteVideoTrack | null;
   remoteScreenAudio: RemoteAudioTrack | null;
+  screenMuted: boolean;
   messages: ChatMessage[];
   sendMessage: (text: string) => void;
   reactions: { emoji: ReactionType; ts: number; from: string }[];
@@ -80,6 +83,7 @@ export function useLiveKitRoom(
   const [screenTracks, setScreenTracks] = useState<LocalTrack[]>([]);
   const [remoteScreenTrack, setRemoteScreenTrack] = useState<RemoteVideoTrack | null>(null);
   const [remoteScreenAudio, setRemoteScreenAudio] = useState<RemoteAudioTrack | null>(null);
+  const [screenMuted, setScreenMuted] = useState(false);
   const [isPublishingScreen, setIsPublishingScreen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [reactions, setReactions] = useState<
@@ -144,6 +148,22 @@ export function useLiveKitRoom(
         const pub = await room.localParticipant.publishTrack(t, publishOpts);
         pubs.push(pub);
       }
+      // Si Chrome detiene la captura (el host cerró la pestaña, navegó fuera,
+      // o apretó "dejar de compartir"), limpiamos el estado para que el
+      // invitado vuelva a la pantalla de espera y la UI del host se resetee.
+      const onScreenEnded = async () => {
+        if (!room) return;
+        for (const t of tracks) {
+          try {
+            await room.localParticipant.unpublishTrack(t, true);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+        setScreenTracks([]);
+        setScreenTrack(null);
+      };
+      for (const t of tracks) t.on(TrackEvent.Ended, onScreenEnded);
       setScreenTrack(pubs[0]);
       setScreenTracks(tracks);
       return true;
@@ -209,11 +229,20 @@ export function useLiveKitRoom(
         else if (track.kind === "audio") setRemoteScreenAudio(track as RemoteAudioTrack);
       }
     );
-    r.on(RoomEvent.TrackUnsubscribed, (_track, pub: RemoteTrackPublication) => {
-      if (pub.source === "screen_share") {
-        setRemoteScreenTrack(null);
-        setRemoteScreenAudio(null);
-      }
+    r.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack, pub: RemoteTrackPublication) => {
+      if (pub.source !== "screen_share") return;
+      if (track.kind === "video") setRemoteScreenTrack(null);
+      else if (track.kind === "audio") setRemoteScreenAudio(null);
+    });
+
+    // Chrome marca la pista capturada como muted cuando la pestaña
+    // compartida pasa a segundo plano. Lo propagamos al UI para avisar
+    // al invitado en vez de mostrar una pantalla negra.
+    r.on(RoomEvent.TrackMuted, (pub: TrackPublication) => {
+      if (pub.source === "screen_share") setScreenMuted(true);
+    });
+    r.on(RoomEvent.TrackUnmuted, (pub: TrackPublication) => {
+      if (pub.source === "screen_share") setScreenMuted(false);
     });
 
     r.on(
@@ -278,6 +307,36 @@ export function useLiveKitRoom(
     };
   }, [tokenResponse]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Cuando la pestaña compartida pasa a segundo plano, Chrome emite "muted"
+  // en la pista y livekit-client pausa el envío upstream a los 5s, cortando
+  // la transmisión para el invitado. Evitamos eso: desactivamos esos handlers
+  // internos y, como red de seguridad, resumimos cualquier pausa.
+  useEffect(() => {
+    if (screenTracks.length === 0) return;
+    const stripMuteHandlers = () => {
+      for (const t of screenTracks) {
+        const raw = t.mediaStreamTrack;
+        const h = t as unknown as {
+          handleTrackMuteEvent?: EventListener;
+          handleTrackUnmuteEvent?: EventListener;
+        };
+        if (h.handleTrackMuteEvent) raw.removeEventListener("mute", h.handleTrackMuteEvent);
+        if (h.handleTrackUnmuteEvent) raw.removeEventListener("unmute", h.handleTrackUnmuteEvent);
+      }
+    };
+    stripMuteHandlers();
+    const t = setTimeout(stripMuteHandlers, 150);
+    const iv = setInterval(() => {
+      for (const t of screenTracks) {
+        if (t.isUpstreamPaused) void t.resumeUpstream();
+      }
+    }, 1000);
+    return () => {
+      clearTimeout(t);
+      clearInterval(iv);
+    };
+  }, [screenTracks]);
+
   const sendMessage = useCallback(
     (text: string) => {
       if (!room || text.length === 0 || text.length > 500) return;
@@ -339,6 +398,7 @@ export function useLiveKitRoom(
     screenShareTrack: screenTracks[0] ?? null,
     remoteScreenTrack,
     remoteScreenAudio,
+    screenMuted,
     messages,
     sendMessage,
     reactions,

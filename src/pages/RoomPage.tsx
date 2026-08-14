@@ -422,6 +422,7 @@ export default function RoomPage() {
               localScreenTrack={livekit.screenShareTrack}
               remoteScreenTrack={livekit.remoteScreenTrack}
               remoteScreenAudio={livekit.remoteScreenAudio}
+              screenMuted={livekit.screenMuted}
               volume={volume}
               onVolumeChange={setVolume}
               onToggleFullscreen={toggleFullscreen}
@@ -523,6 +524,7 @@ function LiveView({
   localScreenTrack,
   remoteScreenTrack,
   remoteScreenAudio,
+  screenMuted,
   volume,
   onVolumeChange,
   onToggleFullscreen,
@@ -536,6 +538,7 @@ function LiveView({
   localScreenTrack: LocalTrack | null;
   remoteScreenTrack: RemoteVideoTrack | null;
   remoteScreenAudio: RemoteAudioTrack | null;
+  screenMuted: boolean;
   volume: number;
   onVolumeChange: (v: number) => void;
   onToggleFullscreen: () => void;
@@ -654,6 +657,14 @@ function LiveView({
           muted
           playsInline
         />
+        {screenMuted && (
+          <div
+            className="absolute inset-x-0 top-0 z-10 px-4 py-3 text-center text-xs font-bold"
+            style={{ backgroundColor: "rgba(0,0,0,0.7)", color: "var(--text-secondary)", backdropFilter: "blur(8px)" }}
+          >
+            El host está en otra pestaña. La transmisión se pausó y se reanuda sola cuando vuelva.
+          </div>
+        )}
         {controls}
       </div>
     );
