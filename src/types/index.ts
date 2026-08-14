@@ -379,3 +379,32 @@ export const RESERVED_USERNAMES = [
   "search",
   "watchly",
 ];
+
+// === Salas (watch_rooms MVP) ===
+export type RoomStatus = "open" | "ended";
+
+export interface Room {
+  id: string;
+  host_user_id: string;
+  name: string;
+  color: string;
+  invite_code: string;
+  livekit_room_name: string;
+  status: RoomStatus;
+  max_participants: number;
+  created_at: string;
+  started_at: string | null;
+  ended_at: string | null;
+}
+
+export interface RoomMember {
+  id: string;
+  room_id: string;
+  user_id: string;
+  role: "host" | "guest";
+  joined_at: string;
+  left_at: string | null;
+  removed_at: string | null;
+}
+
+export type RoomRole = "host" | "guest";

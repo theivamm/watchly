@@ -20,6 +20,8 @@ import DNAPage from "@/pages/DNAPage";
 import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
 import AccountSettingsPage from "@/pages/AccountSettingsPage";
 import RoadmapPage from "@/pages/RoadmapPage";
+import RoomsPage from "@/pages/RoomsPage";
+import RoomPage from "@/pages/RoomPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -70,6 +72,8 @@ function AppRoutes() {
         <Route path="/biblioteca" element={<LibraryPage />} />
         <Route path="/listas" element={<ListsPage />} />
         <Route path="/listas/:id" element={<ListDetailPage />} />
+        <Route path="/salas" element={<RoomsPage />} />
+        <Route path="/salas/:id" element={<RoomPage />} />
         <Route path="/configuracion/perfil" element={<ProfileSettingsPage />} />
         <Route path="/configuracion/cuenta" element={<AccountSettingsPage />} />
       </Route>

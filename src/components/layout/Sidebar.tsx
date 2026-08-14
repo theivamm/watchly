@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, Film, BookOpen, List, Map, Dna, Settings, User } from "lucide-react";
+import { Search, Film, BookOpen, List, Map, Dna, Settings, User, MonitorPlay } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import Avatar from "@/components/ui/Avatar";
 
@@ -8,6 +8,7 @@ const navItems = [
   { to: "/buscar", label: "Buscar", icon: Search },
   { to: "/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/listas", label: "Listas", icon: List },
+  { to: "/salas", label: "Salas", icon: MonitorPlay },
   { to: "/adn", label: "Mi ADN", icon: Dna },
   { to: "/roadmap", label: "Roadmap", icon: Map },
 ];
