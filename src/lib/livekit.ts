@@ -131,12 +131,18 @@ export function useLiveKitRoom(
         tracks = await createLocalScreenTracks({
           audio: true,
           video: { frameRate: 15, width: { ideal: 1280 } } as any,
-        });
+          // Habilita el botón "Compartir esta pestaña en su lugar" de Chrome
+          // para cambiar de pestaña compartida sin cortar la transmisión.
+          surfaceSwitching: "include",
+          selfBrowserSurface: "exclude",
+        } as any);
       } catch {
         tracks = await createLocalScreenTracks({
           audio: false,
           video: { frameRate: 15, width: { ideal: 1280 } } as any,
-        });
+          surfaceSwitching: "include",
+          selfBrowserSurface: "exclude",
+        } as any);
       }
       const publishOpts: TrackPublishOptions = {
         source: "screen_share",
@@ -148,9 +154,12 @@ export function useLiveKitRoom(
         const pub = await room.localParticipant.publishTrack(t, publishOpts);
         pubs.push(pub);
       }
-      // Si Chrome detiene la captura (el host cerró la pestaña, navegó fuera,
-      // o apretó "dejar de compartir"), limpiamos el estado para que el
-      // invitado vuelva a la pantalla de espera y la UI del host se resetee.
+      // Solo el fin del video significa que la captura terminó de verdad
+      // (Chrome la cortó: "dejar de compartir", cerrar/navegar la pestaña).
+      // Limpiamos todo para que el invitado vuelva a la espera y la UI del
+      // host se resetee.
+      const videoTrack = tracks[0];
+      const audioTracks = tracks.slice(1);
       const onScreenEnded = async () => {
         if (!room) return;
         for (const t of tracks) {
@@ -163,7 +172,20 @@ export function useLiveKitRoom(
         setScreenTracks([]);
         setScreenTrack(null);
       };
-      for (const t of tracks) t.on(TrackEvent.Ended, onScreenEnded);
+      videoTrack.on(TrackEvent.Ended, onScreenEnded);
+      // El audio de la pestaña se cae solo al cambiar de pestaña (bug de
+      // Chrome: issues.chromium.org/344876285). No matamos la transmisión por
+      // eso: despublicamos únicamente el audio y el video sigue.
+      for (const at of audioTracks) {
+        at.on(TrackEvent.Ended, async () => {
+          if (!room) return;
+          try {
+            await room.localParticipant.unpublishTrack(at, true);
+          } catch (e) {
+            console.error(e);
+          }
+        });
+      }
       setScreenTrack(pubs[0]);
       setScreenTracks(tracks);
       return true;
@@ -231,8 +253,12 @@ export function useLiveKitRoom(
     );
     r.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack, pub: RemoteTrackPublication) => {
       if (pub.source !== "screen_share") return;
-      if (track.kind === "video") setRemoteScreenTrack(null);
-      else if (track.kind === "audio") setRemoteScreenAudio(null);
+      if (track.kind === "video") {
+        setRemoteScreenTrack(null);
+        setScreenMuted(false);
+      } else if (track.kind === "audio") {
+        setRemoteScreenAudio(null);
+      }
     });
 
     // Chrome marca la pista capturada como muted cuando la pestaña
@@ -308,33 +334,16 @@ export function useLiveKitRoom(
   }, [tokenResponse]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cuando la pestaña compartida pasa a segundo plano, Chrome emite "muted"
-  // en la pista y livekit-client pausa el envío upstream a los 5s, cortando
-  // la transmisión para el invitado. Evitamos eso: desactivamos esos handlers
-  // internos y, como red de seguridad, resumimos cualquier pausa.
+  // en la pista y livekit-client respondería pausando el envío upstream a los
+  // 5s (debouncedTrackMuteHandler -> pauseUpstream -> sender.replaceTrack(null)),
+  // cortando la transmisión para el invitado. Neutralizamos pauseUpstream para
+  // que la pista siga enviando frames aunque la pestaña quede en background.
   useEffect(() => {
     if (screenTracks.length === 0) return;
-    const stripMuteHandlers = () => {
-      for (const t of screenTracks) {
-        const raw = t.mediaStreamTrack;
-        const h = t as unknown as {
-          handleTrackMuteEvent?: EventListener;
-          handleTrackUnmuteEvent?: EventListener;
-        };
-        if (h.handleTrackMuteEvent) raw.removeEventListener("mute", h.handleTrackMuteEvent);
-        if (h.handleTrackUnmuteEvent) raw.removeEventListener("unmute", h.handleTrackUnmuteEvent);
-      }
-    };
-    stripMuteHandlers();
-    const t = setTimeout(stripMuteHandlers, 150);
-    const iv = setInterval(() => {
-      for (const t of screenTracks) {
-        if (t.isUpstreamPaused) void t.resumeUpstream();
-      }
-    }, 1000);
-    return () => {
-      clearTimeout(t);
-      clearInterval(iv);
-    };
+    for (const t of screenTracks) {
+      (t as unknown as { pauseUpstream: () => Promise<void> }).pauseUpstream = () =>
+        Promise.resolve();
+    }
   }, [screenTracks]);
 
   const sendMessage = useCallback(
