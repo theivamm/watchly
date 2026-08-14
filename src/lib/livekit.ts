@@ -6,6 +6,7 @@ import {
   type RemoteTrackPublication,
   type RemoteTrack,
   type RemoteVideoTrack,
+  type RemoteAudioTrack,
   type LocalTrack,
   type LocalTrackPublication,
   createLocalScreenTracks,
@@ -58,6 +59,7 @@ export interface LiveKitRoomState {
   isScreenAvailable: boolean;
   screenShareTrack: LocalTrack | null;
   remoteScreenTrack: RemoteVideoTrack | null;
+  remoteScreenAudio: RemoteAudioTrack | null;
   messages: ChatMessage[];
   sendMessage: (text: string) => void;
   reactions: { emoji: ReactionType; ts: number; from: string }[];
@@ -77,6 +79,7 @@ export function useLiveKitRoom(
   const [screenTrack, setScreenTrack] = useState<LocalTrackPublication | null>(null);
   const [screenTracks, setScreenTracks] = useState<LocalTrack[]>([]);
   const [remoteScreenTrack, setRemoteScreenTrack] = useState<RemoteVideoTrack | null>(null);
+  const [remoteScreenAudio, setRemoteScreenAudio] = useState<RemoteAudioTrack | null>(null);
   const [isPublishingScreen, setIsPublishingScreen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [reactions, setReactions] = useState<
@@ -201,14 +204,15 @@ export function useLiveKitRoom(
     r.on(
       RoomEvent.TrackSubscribed,
       (track: RemoteTrack, pub: RemoteTrackPublication) => {
-        if (pub.source === "screen_share" && track.kind === "video") {
-          setRemoteScreenTrack(track as RemoteVideoTrack);
-        }
+        if (pub.source !== "screen_share") return;
+        if (track.kind === "video") setRemoteScreenTrack(track as RemoteVideoTrack);
+        else if (track.kind === "audio") setRemoteScreenAudio(track as RemoteAudioTrack);
       }
     );
     r.on(RoomEvent.TrackUnsubscribed, (_track, pub: RemoteTrackPublication) => {
       if (pub.source === "screen_share") {
         setRemoteScreenTrack(null);
+        setRemoteScreenAudio(null);
       }
     });
 
@@ -334,6 +338,7 @@ export function useLiveKitRoom(
     isScreenAvailable: !!room,
     screenShareTrack: screenTracks[0] ?? null,
     remoteScreenTrack,
+    remoteScreenAudio,
     messages,
     sendMessage,
     reactions,

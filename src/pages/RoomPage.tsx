@@ -14,6 +14,12 @@ import {
   Video,
   Laugh,
   MousePointerClick,
+  MessageCircle,
+  Minimize2,
+  ChevronDown,
+  Maximize,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import type { Room, RoomMember, RoomRole, Profile } from "@/types";
@@ -27,7 +33,7 @@ import {
   type RoomTokenResponse,
 } from "@/services/rooms";
 import { supabase } from "@/lib/supabase";
-import type { LocalTrack, RemoteVideoTrack } from "livekit-client";
+import type { LocalTrack, RemoteVideoTrack, RemoteAudioTrack } from "livekit-client";
 import {
   useLiveKitRoom,
   REACTION_EMOJIS,
@@ -81,6 +87,11 @@ export default function RoomPage() {
   const [copied, setCopied] = useState(false);
   const [panel, setPanel] = useState<"participants" | "chat">("participants");
 
+  const [immersive, setImmersive] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
+
   const me = useMemo(() => {
     if (!user) return null;
     return {
@@ -102,6 +113,44 @@ export default function RoomPage() {
   meRef.current = me;
   const disconnectRef = useRef(livekit.disconnect);
   disconnectRef.current = livekit.disconnect;
+
+  // Contador de mensajes no leídos mientras el chat está oculto.
+  const msgLenRef = useRef(0);
+  useEffect(() => {
+    const len = livekit.messages.length;
+    if (!immersive) {
+      msgLenRef.current = len;
+      setUnread(0);
+      return;
+    }
+    if (chatOpen) {
+      msgLenRef.current = len;
+      setUnread(0);
+      return;
+    }
+    if (len > msgLenRef.current) setUnread((u) => u + (len - msgLenRef.current));
+    msgLenRef.current = len;
+  }, [livekit.messages.length, immersive, chatOpen]);
+
+  // Auto-ocultar el chat flotante tras unos segundos.
+  useEffect(() => {
+    if (!immersive || !chatOpen) return;
+    const t = setTimeout(() => setChatOpen(false), 8000);
+    return () => clearTimeout(t);
+  }, [chatOpen, immersive, livekit.messages.length]);
+
+  const mainRef = useRef<HTMLDivElement | null>(null);
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await mainRef.current?.requestFullscreen?.();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -300,45 +349,59 @@ export default function RoomPage() {
   const roomColor = room.color || "#8b5cf6";
 
   return (
-    <div className="fixed inset-0 md:left-[84px] flex flex-col" style={{ background: "var(--gradient-accent)" }}>
-      <header className="flex items-center justify-between px-4 py-3 border-b"
-        style={{ backgroundColor: "rgba(11,11,20,0.7)", borderColor: "var(--border)" }}>
-        <div className="flex items-center gap-3 min-w-0">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ backgroundColor: `color-mix(in srgb, ${roomColor} 22%, transparent)` }}
-          >
-            <MonitorPlay className="w-4 h-4" style={{ color: roomColor }} />
-          </div>
-          <h1 className="text-base font-bold truncate" style={{ color: "var(--text-primary)" }}>{room.name}</h1>
-          {isHost && livekit.isPublishingScreen ? (
-            <button
-              onClick={() => void handleStopScreen()}
-              title="Detener transmisión"
-              className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0 cursor-pointer transition-all hover:scale-[1.05]"
-              style={{ backgroundColor: "rgba(248,113,113,0.15)", color: "#f87171", border: "1px solid rgba(248,113,113,0.5)" }}
+    <div className="fixed inset-0 md:left-[84px] z-40 flex flex-col" style={{ background: "var(--gradient-accent)" }}>
+      {!immersive && (
+        <header className="flex items-center justify-between px-4 py-3 border-b shrink-0"
+          style={{ backgroundColor: "rgba(11,11,20,0.7)", borderColor: "var(--border)" }}>
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+              style={{ backgroundColor: `color-mix(in srgb, ${roomColor} 22%, transparent)` }}
             >
-              ● Transmitiendo — detener
+              <MonitorPlay className="w-4 h-4" style={{ color: roomColor }} />
+            </div>
+            <h1 className="text-base font-bold truncate" style={{ color: "var(--text-primary)" }}>{room.name}</h1>
+            {isHost && livekit.isPublishingScreen ? (
+              <button
+                onClick={() => void handleStopScreen()}
+                title="Detener transmisión"
+                className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0 cursor-pointer transition-all hover:scale-[1.05]"
+                style={{ backgroundColor: "rgba(248,113,113,0.15)", color: "#f87171", border: "1px solid rgba(248,113,113,0.5)" }}
+              >
+                ● Transmitiendo — detener
+              </button>
+            ) : (
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0"
+                style={{ backgroundColor: `color-mix(in srgb, ${roomColor} 18%, transparent)`, color: roomColor }}>
+                Abierta
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-xs shrink-0" style={{ color: "var(--text-secondary)" }}>
+            <Users className="w-3.5 h-3.5" />
+            <span>{connectedMembers.length}/{room.max_participants}</span>
+            <button onClick={copyInvitation} title="Copiar enlace de invitación" className="ml-2 p-1 rounded hover:bg-white/5"
+              style={{ color: "var(--text-primary)" }}>
+              {copied ? <Copy className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
-          ) : (
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0"
-              style={{ backgroundColor: `color-mix(in srgb, ${roomColor} 18%, transparent)`, color: roomColor }}>
-              Abierta
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2 text-xs shrink-0" style={{ color: "var(--text-secondary)" }}>
-          <Users className="w-3.5 h-3.5" />
-          <span>{connectedMembers.length}/{room.max_participants}</span>
-          <button onClick={copyInvitation} title="Copiar enlace de invitación" className="ml-2 p-1 rounded hover:bg-white/5"
-            style={{ color: "var(--text-primary)" }}>
-            {copied ? <Copy className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-          </button>
-        </div>
-      </header>
+            <button
+              onClick={() => setImmersive(true)}
+              title="Ocultar interfaz y ver solo la pantalla"
+              className="p-1 rounded hover:bg-white/5"
+              style={{ color: "var(--text-primary)" }}
+            >
+              <Minimize2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </header>
+      )}
 
-      <div className="flex-1 flex overflow-hidden">
-        <main className="flex-1 flex items-center justify-center overflow-hidden" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <main
+          ref={mainRef}
+          className="relative flex-1 flex items-center justify-center overflow-hidden"
+          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+        >
           {livekit.status === "connecting" || livekit.status === "reconnecting" ? (
             <div className="flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -358,65 +421,95 @@ export default function RoomPage() {
               isPublishingScreen={livekit.isPublishingScreen}
               localScreenTrack={livekit.screenShareTrack}
               remoteScreenTrack={livekit.remoteScreenTrack}
+              remoteScreenAudio={livekit.remoteScreenAudio}
+              volume={volume}
+              onVolumeChange={setVolume}
+              onToggleFullscreen={toggleFullscreen}
               onPoke={pokeHost}
             />
           )}
+
+          {immersive && (
+            <button
+              onClick={() => setImmersive(false)}
+              className="absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-[1.03]"
+              style={{ backgroundColor: "rgba(0,0,0,0.65)", color: "var(--text-secondary)", backdropFilter: "blur(8px)" }}
+            >
+              <ChevronDown className="w-3.5 h-3.5" /> Ver interfaz
+            </button>
+          )}
         </main>
 
-        <aside className="w-72 flex flex-col border-l"
-          style={{ backgroundColor: "rgba(11,11,20,0.8)", borderColor: "var(--border)" }}>
-          <nav className="flex border-b" style={{ borderColor: "var(--border)" }}>
-            <button
-              onClick={() => setPanel("participants")}
-              className="flex-1 py-3 text-xs font-bold transition-colors"
-              style={{ color: panel === "participants" ? "var(--accent-light)" : "var(--text-secondary)" }}
-            >
-              Participantes
-            </button>
-            <button
-              onClick={() => setPanel("chat")}
-              className="flex-1 py-3 text-xs font-bold transition-colors"
-              style={{ color: panel === "chat" ? "var(--accent-light)" : "var(--text-secondary)" }}
-            >
-              Chat
-            </button>
-          </nav>
+        {!immersive && (
+          <aside
+            className="flex flex-col md:w-72 md:border-l border-t md:border-t-0 h-[40vh] md:h-auto shrink-0"
+            style={{ backgroundColor: "rgba(11,11,20,0.8)", borderColor: "var(--border)" }}
+          >
+            <nav className="flex border-b shrink-0" style={{ borderColor: "var(--border)" }}>
+              <button
+                onClick={() => setPanel("participants")}
+                className="flex-1 py-3 text-xs font-bold transition-colors"
+                style={{ color: panel === "participants" ? "var(--accent-light)" : "var(--text-secondary)" }}
+              >
+                Participantes
+              </button>
+              <button
+                onClick={() => setPanel("chat")}
+                className="flex-1 py-3 text-xs font-bold transition-colors"
+                style={{ color: panel === "chat" ? "var(--accent-light)" : "var(--text-secondary)" }}
+              >
+                Chat
+              </button>
+            </nav>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-3">
-            {panel === "participants" && (
-              <ParticipantsList
-                participants={participantInfos}
-                isHost={isHost}
-                kicking={kicking}
-                onKick={handleKick}
-                localUserId={me?.user_id}
-              />
-            )}
-            {panel === "chat" && (
-              <ChatPanel
-                messages={livekit.messages}
-                onSend={livekit.sendMessage}
-                reactions={livekit.reactions}
-                onReact={livekit.sendReaction}
-              />
-            )}
-          </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
+              {panel === "participants" && (
+                <ParticipantsList
+                  participants={participantInfos}
+                  isHost={isHost}
+                  kicking={kicking}
+                  onKick={handleKick}
+                  localUserId={me?.user_id}
+                />
+              )}
+              {panel === "chat" && (
+                <ChatPanel
+                  messages={livekit.messages}
+                  onSend={livekit.sendMessage}
+                  reactions={livekit.reactions}
+                  onReact={livekit.sendReaction}
+                />
+              )}
+            </div>
 
-          <div className="p-3 border-t" style={{ borderColor: "var(--border)" }}>
-            <button
-              onClick={() => void handleLeave()}
-              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02]"
-              style={{ backgroundColor: "var(--surface-2)", color: "#f87171", border: "1.5px solid var(--border)" }}
-            >
-              <LogOut className="w-4 h-4" />
-              Salir de la sala
-            </button>
-            <p className="mt-2 text-center text-[11px]" style={{ color: "var(--text-secondary)" }}>
-              La sala queda abierta. Volvé cuando quieras con el mismo enlace.
-            </p>
-          </div>
-        </aside>
+            <div className="p-3 border-t shrink-0" style={{ borderColor: "var(--border)" }}>
+              <button
+                onClick={() => void handleLeave()}
+                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02]"
+                style={{ backgroundColor: "var(--surface-2)", color: "#f87171", border: "1.5px solid var(--border)" }}
+              >
+                <LogOut className="w-4 h-4" />
+                Salir de la sala
+              </button>
+              <p className="mt-2 text-center text-[11px]" style={{ color: "var(--text-secondary)" }}>
+                La sala queda abierta. Volvé cuando quieras con el mismo enlace.
+              </p>
+            </div>
+          </aside>
+        )}
       </div>
+
+      {immersive && (
+        <FloatingChat
+          open={chatOpen}
+          unread={unread}
+          onToggle={() => setChatOpen((o) => !o)}
+          messages={livekit.messages}
+          onSend={livekit.sendMessage}
+          reactions={livekit.reactions}
+          onReact={livekit.sendReaction}
+        />
+      )}
     </div>
   );
 }
@@ -429,6 +522,10 @@ function LiveView({
   isPublishingScreen,
   localScreenTrack,
   remoteScreenTrack,
+  remoteScreenAudio,
+  volume,
+  onVolumeChange,
+  onToggleFullscreen,
   onPoke,
 }: {
   room: import("livekit-client").Room | null;
@@ -438,10 +535,15 @@ function LiveView({
   isPublishingScreen: boolean;
   localScreenTrack: LocalTrack | null;
   remoteScreenTrack: RemoteVideoTrack | null;
+  remoteScreenAudio: RemoteAudioTrack | null;
+  volume: number;
+  onVolumeChange: (v: number) => void;
+  onToggleFullscreen: () => void;
   onPoke: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const el = videoRef.current;
@@ -456,14 +558,60 @@ function LiveView({
   }, [remoteScreenTrack, room]);
 
   useEffect(() => {
-    if (!localScreenTrack || !localVideoRef.current) return;
-    localScreenTrack.attach(localVideoRef.current);
-    localVideoRef.current.autoplay = true;
-    localVideoRef.current.playsInline = true;
+    const el = audioRef.current;
+    if (!remoteScreenAudio || !el) return;
+    remoteScreenAudio.attach(el);
+    el.autoplay = true;
+    el.muted = false;
+    el.volume = volume;
+    el.play?.().catch(() => {});
     return () => {
-      localScreenTrack.detach(localVideoRef.current!);
+      remoteScreenAudio.detach(el);
+    };
+  }, [remoteScreenAudio, volume, room]);
+
+  useEffect(() => {
+    const el = localVideoRef.current;
+    if (!localScreenTrack || !el) return;
+    localScreenTrack.attach(el);
+    el.autoplay = true;
+    el.playsInline = true;
+    return () => {
+      localScreenTrack.detach(el);
     };
   }, [localScreenTrack]);
+
+  const controls = (
+    <div
+      className="absolute bottom-3 right-3 z-10 flex items-center gap-2 px-3 py-2 rounded-full"
+      style={{ backgroundColor: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)" }}
+    >
+      <button onClick={onToggleFullscreen} title="Pantalla completa" className="text-white/90 hover:text-white">
+        <Maximize className="w-4 h-4" />
+      </button>
+      {!isHost && (
+        <>
+          <button
+            onClick={() => onVolumeChange(volume > 0 ? 0 : 1)}
+            title={volume > 0 ? "Silenciar" : "Activar sonido"}
+            className="text-white/90 hover:text-white"
+          >
+            {volume > 0 ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={volume}
+            onChange={(e) => onVolumeChange(Number(e.target.value))}
+            className="w-20 accent-white"
+            aria-label="Volumen"
+          />
+        </>
+      )}
+    </div>
+  );
 
   const waitingStage = (
     <WaitingStage
@@ -475,12 +623,11 @@ function LiveView({
     />
   );
 
+  let content;
   if (!room || room.state !== "connected") {
-    return waitingStage;
-  }
-
-  if (isHost && localScreenTrack) {
-    return (
+    content = waitingStage;
+  } else if (isHost && localScreenTrack) {
+    content = (
       <div className="relative w-full h-full bg-black flex items-center justify-center">
         <video ref={localVideoRef} className="max-w-full max-h-full" muted playsInline />
         <span className="absolute top-3 left-3 text-xs font-bold px-2 py-1 rounded-full"
@@ -497,21 +644,29 @@ function LiveView({
         </button>
       </div>
     );
-  }
-
-  if (remoteScreenTrack) {
-    return (
-      <video
-        key={remoteScreenTrack.sid ?? "screen"}
-        ref={videoRef}
-        className="w-full h-full object-contain bg-black"
-        muted
-        playsInline
-      />
+  } else if (remoteScreenTrack) {
+    content = (
+      <div className="relative w-full h-full bg-black flex items-center justify-center">
+        <video
+          key={remoteScreenTrack.sid ?? "screen"}
+          ref={videoRef}
+          className="w-full h-full object-contain bg-black"
+          muted
+          playsInline
+        />
+        {controls}
+      </div>
     );
+  } else {
+    content = waitingStage;
   }
 
-  return waitingStage;
+  return (
+    <div className="relative w-full h-full">
+      <audio ref={audioRef} />
+      {content}
+    </div>
+  );
 }
 
 function WaitingStage({
@@ -599,6 +754,65 @@ function WaitingStage({
       <p className="mt-4 text-xs" style={{ color: "var(--text-secondary)" }}>
         Algunos sitios y contenidos protegidos pueden impedir la transmisión de imagen o sonido.
       </p>
+    </div>
+  );
+}
+
+function FloatingChat({
+  open,
+  unread,
+  onToggle,
+  messages,
+  onSend,
+  reactions,
+  onReact,
+}: {
+  open: boolean;
+  unread: number;
+  onToggle: () => void;
+  messages: ChatMessage[];
+  onSend: (text: string) => void;
+  reactions: { emoji: ReactionType; ts: number; from: string }[];
+  onReact: (emoji: ReactionType) => void;
+}) {
+  return (
+    <div className="absolute bottom-4 left-0 right-0 z-20 flex flex-col items-center px-4 pointer-events-none">
+      {open && (
+        <div
+          className="w-full max-w-md h-72 rounded-3xl border p-3 mb-2 pointer-events-auto"
+          style={{
+            backgroundColor: "rgba(15,15,28,0.72)",
+            borderColor: "rgba(255,255,255,0.15)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
+          }}
+        >
+          <ChatPanel messages={messages} onSend={onSend} reactions={reactions} onReact={onReact} />
+        </div>
+      )}
+      <button
+        onClick={onToggle}
+        className="pointer-events-auto inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold border transition-all hover:scale-[1.03]"
+        style={{
+          backgroundColor: "rgba(15,15,28,0.72)",
+          borderColor: "rgba(255,255,255,0.2)",
+          color: "var(--text-primary)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+        }}
+      >
+        <MessageCircle className="w-4 h-4" style={{ color: "var(--accent-light)" }} />
+        {open ? "Cerrar chat" : "Chat"}
+        {!open && unread > 0 && (
+          <span
+            className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full text-[10px] font-extrabold flex items-center justify-center"
+            style={{ backgroundColor: "#ef4444", color: "#fff" }}
+          >
+            {unread}
+          </span>
+        )}
+      </button>
     </div>
   );
 }
