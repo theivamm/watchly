@@ -8,7 +8,7 @@ const navItems = [
   { to: "/buscar", label: "Buscar", icon: Search },
   { to: "/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/listas", label: "Listas", icon: List },
-  { to: "/salas", label: "Salas", icon: MonitorPlay },
+  { to: "/salas", label: "Salas", icon: MonitorPlay, hidden: true },
   { to: "/adn", label: "Mi ADN", icon: Dna },
   { to: "/roadmap", label: "Roadmap", icon: Map },
   { to: "/perfil", label: "Perfil", icon: User },
@@ -44,10 +44,12 @@ export default function MobileNavigation() {
       ? location.pathname.startsWith("/perfil")
       : location.pathname.startsWith(to);
 
+  const visibleItems = navItems.filter((item) => !item.hidden);
+
   const activeItem =
-    navItems.find(({ to }) => itemActive(to)) ??
-    navItems.find(({ to }) => to === "/perfil") ??
-    navItems[0];
+    visibleItems.find(({ to }) => itemActive(to)) ??
+    visibleItems.find(({ to }) => to === "/perfil") ??
+    visibleItems[0];
   const ActiveIcon = activeItem.icon;
 
   return (
@@ -86,7 +88,7 @@ export default function MobileNavigation() {
             </Link>
           </div>
           <div className="grid grid-cols-4 gap-3">
-            {navItems.map(({ to, label, icon: Icon }) => {
+            {visibleItems.map(({ to, label, icon: Icon }) => {
               const active = itemActive(to);
               return (
                 <Link

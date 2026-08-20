@@ -8,7 +8,7 @@ const navItems = [
   { to: "/buscar", label: "Buscar", icon: Search },
   { to: "/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/listas", label: "Listas", icon: List },
-  { to: "/salas", label: "Salas", icon: MonitorPlay },
+  { to: "/salas", label: "Salas", icon: MonitorPlay, hidden: true },
   { to: "/adn", label: "Mi ADN", icon: Dna },
   { to: "/roadmap", label: "Roadmap", icon: Map },
 ];
@@ -46,7 +46,7 @@ export default function Sidebar() {
 
       {/* Nav items */}
       <nav className="flex-1 flex flex-col gap-1.5 px-3 py-4">
-        {navItems.map(({ to, label, icon: Icon }) => {
+        {navItems.filter((item) => !item.hidden).map(({ to, label, icon: Icon }) => {
           const active = location.pathname.startsWith(to);
           return (
             <Link

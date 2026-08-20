@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/app/auth-context";
 import { Link } from "react-router-dom";
-import { Search, BookOpen, List, Sparkles, TrendingUp, ChevronRight, Film, Clapperboard } from "lucide-react";
+import { Search, BookOpen, List, Sparkles, TrendingUp, ChevronRight, Film, Clapperboard, HelpCircle } from "lucide-react";
 import { useInfiniteTrending } from "@/hooks/useMedia";
 import HorizontalMediaCard from "@/components/media/HorizontalMediaCard";
 import MediaCard from "@/components/media/MediaCard";
 import HorizontalCarousel from "@/components/media/HorizontalCarousel";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
+import HelpGuideModal from "@/components/home/HelpGuideModal";
 import { getUserLibrary } from "@/services/library";
 import { getUserLists } from "@/services/lists";
 import { getPosterUrl } from "@/services/tmdb";
@@ -25,6 +26,7 @@ export default function HomePage() {
   const [selected, setSelected] = useState<TMDBSearchResult | null>(null);
   const [bgIndex, setBgIndex] = useState(0);
   const [recentLimit, setRecentLimit] = useState(10);
+  const [showHelp, setShowHelp] = useState(false);
 
   const heroBg = useMemo(() => entries.filter((e) => e.poster_path).slice(0, 5), [entries]);
 
@@ -70,17 +72,33 @@ export default function HomePage() {
       {/* Welcome hero */}
       <section className="relative overflow-hidden rounded-[2rem] p-8 md:p-12 border"
         style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)" }}>
+        {/* Help button */}
+        <button
+          type="button"
+          onClick={() => setShowHelp(true)}
+          aria-label="Guía de uso"
+          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
+          style={{
+            backgroundColor: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            color: "var(--accent-light)",
+          }}
+        >
+          <HelpCircle className="w-4.5 h-4.5" />
+        </button>
         {/* Crossfading covers of added titles */}
         {heroBg.length > 0 && (
-          <div className="absolute inset-0">
+          <div className="absolute inset-0" style={{ contain: "strict" }}>
             {heroBg.map((entry, i) => (
               <img
                 key={entry.id}
                 src={getPosterUrl(entry.poster_path, "w500")}
                 alt=""
-                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2200ms] ease-in-out"
+                className="absolute inset-0 w-full h-full object-cover"
                 style={{
                   opacity: i === bgIndex ? 1 : 0,
+                  transition: "opacity 2.2s ease-in-out",
+                  willChange: "opacity",
                   filter: "blur(20px) saturate(1.15)",
                   transform: "scale(1.15)",
                 }}
@@ -280,6 +298,8 @@ export default function HomePage() {
           }}
         />
       )}
+
+      {showHelp && <HelpGuideModal onClose={() => setShowHelp(false)} />}
     </div>
   );
 }

@@ -18,6 +18,8 @@ export default function HorizontalCarousel({
   const justDragged = useRef(false);
   const drag = useRef<{ x: number; left: number; moved: boolean; id: number } | null>(null);
   const [pos, setPos] = useState({ left: false, right: false });
+  const onLoadMoreRef = useRef(onLoadMore);
+  onLoadMoreRef.current = onLoadMore;
 
   const update = useCallback(() => {
     const el = railRef.current;
@@ -36,7 +38,7 @@ export default function HorizontalCarousel({
       el.removeEventListener("scroll", update);
       ro.disconnect();
     };
-  }, [update, children]);
+  }, [update]);
 
   const startDrag = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
@@ -85,18 +87,27 @@ export default function HorizontalCarousel({
   };
 
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadingMoreRef = useRef(false);
   useEffect(() => {
+    if (!onLoadMore) return;
     const el = sentinelRef.current;
-    if (!el || !onLoadMore) return;
+    if (!el) return;
     const obs = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) onLoadMore();
+        if (entries[0].isIntersecting && !loadingMoreRef.current) {
+          loadingMoreRef.current = true;
+          onLoadMoreRef.current?.();
+        }
       },
       { root: railRef.current, rootMargin: "300px 0px" }
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, [onLoadMore]);
+
+  useEffect(() => {
+    if (!loadingMore) loadingMoreRef.current = false;
+  }, [loadingMore]);
 
   return (
     <div className="relative">
@@ -105,6 +116,7 @@ export default function HorizontalCarousel({
         onPointerDown={startDrag}
         onClickCapture={onClickCapture}
         className={`flex overflow-x-auto no-scrollbar snap-x scroll-smooth cursor-grab active:cursor-grabbing select-none ${className}`}
+        style={{ overscrollBehaviorX: "contain" }}
       >
         {children}
         {onLoadMore && (
