@@ -1,45 +1,37 @@
 import { useEffect, useState } from "react";
-import { Search, BookOpen, Share2, Sparkles, ArrowRight, Play, Star, LogIn, UserPlus, HelpCircle, Clapperboard, Tv, HeartHandshake, Users } from "lucide-react";
 import { useTrending } from "@/hooks/useMedia";
-import { getPosterUrl } from "@/services/tmdb";
-import { getDominantColor, rgba, DEFAULT_TINT, type RGB } from "@/lib/posterColor";
+import { useHeroCycle } from "@/hooks/useHeroCycle";
+import HeroBackdrop from "@/components/home/HeroBackdrop";
+import { getBackdropUrl, getPosterUrl } from "@/services/tmdb";
+import { genreLabel } from "@/lib/genres";
 import { useAuth } from "@/app/auth-context";
 import UserMenu from "@/components/layout/UserMenu";
 import { usePageTitle } from "@/hooks/usePageTitle";
+
+const FEATURES = [
+  { title: "Buscá todo", desc: "Encontrá cualquier película o serie de TMDB en segundos, con posters, sinopsis y puntajes reales." },
+  { title: "Organizá tu biblioteca", desc: "Estados, calificaciones con estrellas y notas en cada título. Tu historial siempre al día." },
+  { title: "Compartí tu perfil", desc: "Mostrá lo que ves con listas y un perfil público que podés compartir con quien quieras." },
+];
+
+const ROADMAP = [
+  { title: "ADN Audiovisual", desc: "Tu biblioteca se convierte en un perfil visual de gustos: géneros, décadas y directores. Preliminar desde 5 títulos." },
+  { title: "¿Qué vemos hoy?", desc: "Decinos cómo es tu momento y Watchly elige entre lo que ya querías ver. Sin discusiones y sin IA." },
+  { title: "Compatibilidad", desc: "Al visitar un perfil público: cuánto comparten sus pantallas y una película para ver juntos." },
+  { title: "Modo pareja o grupo", desc: "Una sala con 2 a 8 personas, votación de portadas y una decisión sin discusiones eternas." },
+  { title: "Cápsula y rewatch", desc: "Guardá lo que te dejó cada historia y mirá cómo cambió tu relación con ella con el tiempo." },
+  { title: "Créditos del año", desc: "Tus créditos finales: primera y última película del año, mejor calificada y países recorridos." },
+];
 
 export default function LandingPage() {
   usePageTitle("Watchly — Tu biblioteca de películas y series", "Organizá tu biblioteca, calificá y compartí lo que ves. Descubrí tu ADN audiovisual.");
   const { user } = useAuth();
   const { data } = useTrending("all");
-  const trending = data?.results || [];
-  const covers = trending.filter((i) => i.posterPath).map((i) => i.posterPath as string).slice(0, 6);
-  const [scrolled, setScrolled] = useState(false);
+  const trending = (data?.results || []).filter((i) => i.posterPath);
+  const heroItems = trending.filter((i) => i.overview).slice(0, 5);
+  const hero = useHeroCycle(heroItems.map((i) => i.posterPath));
+  const active = heroItems[hero.index];
   const [showDeletedBanner, setShowDeletedBanner] = useState(false);
-  const [bgIndex, setBgIndex] = useState(0);
-  const [tint, setTint] = useState<RGB>(DEFAULT_TINT);
-
-  useEffect(() => {
-    if (covers.length <= 1) return;
-    setBgIndex(0);
-    const t = setInterval(() => setBgIndex((i) => (i + 1) % covers.length), 4000);
-    return () => clearInterval(t);
-  }, [covers.length]);
-
-  const activeCover = covers[bgIndex];
-
-  useEffect(() => {
-    if (!activeCover) return;
-    getDominantColor(getPosterUrl(activeCover, "w200"))
-      .then(setTint)
-      .catch(() => setTint(DEFAULT_TINT));
-  }, [activeCover]);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     if (window.location.search.includes("account_deleted=1")) {
@@ -48,176 +40,134 @@ export default function LandingPage() {
     }
   }, []);
 
+  const accent = { color: hero.accent, transition: "color 1.2s" } as const;
+  const glassCard = "liquid-glass rounded-[2.5rem]";
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "transparent" }}>
-
-      {/* Navbar */}
-      <header
-        className="sticky top-0 z-50 transition-all duration-500"
-        style={{
-          padding: scrolled ? "10px 0" : "18px 0",
-          backgroundColor: scrolled ? "rgba(11,11,20,0.72)" : "transparent",
-          backdropFilter: scrolled ? "blur(20px) saturate(140%)" : "none",
-          WebkitBackdropFilter: scrolled ? "blur(20px) saturate(140%)" : "none",
-          borderBottom: scrolled ? "1px solid color-mix(in srgb, var(--accent) 18%, transparent)" : "1px solid transparent",
-          boxShadow: scrolled ? "0 12px 36px -16px rgba(0,0,0,0.6)" : "none",
-        }}
-      >
-        <div className="flex items-center justify-between px-6 md:px-10">
-          <span
-            className="text-2xl font-extrabold tracking-tight text-gradient whitespace-nowrap transition-transform duration-500"
-            style={{ transform: scrolled ? "scale(0.9)" : "scale(1)" }}
-          >
-            Watchly
-          </span>
-          <div className="flex items-center gap-2">
-            <a href="/roadmap" title="Roadmap"
-              className="w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-105 hover:opacity-80"
-              style={{ backgroundColor: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text-secondary)" }}>
-              <HelpCircle className="w-5 h-5" />
-            </a>
-            {user ? (
-              <UserMenu />
-            ) : (
-              <>
-                <a href="/login"
-                  className="flex items-center gap-2 px-3 sm:px-5 h-11 rounded-full text-sm font-semibold transition-all hover:opacity-80"
-                  style={{ color: "var(--text-primary)", backgroundColor: "var(--surface-2)", border: "1px solid var(--border)" }}>
-                  <LogIn className="w-4 h-4" />
-                  <span className="hidden sm:inline">Iniciar sesión</span>
-                </a>
-                <a href="/registro"
-                  className="flex items-center gap-2 px-3 sm:px-5 h-11 rounded-full text-sm font-bold transition-all hover:scale-[1.04]"
-                  style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
-                  <UserPlus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Crear cuenta</span>
-                </a>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen flex flex-col text-white">
       {showDeletedBanner && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-6 py-3 rounded-full text-sm font-semibold"
-          style={{ backgroundColor: "rgba(234,179,163,0.9)", color: "#7c2d12", boxShadow: "0 4px 20px rgba(239,68,68,0.3)" }}>
+          style={{ backgroundColor: "rgba(234,179,163,0.9)", color: "#7c2d12" }}>
           Cuenta eliminada correctamente. ¡Esperamos verte de vuelta pronto!
         </div>
       )}
 
-      {/* Hero banner with cycling blurred covers */}
-      <section className="relative flex-1 flex items-center overflow-hidden pt-12 pb-16">
-        {covers.length > 0 && (
-          <div className="absolute inset-0">
-            {covers.map((poster, i) => (
-              <img
-                key={i}
-                src={getPosterUrl(poster, "w500")}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2200ms] ease-in-out"
-                style={{
-                  opacity: i === bgIndex ? 1 : 0,
-                  filter: "blur(28px) saturate(1.25)",
-                  transform: "scale(1.2)",
-                }}
-              />
-            ))}
-            <div className="absolute inset-0"
-              style={{ background: "linear-gradient(180deg, rgba(11,11,20,0.92) 0%, rgba(11,11,20,0.55) 50%, rgba(11,11,20,0.96) 100%)" }} />
+      {/* ───────── HERO ───────── */}
+      <section className="relative min-h-[100svh] overflow-hidden flex flex-col">
+        <HeroBackdrop items={heroItems} index={hero.index} glow={hero.glow} glow2={hero.glow2} />
+
+        {/* Nav */}
+        <header className="relative z-20 px-4 md:px-10 pt-6">
+          <div className="liquid-glass mx-auto max-w-[1288px] h-16 rounded-full flex items-center gap-2 pl-7 pr-2.5">
+            <span className="font-cinema text-3xl" style={accent}>Watchly</span>
+            <div className="flex-1" />
+            <a href="/roadmap" className="hidden sm:block px-4 py-2.5 text-sm font-semibold text-white/80 hover:text-white">Roadmap</a>
+            {user ? <UserMenu /> : (
+              <>
+                <a href="/login" className="liquid-glass-sm h-11 px-5 rounded-full flex items-center text-sm font-bold text-white hover:text-white">Iniciar sesión</a>
+                <a href="/registro" className="h-11 px-6 rounded-full bg-white text-[#111] hover:text-[#111] flex items-center text-sm font-extrabold">Crear cuenta</a>
+              </>
+            )}
           </div>
-        )}
+        </header>
 
-        <div
-          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] h-[150%] rounded-full"
-          style={{ background: `radial-gradient(ellipse at center, ${rgba(tint, 0.42)} 0%, transparent 65%)` }}
-        />
-        <div className="absolute top-[-10%] left-[-5%] w-[520px] h-[520px] rounded-full blur-[130px] animate-glow pointer-events-none"
-          style={{ background: "var(--glow-violet)" }} />
-        <div className="absolute bottom-[-15%] right-[-8%] w-[480px] h-[480px] rounded-full blur-[130px] pointer-events-none"
-          style={{ background: "var(--glow-pink)" }} />
-
-        <div className="relative z-10 w-full max-w-4xl mx-auto text-center px-6 md:px-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-7"
-            style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
-            <Sparkles className="w-3.5 h-3.5" />
-            Tu mundo de cine
-          </div>
-
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.02] mb-7"
-            style={{ color: "var(--text-primary)" }}>
-            Viví tu cine.
-            <br />
-            <span className="text-gradient">Compartí todo</span>
-            <br />
-            lo que ves.
-          </h1>
-
-          <p className="text-lg md:text-xl max-w-lg mx-auto leading-relaxed mb-10" style={{ color: "var(--text-secondary)" }}>
-            Buscá, guardá, calificá y compartí películas y series. Tu biblioteca audiovisual personal — hermosa, simple, tuya.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="/registro"
-              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px color-mix(in srgb, var(--accent) 50%, transparent)" }}>
-              Crear mi perfil gratis
-              <ArrowRight className="w-5 h-5" />
-            </a>
-            <a href="/login"
-              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
-              style={{ backgroundColor: "var(--surface-2)", color: "var(--text-primary)", border: "1.5px solid var(--border)" }}>
-              <Play className="w-4 h-4" />
-              Ya tengo cuenta
-            </a>
+        {/* Copy + title card */}
+        <div className="relative z-10 flex-1 flex items-center justify-between gap-10 px-5 md:px-14 lg:px-24 py-12">
+          <div className="max-w-[840px]">
+            <span className="liquid-glass-sm inline-flex px-[18px] py-2 rounded-full text-xs font-extrabold tracking-[.2em] uppercase">Tu mundo de cine</span>
+            <h1 className="font-cinema mt-7 mb-6 text-6xl md:text-8xl xl:text-[8.5rem] leading-[1.02] drop-shadow-[0_10px_60px_rgba(0,0,0,.4)]">
+              Viví tu cine.<br />
+              <span style={accent}>Compartí todo</span><br />
+              lo que ves.
+            </h1>
+            <p className="text-lg md:text-xl leading-relaxed font-medium text-white/85 max-w-xl text-pretty">
+              Guardá lo que viste y lo que querés ver, calificá, escribí notas y armá listas. Tu historial de cine — hermoso, simple, tuyo.
+            </p>
+            <div className="flex flex-wrap gap-3.5 mt-9">
+              <a href="/registro" className="h-14 px-8 rounded-full bg-white text-[#111] hover:text-[#111] font-extrabold flex items-center gap-2.5 shadow-[0_12px_40px_rgba(0,0,0,.35)] hover:scale-[1.03] transition-transform">
+                Crear mi perfil gratis <span className="text-xl">→</span>
+              </a>
+              <a href="/login" className="liquid-glass-sm h-14 px-8 rounded-full font-bold flex items-center text-white hover:text-white hover:scale-[1.03] transition-transform">
+                Ya tengo cuenta
+              </a>
+            </div>
           </div>
 
-          <div className="flex items-center justify-center gap-8 mt-10">
-            {[
-              ["+10K", "títulos"],
-              ["5", "estados"],
-              ["∞", "listas"],
-            ].map(([n, l]) => (
-              <div key={l} className="text-center">
-                <p className="text-2xl font-extrabold text-gradient leading-none">{n}</p>
-                <p className="text-xs mt-1.5" style={{ color: "var(--text-secondary)" }}>{l}</p>
+          {active && (
+            <div className="liquid-glass hidden xl:block w-[380px] shrink-0 rounded-[2.25rem] p-[18px]">
+              <div className="grid">
+                {heroItems.map((it, i) => (
+                  <div key={it.tmdbId} className="[grid-area:1/1] flex flex-col gap-3.5 transition-all duration-1000"
+                    style={{ opacity: i === hero.index ? 1 : 0, transform: `translateY(${i === hero.index ? 0 : 18}px)` }}>
+                    <div className="relative h-[210px] rounded-3xl overflow-hidden">
+                      <img src={it.backdropPath ? getBackdropUrl(it.backdropPath, "w780") : getPosterUrl(it.posterPath, "w500")}
+                        alt="" className="w-full h-full object-cover" />
+                      {it.tmdbRating ? (
+                        <span className="absolute top-3 right-3 px-3 py-1.5 rounded-full text-[#111] text-[13px] font-extrabold"
+                          style={{ background: hero.accent }}>★ {it.tmdbRating.toFixed(1)}</span>
+                      ) : null}
+                    </div>
+                    <div className="px-1.5">
+                      <p className="text-xs font-bold text-white/70">{[it.year, genreLabel(it.genreIds)].filter(Boolean).join(" · ")}</p>
+                      <p className="font-cinema text-4xl leading-none my-2 line-clamp-2">{it.title}</p>
+                      <p className="text-sm leading-relaxed text-white/85 line-clamp-3">{it.overview}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 pt-4 pb-1">
+                <span className="flex-1 h-11 rounded-full flex items-center justify-center text-[13px] font-extrabold text-[#111]" style={{ background: hero.accent, transition: "background 1.2s" }}>+ Quiero ver</span>
+                <span className="liquid-glass-sm flex-1 h-11 rounded-full flex items-center justify-center text-[13px] font-bold">✓ Vista</span>
+                <span className="liquid-glass-sm flex-1 h-11 rounded-full flex items-center justify-center text-[13px] font-bold">Lista</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Rail + stats */}
+        <div className="relative z-10 flex items-end justify-between gap-6 px-5 md:px-14 lg:px-24 pb-10">
+          <div className="flex items-end gap-3.5 overflow-x-auto no-scrollbar py-2">
+            {heroItems.map((it, i) => {
+              const on = i === hero.index;
+              return (
+                <button key={it.tmdbId} type="button" onClick={() => hero.select(i)} aria-label={it.title}
+                  className="shrink-0 flex flex-col gap-2.5 transition-all duration-700" style={{ width: on ? 120 : 86 }}>
+                  <img src={getPosterUrl(it.posterPath, "w342")} alt={it.title}
+                    className="w-full object-cover rounded-[18px] transition-all duration-700"
+                    style={{ aspectRatio: "2/3", border: `1px solid rgba(255,255,255,${on ? 0.6 : 0.18})`, boxShadow: `0 20px 40px rgba(0,0,0,.45), 0 0 0 ${on ? 2 : 0}px ${hero.accent}` }} />
+                  <span className="h-[3px] rounded-full bg-white/20 overflow-hidden" style={{ opacity: on ? 1 : 0 }}>
+                    <span className="block h-full" style={{ width: `${hero.progress}%`, background: hero.accent }} />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="liquid-glass hidden md:flex rounded-[2rem] py-4 px-1.5 shrink-0">
+            {[["+10K", "títulos"], ["5", "estados"], ["∞", "listas"]].map(([n, l]) => (
+              <div key={l} className="px-7 text-center">
+                <div className="font-cinema text-4xl leading-none" style={accent}>{n}</div>
+                <div className="text-xs font-bold mt-2 text-white/75">{l}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Trending marquee — full width with center spotlight */}
+      {/* ───────── TENDENCIA (marquee) ───────── */}
       {trending.length > 0 && (
         <section className="relative py-12 overflow-hidden">
-          <div className="pointer-events-none absolute inset-x-0 top-0 bottom-0 flex items-center justify-center overflow-hidden">
-            <div
-              className="w-[55%] h-[120%] rounded-full animate-glow"
-              style={{ background: "radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 30%, transparent) 0%, transparent 70%)" }}
-            />
+          <div className="absolute top-0 left-1/4 w-[900px] h-[420px] rounded-full blur-[150px] opacity-50 cinema-drift-a pointer-events-none"
+            style={{ background: hero.row, transition: "background 1.6s" }} />
+          <div className="relative flex items-center gap-5 px-6 md:px-24 mb-7">
+            <h2 className="font-cinema text-3xl md:text-5xl whitespace-nowrap">Tendencia de la semana</h2>
+            <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(255,255,255,.3), transparent)" }} />
           </div>
-          <div className="absolute top-1/2 -left-24 w-72 h-72 rounded-full blur-[110px] animate-glow pointer-events-none"
-            style={{ background: "color-mix(in srgb, var(--accent) 35%, transparent)" }} />
-          <div className="absolute -right-20 bottom-0 w-64 h-64 rounded-full blur-[100px] pointer-events-none"
-            style={{ background: "rgba(236,72,153,0.22)" }} />
-
-          <div className="relative max-w-6xl mx-auto px-6 md:px-10">
-            <div className="flex gap-3 mb-6 items-center">
-              <span className="text-xs font-extrabold uppercase tracking-[0.25em]" style={{ color: "var(--text-secondary)" }}>
-                Tendencia de la semana
-              </span>
-              <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, color-mix(in srgb, var(--accent) 40%, transparent), transparent)" }} />
-            </div>
-          </div>
-
-          <div className="relative z-10 flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
-            <div className="flex gap-4 md:gap-6 animate-marquee shrink-0">
-              {[...trending, ...trending].map((item, i) => (
-                <div key={`${item.tmdbId}-${i}`} className="w-40 md:w-52 shrink-0">
-                  <div className="aspect-[2/3] rounded-2xl overflow-hidden border poster-card"
-                    style={{ borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)", boxShadow: "0 10px 30px -12px rgba(0,0,0,0.6)" }}>
-                    <img src={getPosterUrl(item.posterPath, "w342")} alt={item.title}
-                      className="w-full h-full object-cover" loading="lazy" />
-                  </div>
+          <div className="relative flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
+            <div className="flex gap-6 animate-marquee shrink-0">
+              {[...trending, ...trending].map((it, i) => (
+                <div key={`${it.tmdbId}-${i}`}
+                  className="relative w-44 md:w-56 shrink-0 aspect-[2/3] rounded-[1.75rem] overflow-hidden border border-white/18 shadow-[0_24px_50px_-12px_rgba(0,0,0,.7)]">
+                  <img src={getPosterUrl(it.posterPath, "w342")} alt={it.title} loading="lazy" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
@@ -225,137 +175,76 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* Features */}
-      <section className="relative px-6 md:px-10 py-20 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-6%] w-96 h-96 rounded-full blur-[130px] animate-glow pointer-events-none"
-          style={{ background: "var(--glow-violet)" }} />
-        <div className="absolute bottom-[-10%] left-[-6%] w-80 h-80 rounded-full blur-[120px] pointer-events-none"
-          style={{ background: "var(--glow-pink)" }} />
-
-        <div className="relative max-w-5xl mx-auto">
-          <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-center mb-3" style={{ color: "var(--accent-light)" }}>
-            Por qué Watchly
-          </p>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-center mb-14"
-            style={{ color: "var(--text-primary)" }}>
-            Todo tu cine, <span className="text-gradient">en un solo lugar</span>
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { icon: Search, title: "Buscá todo", desc: "Encontrá cualquier película o serie de TMDB en segundos, con posters, sinopsis y puntajes reales." },
-              { icon: BookOpen, title: "Organizá tu biblioteca", desc: "Estados, calificaciones con estrellas y notas en cada título. Tu colección siempre al día." },
-              { icon: Share2, title: "Compartí tu perfil", desc: "Mostrá lo que ves con listas y un perfil público que podés compartir con quien quieras." },
-            ].map(({ icon: Icon, title, desc }, i) => (
-              <div key={title}
-                className="group relative glass rounded-[2rem] p-8 overflow-hidden transition-all duration-300 hover:-translate-y-2"
-                style={{ boxShadow: "0 20px 50px -18px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
-                <div className="absolute -top-20 -right-20 w-52 h-52 rounded-full blur-[90px] opacity-40 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none"
-                  style={{ background: i === 1 ? "rgba(236,72,153,0.7)" : i === 2 ? "rgba(56,189,248,0.6)" : "color-mix(in srgb, var(--accent) 80%, transparent)" }} />
-                <div className="relative">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
-                    style={{ background: "var(--gradient-accent)", boxShadow: "0 8px 24px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
-                    <Icon className="w-6 h-6 text-white" />
-                  </div>
-                  <p className="text-xs font-extrabold mb-2" style={{ color: "var(--accent-light)" }}>0{i + 1}</p>
-                  <h3 className="text-xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>{title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* ───────── FEATURES ───────── */}
+      <section className="relative px-5 md:px-24 py-20">
+        <p className="text-xs font-extrabold tracking-[.25em] uppercase text-center" style={accent}>Por qué Watchly</p>
+        <h2 className="font-cinema text-5xl md:text-7xl text-center mt-4 mb-14">
+          Todo tu cine, <span style={accent}>en un solo lugar</span>
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[1248px] mx-auto">
+          {FEATURES.map((f, i) => (
+            <div key={f.title} className={`${glassCard} relative overflow-hidden min-h-[320px] p-9 flex flex-col gap-3.5 transition-transform duration-300 hover:-translate-y-2`}>
+              <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[80px] opacity-60 pointer-events-none"
+                style={{ background: hero.row, filter: `blur(80px) hue-rotate(${i * 50}deg)` }} />
+              <div className="relative font-cinema text-7xl leading-none" style={accent}>0{i + 1}</div>
+              <h3 className="relative font-cinema text-3xl leading-tight mt-auto">{f.title}</h3>
+              <p className="relative text-[15px] leading-relaxed text-white/80 text-pretty">{f.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Roadmap */}
-      <section className="relative px-6 md:px-10 py-20 overflow-hidden">
-        <div className="absolute top-[-8%] left-[-8%] w-96 h-96 rounded-full blur-[130px] pointer-events-none"
-          style={{ background: "rgba(236,72,153,0.28)" }} />
-        <div className="absolute bottom-[-15%] right-[-8%] w-[420px] h-[420px] rounded-full blur-[140px] animate-glow pointer-events-none"
-          style={{ background: "rgba(56,189,248,0.22)" }} />
-
-        <div className="relative max-w-5xl mx-auto">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <HelpCircle className="w-4 h-4" style={{ color: "var(--accent-light)" }} />
-            <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-center" style={{ color: "var(--accent-light)" }}>
-              Roadmap
-            </p>
-          </div>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-center mb-4"
-            style={{ color: "var(--text-primary)" }}>
-            Lo que se viene <span className="text-gradient">en Watchly</span>
+      {/* ───────── ROADMAP ───────── */}
+      <section className="relative px-5 md:px-24 py-20 overflow-hidden">
+        <div className="absolute top-0 -right-24 w-[700px] h-[700px] rounded-full blur-[150px] opacity-45 cinema-drift-b pointer-events-none"
+          style={{ background: hero.row, transition: "background 1.6s" }} />
+        <div className="relative max-w-[1248px] mx-auto">
+          <p className="text-xs font-extrabold tracking-[.25em] uppercase text-center" style={accent}>Roadmap</p>
+          <h2 className="font-cinema text-5xl md:text-7xl text-center mt-4 mb-5">
+            Lo que se viene <span style={accent}>en Watchly</span>
           </h2>
-          <p className="text-base max-w-2xl mx-auto text-center mb-14" style={{ color: "var(--text-secondary)" }}>
-            Una función diferencial por etapa, medida y consolidada antes de avanzar. Esto es lo que está en camino
-            para tu identidad audiovisual.
+          <p className="text-base md:text-lg text-center max-w-2xl mx-auto mb-12 text-white/75">
+            Una función diferencial por etapa, medida y consolidada antes de avanzar.
           </p>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {[
-              { icon: Sparkles, title: "ADN Audiovisual", desc: "Tu biblioteca se convierte en un perfil visual de gustos: géneros, décadas y directores. Preliminar desde 5 títulos." },
-              { icon: Tv, title: "¿Qué vemos hoy?", desc: "Decinos cómo es tu momento y Watchly elige entre lo que ya querías ver. Sin discusiones y sin IA." },
-              { icon: HeartHandshake, title: "Compatibilidad", desc: "Al visitar un perfil público: cuánto comparten sus pantallas y una película para ver juntos." },
-              { icon: Users, title: "Modo pareja o grupo", desc: "Una sala con 2 a 8 personas, votación de portadas y una decisión sin discusiones eternas." },
-              { icon: Clapperboard, title: "Cápsula y rewatch", desc: "Guardá lo que te dejó cada historia y mirá cómo cambió tu relación con ella con el tiempo." },
-              { icon: Star, title: "Créditos del año", desc: "Tus créditos finales: primera y última película del año, mejor calificada y países recorridos." },
-            ].map(({ icon: Icon, title, desc }, i) => (
-              <div key={title}
-                className="group relative glass rounded-[2rem] p-7 overflow-hidden transition-all duration-300 hover:-translate-y-2"
-                style={{ boxShadow: "0 20px 50px -18px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
-                <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[80px] opacity-40 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none"
-                  style={{ background: i % 3 === 1 ? "rgba(236,72,153,0.7)" : i % 3 === 2 ? "rgba(56,189,248,0.6)" : "color-mix(in srgb, var(--accent) 80%, transparent)" }} />
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
-                    style={{ background: "var(--gradient-accent)", boxShadow: "0 6px 20px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>{title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{desc}</p>
+            {ROADMAP.map((r, i) => (
+              <div key={r.title} className="liquid-glass rounded-[2rem] px-7 py-6 flex items-center gap-5">
+                <div className="shrink-0 w-16 h-16 rounded-[1.4rem] flex items-center justify-center font-cinema text-3xl text-[#111]"
+                  style={{ background: hero.accent, filter: `hue-rotate(${(i % 3) * 50}deg)`, transition: "background 1.2s" }}>
+                  {i + 1}
+                </div>
+                <div>
+                  <p className="font-extrabold text-lg mb-1.5">{r.title}</p>
+                  <p className="text-sm leading-relaxed text-white/75 text-pretty">{r.desc}</p>
                 </div>
               </div>
             ))}
           </div>
-
-          <div className="text-center mt-10">
-            <a href="/roadmap"
-              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px color-mix(in srgb, var(--accent) 50%, transparent)" }}>
-              Ver el roadmap completo
-              <ArrowRight className="w-5 h-5" />
+          <div className="flex justify-center mt-10">
+            <a href="/roadmap" className="liquid-glass-sm h-14 px-8 rounded-full flex items-center font-bold text-white hover:text-white hover:scale-[1.03] transition-transform">
+              Ver el roadmap completo →
             </a>
           </div>
         </div>
       </section>
 
-      {/* CTA banner */}
-      <section className="relative px-6 md:px-10 pb-24 overflow-hidden">
-        <div className="relative max-w-4xl mx-auto glass rounded-[2.5rem] p-10 md:p-16 text-center overflow-hidden"
-          style={{ boxShadow: "0 30px 70px -24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
-          <div className="absolute top-[-40%] left-1/2 -translate-x-1/2 w-[560px] h-[560px] rounded-full blur-[120px] animate-glow pointer-events-none"
-            style={{ background: "var(--gradient-accent)", opacity: 0.4 }} />
-          <div className="absolute bottom-[-45%] right-[-8%] w-72 h-72 rounded-full blur-[110px] pointer-events-none"
-            style={{ background: "rgba(236,72,153,0.3)" }} />
+      {/* ───────── CTA ───────── */}
+      <section className="relative px-5 md:px-24 pb-24">
+        <div className="liquid-glass relative max-w-[1248px] mx-auto rounded-[3.5rem] px-8 py-20 text-center overflow-hidden">
+          <div className="absolute -top-64 left-1/2 -ml-80 w-[640px] h-[640px] rounded-full blur-[110px] opacity-80 cinema-drift-a pointer-events-none"
+            style={{ background: hero.row, transition: "background 1.6s" }} />
           <div className="relative">
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5" style={{ color: "var(--text-primary)" }}>
-              Empezá hoy. <span className="text-gradient">Gratis.</span>
-            </h2>
-            <p className="text-base md:text-lg max-w-xl mx-auto mb-9" style={{ color: "var(--text-secondary)" }}>
-              Tu perfil de cine te está esperando. Creá tu cuenta en menos de un minuto.
-            </p>
-            <a href="/registro"
-              className="inline-flex items-center gap-2.5 px-9 py-4 rounded-full text-base font-bold transition-all hover:scale-[1.04]"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 30px color-mix(in srgb, var(--accent) 50%, transparent)" }}>
-              Crear mi cuenta
-              <ArrowRight className="w-5 h-5" />
+            <h2 className="font-cinema text-6xl md:text-8xl leading-none">Empezá hoy. <span style={accent}>Gratis.</span></h2>
+            <p className="text-lg text-white/80 mx-auto mt-6 mb-9 max-w-lg">Tu perfil de cine te está esperando. Creá tu cuenta en menos de un minuto.</p>
+            <a href="/registro" className="inline-flex h-16 px-10 items-center gap-2.5 rounded-full bg-white text-[#111] hover:text-[#111] font-extrabold text-lg shadow-[0_12px_40px_rgba(0,0,0,.35)] hover:scale-[1.03] transition-transform">
+              Crear mi cuenta →
             </a>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="px-6 md:px-10 py-8 text-center text-sm border-t"
-        style={{ color: "var(--text-secondary)", borderColor: "color-mix(in srgb, var(--accent) 15%, transparent)" }}>
-        <span className="font-extrabold text-gradient">Watchly</span> &mdash; Tu identidad audiovisual.
+      <footer className="px-6 md:px-10 py-8 text-center text-sm text-white/60 border-t border-white/10">
+        <span className="font-cinema text-lg" style={accent}>Watchly</span> — Tu identidad audiovisual.
       </footer>
     </div>
   );
