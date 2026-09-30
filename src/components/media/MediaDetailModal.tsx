@@ -1,7 +1,7 @@
 import "@/styles/cinema.css";
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { X, Star, ListPlus, ListIcon, ChevronDown, Check, Sparkles, Quote, Share2, CalendarDays, MapPin, Users, Languages, MonitorPlay, Repeat, Trash2, Pencil, Plus, HelpCircle, RotateCw, Play, Clock } from "lucide-react";
+import { X, Star, ListPlus, ListIcon, ChevronDown, Check, Sparkles, Quote, Share2, CalendarDays, MapPin, Users, Languages, MonitorPlay, Repeat, Trash2, Pencil, Plus, HelpCircle, RotateCw, Play, Clock, Bookmark, CheckCheck, Pause, XCircle, Info } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { getPosterUrl, getBackdropUrl, getMediaDetails } from "@/services/tmdb";
 import { addToLibrary, updateEntry, removeFromLibrary, getEntry } from "@/services/library";
@@ -185,6 +185,7 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
   const [justSavedId, setJustSavedId] = useState<string | null>(null);
   const [sessionSaved, setSessionSaved] = useState(false);
   const [coverColor, setCoverColor] = useState<[number, number, number] | null>(null);
+  const [tab, setTab] = useState<"info" | "diary">("info");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const justSavedTimer = useRef<number | null>(null);
 
@@ -610,203 +611,225 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
   const cast = details?.cast ?? [];
   const trailerKey = details?.videos?.find((v) => v.site === "YouTube" && v.key)?.key;
   const yearLabel = details?.year ?? result.year ?? "Sin año";
+  const STATUS_ICONS: Record<EntryStatus, typeof Bookmark> = { want_to_watch: Bookmark, watching: Play, completed: CheckCheck, paused: Pause, dropped: XCircle };
   const chip = "liquid-glass-sm px-4 py-2 rounded-full text-xs font-extrabold text-white";
   const card = "frost-card rounded-[2rem] p-6";
   const label = "text-xs font-extrabold uppercase tracking-widest text-white/60";
   const roundBtn = "liquid-glass-sm w-11 h-11 rounded-full flex items-center justify-center text-white transition-transform hover:scale-110 active:scale-90";
-  const whiteBtn = "inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full bg-white text-[#111] text-sm font-extrabold shadow-[0_12px_40px_rgba(0,0,0,.35)] transition-transform hover:scale-[1.03] active:scale-95 disabled:opacity-50";
-  const glassBtn = "liquid-glass-sm inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full text-sm font-bold text-white transition-transform hover:scale-[1.03]";
+  const whiteBtn = "inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-white text-[#111] text-sm font-extrabold shadow-[0_12px_40px_rgba(0,0,0,.35)] transition-transform hover:scale-[1.03] active:scale-95 disabled:opacity-50";
+  const glassBtn = "liquid-glass-sm inline-flex items-center justify-center gap-2 h-12 px-5 rounded-full text-sm font-bold text-white transition-transform hover:scale-[1.03]";
+  const showDiary = !isReadOnly && tab === "diary";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 text-white" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-5 text-white" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-2xl" />
 
       <div
-        className="relative w-[min(96vw,1240px)] h-full max-h-[94vh] overflow-hidden rounded-[2.5rem] animate-pop border border-white/20"
+        className="relative w-[min(98vw,1320px)] h-full max-h-[95vh] overflow-hidden rounded-[2.25rem] sm:rounded-[2.75rem] animate-pop border border-white/20"
         onClick={(e) => e.stopPropagation()}
         style={{ backgroundColor: "#0b0b14", boxShadow: "0 40px 120px -24px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.2)" }}
       >
-        {/* Fondo: backdrop grande + manchas del color del póster */}
+        {/* Fondo: póster ultra desenfocado + backdrop arriba */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <img
-            src={heroImg ?? posterUrl}
-            alt=""
-            aria-hidden="true"
-            className="absolute top-0 inset-x-0 w-full h-[560px] object-cover cinema-kenburns"
-            style={heroImg ? undefined : { filter: "blur(40px) saturate(1.3)", transform: "scale(1.4)" }}
-          />
-          <div className="absolute -top-40 -left-24 w-[620px] h-[620px] rounded-full blur-[130px] cinema-drift-a" style={{ background: tone.glow }} />
-          <div className="absolute top-40 -right-24 w-[560px] h-[560px] rounded-full blur-[130px] cinema-drift-b" style={{ background: tone.glow2 }} />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(11,11,20,.25) 0, rgba(11,11,20,.7) 300px, rgba(11,11,20,.94) 520px, #0b0b14 640px)" }} />
-        </div>
-
-        {/* Acciones flotantes */}
-        <div className="absolute top-5 right-5 z-30 flex items-center gap-2">
-          {shareUrl && (
-            <button onClick={handleShare} className={roundBtn} title={copied ? "¡Link copiado!" : "Copiar link para compartir"} style={{ color: copied ? "#86efac" : undefined }}>
-              {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-            </button>
+          <img src={posterUrl} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" style={{ filter: "blur(80px) saturate(1.6)", transform: "scale(1.5)", opacity: 0.7 }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(8,8,16,.55), rgba(8,8,16,.86))" }} />
+          {heroImg && (
+            <img src={heroImg} alt="" aria-hidden="true" className="hidden lg:block absolute top-0 right-0 w-[calc(100%-360px)] h-[360px] object-cover"
+              style={{ WebkitMaskImage: "linear-gradient(180deg,#000 0,transparent 100%)", maskImage: "linear-gradient(180deg,#000 0,transparent 100%)", opacity: 0.55 }} />
           )}
-          <button onClick={onClose} aria-label="Cerrar" className={roundBtn}>
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
-        <div className="relative z-10 h-full overflow-y-auto no-scrollbar">
-          <div className="px-6 sm:px-10 pt-24 sm:pt-32 pb-12">
-            {/* ───────── HERO ───────── */}
-            <section className="flex flex-col md:flex-row gap-8 md:gap-10 items-start md:items-end">
-              <img
-                src={posterUrl}
-                alt={result.title}
-                className="w-40 md:w-[250px] shrink-0 aspect-[2/3] object-cover rounded-[2rem] border border-white/25 animate-breathe"
-                style={{ boxShadow: `0 30px 80px -15px rgba(0,0,0,.85), 0 10px 40px ${tone.glow}` }}
-              />
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className={chip}>{yearLabel}</span>
-                  <span className={chip}>{result.mediaType === "movie" ? "Película" : "Serie"}</span>
-                  {runtimeLabel && (
-                    <span className={`${chip} inline-flex items-center gap-1.5`}><Clock className="w-3.5 h-3.5" /> {runtimeLabel}</span>
-                  )}
-                  {score ? (
-                    <span className="px-4 py-2 rounded-full text-xs font-extrabold text-[#111]" style={{ background: tone.accent }}>TMDB {score.toFixed(1)}</span>
-                  ) : null}
-                  {isReadOnly && readOnlyEntry && (
-                    <span className="inline-flex items-center gap-1.5 pl-3 pr-4 py-2 rounded-full text-xs font-extrabold liquid-glass-sm text-white">
-                      <span className="w-2 h-2 rounded-full" style={{ background: STATUS_COLORS[readOnlyEntry.status] }} />
-                      {STATUS_LABELS[readOnlyEntry.status]}
-                    </span>
-                  )}
+        <button onClick={onClose} aria-label="Cerrar" className={`${roundBtn} absolute top-4 right-4 z-30`}><X className="w-5 h-5" /></button>
+
+        <div className="relative z-10 h-full overflow-y-auto no-scrollbar lg:overflow-hidden lg:grid lg:grid-cols-[350px_minmax(0,1fr)]">
+          {/* ───────── PANEL IZQUIERDO: póster + acciones rápidas ───────── */}
+          <aside className="p-5 sm:p-7 lg:overflow-y-auto no-scrollbar lg:border-r lg:border-white/10 space-y-5">
+            <div className="relative mx-auto max-w-[260px] lg:max-w-none">
+              <img src={posterUrl} alt={result.title} className="w-full aspect-[2/3] object-cover rounded-[2rem] border border-white/25"
+                style={{ boxShadow: `0 30px 70px -15px rgba(0,0,0,.85), 0 10px 40px ${tone.glow}` }} />
+              {score ? (
+                <span className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-extrabold text-[#111]" style={{ background: tone.accent }}>★ {score.toFixed(1)}</span>
+              ) : null}
+            </div>
+
+            {isReadOnly && readOnlyEntry ? (
+              <div className="frost-card rounded-[1.75rem] p-4 flex items-center gap-3">
+                {(() => { const I = STATUS_ICONS[readOnlyEntry.status]; return <I className="w-5 h-5" style={{ color: STATUS_COLORS[readOnlyEntry.status] }} />; })()}
+                <div>
+                  <p className={label}>Estado</p>
+                  <p className="text-sm font-extrabold mt-0.5">{STATUS_LABELS[readOnlyEntry.status]}</p>
                 </div>
-                {genres.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {genres.map((g) => (
-                      <span key={g} className="px-3 py-1 rounded-full text-[11px] font-bold border border-white/25 text-white/85">{g}</span>
-                    ))}
-                  </div>
-                )}
+              </div>
+            ) : (
+              <div className="frost-card rounded-[1.75rem] p-2 space-y-1">
+                {STATUSES.map((s) => {
+                  const I = STATUS_ICONS[s.value];
+                  const active = status === s.value;
+                  return (
+                    <button key={s.value} onClick={() => setStatus(s.value)}
+                      className="w-full flex items-center gap-3 px-4 h-11 rounded-full text-sm font-extrabold transition-all"
+                      style={{ background: active ? "#fff" : "transparent", color: active ? "#111" : "rgba(255,255,255,.88)" }}>
+                      <I className="w-4 h-4" style={{ color: active ? "#111" : STATUS_COLORS[s.value] }} />
+                      {s.label}
+                      {active && <Check className="w-4 h-4 ml-auto" strokeWidth={3} />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-                <h2 className="font-cinema mt-5 mb-4 text-5xl md:text-7xl leading-[1.02] drop-shadow-[0_10px_50px_rgba(0,0,0,.5)]">{result.title}</h2>
+            <div className="frost-card rounded-[1.75rem] px-5 py-4">
+              <p className={`${label} mb-2.5`}>{isReadOnly ? "Su nota" : "Tu nota"}</p>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const on = (isReadOnly ? displayRating : hoverRating || rating) >= star;
+                  const icon = <Star className="w-7 h-7" fill={on ? tone.accent : "none"} stroke={on ? tone.accent : "rgba(255,255,255,.5)"} strokeWidth={1.6} />;
+                  return isReadOnly ? <span key={star}>{icon}</span> : (
+                    <button key={star} onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)}
+                      onClick={() => setRating(rating === star ? 0 : star)} className="transition-transform hover:scale-125">{icon}</button>
+                  );
+                })}
+              </div>
+            </div>
 
-                <p className="text-base md:text-lg leading-relaxed font-medium text-white/85 max-w-2xl text-pretty line-clamp-5">
-                  {description || result.overview || "Sin sinopsis disponible."}
-                </p>
+            {!isReadOnly && (
+              <div className="space-y-2.5">
+                <button onClick={handleSave} disabled={saving || loading} className={`${whiteBtn} w-full`}>
+                  {saving ? <RotateCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" strokeWidth={3} />}
+                  {saving ? "Guardando..." : existingEntry ? "Actualizar" : "Guardar en mi biblioteca"}
+                </button>
+                {saveError && <p className="text-xs font-bold text-red-300">{saveError}</p>}
 
-                {/* Nota + acciones */}
-                <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-4">
-                  <div>
-                    <p className={`${label} mb-2`}>{isReadOnly ? "Su nota" : "Tu nota"}</p>
-                    <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => {
-                        const on = (isReadOnly ? displayRating : hoverRating || rating) >= star;
-                        const icon = <Star className="w-7 h-7" fill={on ? tone.accent : "none"} stroke={on ? tone.accent : "rgba(255,255,255,.5)"} strokeWidth={1.6} />;
-                        return isReadOnly ? (
-                          <span key={star}>{icon}</span>
+                <div ref={dropdownRef} className="relative">
+                  <button onClick={() => setShowListDropdown((v) => !v)} className={`${glassBtn} w-full`} style={addedToListId ? { color: "#86efac" } : undefined}>
+                    <ListPlus className="w-4 h-4" />
+                    {addedToListId ? "¡Agregado!" : "Agregar a lista"}
+                    <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${showListDropdown ? "rotate-180" : ""}`} />
+                  </button>
+                  {showListDropdown && (
+                    <div className="liquid-menu absolute z-40 mt-2 left-0 right-0 rounded-[1.75rem] overflow-hidden animate-slide-up">
+                      <div className="max-h-52 overflow-y-auto p-2">
+                        {lists.length === 0 ? (
+                          <div className="px-3 py-3 text-xs text-white/70">No tenés listas aún. Creá una abajo.</div>
                         ) : (
-                          <button key={star} onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)}
-                            onClick={() => setRating(rating === star ? 0 : star)} className="transition-transform hover:scale-125">
-                            {icon}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {!isReadOnly && (
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      <button onClick={handleSave} disabled={saving || loading} className={whiteBtn}>
-                        {saving ? <RotateCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" strokeWidth={3} />}
-                        {saving ? "Guardando..." : existingEntry ? "Actualizar" : "Guardar en mi biblioteca"}
-                      </button>
-
-                      <div ref={dropdownRef} className="relative">
-                        <button onClick={() => setShowListDropdown((v) => !v)} className={glassBtn} style={addedToListId ? { color: "#86efac" } : undefined}>
-                          <ListPlus className="w-4 h-4" />
-                          {addedToListId ? "¡Agregado!" : "Agregar a lista"}
-                          <ChevronDown className={`w-4 h-4 transition-transform ${showListDropdown ? "rotate-180" : ""}`} />
-                        </button>
-                        {showListDropdown && (
-                          <div className="liquid-menu absolute z-40 mt-3 left-0 w-72 rounded-[1.75rem] overflow-hidden animate-slide-up">
-                            <div className="max-h-52 overflow-y-auto p-2">
-                              {lists.length === 0 ? (
-                                <div className="px-3 py-3 text-xs text-white/70">No tenés listas aún. Creá una abajo.</div>
-                              ) : (
-                                lists.map((list) => {
-                                  const justAdded = addedToListId === list.id;
-                                  const isInList = justAdded || listsContaining.has(list.id);
-                                  return (
-                                    <button key={list.id} onClick={() => handleAddToList(list.id)} disabled={addingToList === list.id}
-                                      className="liquid-menu-item justify-between">
-                                      <span className="truncate">{list.name}</span>
-                                      {isInList ? (
-                                        <Check className="w-4 h-4 shrink-0" style={{ color: justAdded ? "#86efac" : tone.accent }} />
-                                      ) : addingToList === list.id ? (
-                                        <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
-                                      ) : null}
-                                    </button>
-                                  );
-                                })
-                              )}
-                            </div>
-                            <div className="p-3 border-t border-white/10 space-y-2">
-                              <input value={newListName} onChange={(e) => setNewListName(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === "Enter") handleCreateList(); }}
-                                placeholder="Nombre de la lista nueva..." className="glass-input !h-11 !text-xs" />
-                              <button onClick={handleCreateList} disabled={creatingList || !newListName.trim()}
-                                className="w-full inline-flex items-center justify-center gap-1.5 h-10 rounded-full bg-white text-[#111] text-xs font-extrabold disabled:opacity-50">
-                                <Plus className="w-3.5 h-3.5" />
-                                {creatingList ? "Creando..." : "Crear lista y agregar"}
+                          lists.map((list) => {
+                            const justAdded = addedToListId === list.id;
+                            const isInList = justAdded || listsContaining.has(list.id);
+                            return (
+                              <button key={list.id} onClick={() => handleAddToList(list.id)} disabled={addingToList === list.id} className="liquid-menu-item justify-between">
+                                <span className="truncate">{list.name}</span>
+                                {isInList ? <Check className="w-4 h-4 shrink-0" style={{ color: justAdded ? "#86efac" : tone.accent }} />
+                                  : addingToList === list.id ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" /> : null}
                               </button>
-                            </div>
-                          </div>
+                            );
+                          })
                         )}
                       </div>
-
-                      {trailerKey && (
-                        <a href={`https://www.youtube.com/watch?v=${trailerKey}`} target="_blank" rel="noreferrer" className={`${glassBtn} hover:text-white`}>
-                          <Play className="w-4 h-4" fill="currentColor" /> Tráiler
-                        </a>
-                      )}
-
-                      {existingEntry && (
-                        <button onClick={handleRemove} disabled={saving} title="Eliminar de mi biblioteca" className={roundBtn} style={{ color: "#fca5a5" }}>
-                          <Trash2 className="w-4 h-4" />
+                      <div className="p-3 border-t border-white/10 space-y-2">
+                        <input value={newListName} onChange={(e) => setNewListName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleCreateList(); }}
+                          placeholder="Nombre de la lista nueva..." className="glass-input !h-11 !text-xs" />
+                        <button onClick={handleCreateList} disabled={creatingList || !newListName.trim()}
+                          className="w-full inline-flex items-center justify-center gap-1.5 h-10 rounded-full bg-white text-[#111] text-xs font-extrabold disabled:opacity-50">
+                          <Plus className="w-3.5 h-3.5" /> {creatingList ? "Creando..." : "Crear lista y agregar"}
                         </button>
-                      )}
+                      </div>
                     </div>
                   )}
                 </div>
-                {!isReadOnly && saveError && <p className="mt-3 text-xs font-bold text-red-300">{saveError}</p>}
 
-                {memberLists.length > 0 && (
-                  <div className="flex items-center gap-2 flex-wrap mt-5">
-                    <span className={label}>En:</span>
-                    {memberLists.map((list) => (
-                      <span key={list.id} className="liquid-glass-sm inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold text-white">
-                        <ListIcon className="w-3 h-3" /> {list.name}
-                      </span>
-                    ))}
-                  </div>
+                <div className="flex gap-2.5">
+                  {trailerKey && (
+                    <a href={`https://www.youtube.com/watch?v=${trailerKey}`} target="_blank" rel="noreferrer" className={`${glassBtn} flex-1 hover:text-white`}>
+                      <Play className="w-4 h-4" fill="currentColor" /> Tráiler
+                    </a>
+                  )}
+                  {shareUrl && (
+                    <button onClick={handleShare} className={`${glassBtn} flex-1`} style={{ color: copied ? "#86efac" : undefined }}>
+                      {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />} {copied ? "Copiado" : "Compartir"}
+                    </button>
+                  )}
+                  {existingEntry && (
+                    <button onClick={handleRemove} disabled={saving} title="Eliminar de mi biblioteca" className={roundBtn} style={{ color: "#fca5a5" }}>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {isReadOnly && (
+              <div className="flex gap-2.5">
+                {trailerKey && (
+                  <a href={`https://www.youtube.com/watch?v=${trailerKey}`} target="_blank" rel="noreferrer" className={`${glassBtn} flex-1 hover:text-white`}><Play className="w-4 h-4" fill="currentColor" /> Tráiler</a>
+                )}
+                {shareUrl && (
+                  <button onClick={handleShare} className={`${glassBtn} flex-1`} style={{ color: copied ? "#86efac" : undefined }}>
+                    {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />} {copied ? "Copiado" : "Compartir"}
+                  </button>
                 )}
               </div>
-            </section>
+            )}
+          </aside>
 
-            {/* ───────── CUERPO ───────── */}
-            <div className={`mt-10 grid gap-5 ${isReadOnly ? "max-w-3xl" : "lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"}`}>
-              <div className="min-w-0 space-y-5">
-                {isReadOnly && readOnlyEntry ? (
-                  <>
-                    <div className={card}>
-                      <p className={`${label} mb-3`}>Descripción</p>
-                      <p className="text-sm leading-relaxed text-white/90">{description || "Sin descripción disponible."}</p>
+          {/* ───────── PANEL DERECHO: información + diario ───────── */}
+          <main className="min-w-0 p-5 sm:p-8 lg:pr-20 lg:overflow-y-auto no-scrollbar">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={chip}>{yearLabel}</span>
+              <span className={chip}>{result.mediaType === "movie" ? "Película" : "Serie"}</span>
+              {runtimeLabel && <span className={`${chip} inline-flex items-center gap-1.5`}><Clock className="w-3.5 h-3.5" /> {runtimeLabel}</span>}
+              {genres.map((g) => <span key={g} className="px-3.5 py-2 rounded-full text-xs font-bold border border-white/25 text-white/90">{g}</span>)}
+            </div>
+            <h2 className="font-cinema mt-5 mb-6 text-5xl md:text-7xl leading-[1.02] drop-shadow-[0_10px_50px_rgba(0,0,0,.5)]">{result.title}</h2>
+
+            {!isReadOnly && (
+              <div className="flex gap-2 mb-6">
+                <button onClick={() => setTab("info")} data-active={tab === "info"} className="frost-tab"><Info className="w-4 h-4" /> Sobre el título</button>
+                <button onClick={() => setTab("diary")} data-active={tab === "diary"} className="frost-tab">
+                  <Pencil className="w-4 h-4" /> Mi diario
+                  {sessions.length > 0 && <span className="px-2 py-0.5 rounded-full text-[11px]" style={{ background: "rgba(128,128,128,.25)" }}>{sessions.length}</span>}
+                </button>
+              </div>
+            )}
+
+            {!showDiary && (
+              <div className="space-y-5">
+                <div className={card}>
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <p className={label}>Sinopsis</p>
+                    {!isReadOnly && (
+                      <button onClick={fillDescription} disabled={fetchingDesc} className="liquid-glass-sm inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[11px] font-extrabold text-white disabled:opacity-60">
+                        <Sparkles className="w-3.5 h-3.5" /> {fetchingDesc ? "Buscando..." : "Actualizar desde TMDB"}
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-base leading-relaxed text-white/90 text-pretty">
+                    {description || result.overview || "Sin sinopsis disponible."}
+                  </p>
+                </div>
+
+                {cast.length > 0 && (
+                  <div className={card}>
+                    <p className={`${label} mb-4`}>Reparto</p>
+                    <div className="flex flex-wrap gap-2">
+                      {cast.map((c) => <span key={c.name} className="liquid-glass-sm inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold text-white"><Users className="w-3 h-3 text-white/60" /> {c.name}</span>)}
                     </div>
+                  </div>
+                )}
+
+                {memberLists.length > 0 && (
+                  <div className={card}>
+                    <p className={`${label} mb-4`}>Está en tus listas</p>
+                    <div className="flex flex-wrap gap-2">
+                      {memberLists.map((list) => <span key={list.id} className="liquid-glass-sm inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-extrabold text-white"><ListIcon className="w-3 h-3" /> {list.name}</span>)}
+                    </div>
+                  </div>
+                )}
+
+                {isReadOnly && readOnlyEntry && (
+                  <>
                     {readOnlyEntry.notes && (
                       <div className={card}>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Quote className="w-4 h-4" style={{ color: tone.accent }} />
-                          <p className={label}>Comentario</p>
-                        </div>
+                        <div className="flex items-center gap-2 mb-3"><Quote className="w-4 h-4" style={{ color: tone.accent }} /><p className={label}>Comentario</p></div>
                         <p className="text-sm leading-relaxed text-white/90">{readOnlyEntry.notes}</p>
                       </div>
                     )}
@@ -815,212 +838,134 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                       <Link to="/registro" className={`${whiteBtn} flex-1 hover:text-[#111]`}>Crear cuenta</Link>
                     </div>
                   </>
-                ) : (
-                  <>
-                    {/* Estado */}
-                    <div className={card}>
-                      <p className={`${label} mb-4`}>Estado</p>
-                      <div className="flex flex-wrap gap-2">
-                        {STATUSES.map((s) => (
-                          <button key={s.value} onClick={() => setStatus(s.value)} data-active={status === s.value} className="frost-tab !py-2 !px-4 !text-xs">
-                            <span className="w-2 h-2 rounded-full" style={{ background: STATUS_COLORS[s.value] }} />
-                            {s.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Comentario */}
-                    <div className={card}>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Quote className="w-4 h-4" style={{ color: tone.accent }} />
-                        <p className={label}>Mi comentario</p>
-                      </div>
-                      <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Escribí un breve comentario personal..." rows={4} className="glass-input" />
-                    </div>
-
-                    {/* Descripción */}
-                    <div className={card}>
-                      <div className="flex items-center justify-between gap-3 mb-4">
-                        <p className={label}>Descripción</p>
-                        <button onClick={fillDescription} disabled={fetchingDesc} className="liquid-glass-sm inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[11px] font-extrabold text-white disabled:opacity-60">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          {fetchingDesc ? "Buscando..." : "Obtener automáticamente"}
-                        </button>
-                      </div>
-                      <p className="text-sm leading-relaxed text-white/85">
-                        {description || "Sin descripción disponible. Tocá “Obtener automáticamente” para cargarla desde TMDB."}
-                      </p>
-                    </div>
-                  </>
-                )}
-
-                {cast.length > 0 && (
-                  <div className={card}>
-                    <p className={`${label} mb-4`}>Reparto</p>
-                    <div className="flex flex-wrap gap-2">
-                      {cast.map((c) => (
-                        <span key={c.name} className="liquid-glass-sm px-3.5 py-1.5 rounded-full text-xs font-bold text-white">{c.name}</span>
-                      ))}
-                    </div>
-                  </div>
                 )}
               </div>
+            )}
 
-              {/* Registro: cómo lo viste */}
-              {!isReadOnly && (
-                <div className="min-w-0">
-                  <div className="liquid-glass rounded-[2rem] p-6 md:p-7 space-y-5">
-                    <div className="flex items-center gap-2.5 text-base font-extrabold">
-                      <CalendarDays className="w-5 h-5" style={{ color: tone.accent }} />
-                      ¿Cómo lo viste?
-                      {sessions.length > 0 && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold text-[#111]" style={{ background: tone.accent }}>{sessions.length}</span>
-                      )}
-                      <HelpTooltip text={HOW_YOU_WATCHED_HELP} />
-                    </div>
-                    <p className="text-xs leading-relaxed text-white/70">
-                      Contanos dónde y cómo lo viste: ayuda a tu ADN Audiovisual a entender tu forma de consumir.
-                    </p>
+            {showDiary && (
+              <div className="space-y-5">
+                <div className={card}>
+                  <div className="flex items-center gap-2 mb-4"><Quote className="w-4 h-4" style={{ color: tone.accent }} /><p className={label}>Mi comentario</p></div>
+                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="¿Qué te pareció? Escribí tu opinión personal..." rows={4} className="glass-input" />
+                  <p className="text-[11px] mt-2 text-white/55">Se guarda con el botón “{existingEntry ? "Actualizar" : "Guardar en mi biblioteca"}”.</p>
+                </div>
 
-                    {sessions.length > 0 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {sessions.map((session) => {
-                          const isJustSaved = session.id === justSavedId;
-                          const coverUrl = heroImg ?? getBackdropUrl(result.backdropPath, "w780");
-                          return (
-                            <div key={session.id} id={`session-${session.id}`}
-                              className={`frost-card relative rounded-[1.5rem] overflow-hidden ${isJustSaved ? "animate-saved-flash" : ""}`}>
-                              <div className="relative h-28 overflow-hidden">
-                                <div className="absolute -inset-3 bg-cover bg-center opacity-60" style={{ backgroundImage: `url(${coverUrl})`, filter: "blur(10px) saturate(150%)" }} />
-                                <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${tone.glow}, rgba(8,8,14,.85))` }} />
-                                <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap max-w-[80%]">
-                                  <span className="liquid-glass-sm inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold text-white">
-                                    <CalendarDays className="w-3 h-3" /> {session.watched_date ?? "Fecha sin registrar"}
-                                  </span>
-                                  {session.is_rewatch && (
-                                    <span className="liquid-glass-sm inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold text-white">
-                                      <Repeat className="w-3 h-3" /> Re-ver
-                                    </span>
-                                  )}
-                                </div>
-                                <span className="liquid-glass-sm absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold text-white">
-                                  <Star className="w-3.5 h-3.5" fill={session.rating ? tone.accent : "none"} stroke={session.rating ? tone.accent : "currentColor"} />
-                                  {session.rating ? `${session.rating}/5` : "Sin nota"}
-                                </span>
+                <div className="liquid-glass rounded-[2rem] p-6 md:p-7 space-y-5">
+                  <div className="flex items-center gap-2.5 text-base font-extrabold">
+                    <CalendarDays className="w-5 h-5" style={{ color: tone.accent }} />
+                    ¿Cómo lo viste?
+                    <HelpTooltip text={HOW_YOU_WATCHED_HELP} />
+                  </div>
+                  <p className="text-xs leading-relaxed text-white/70">Contanos dónde y cómo lo viste: ayuda a tu ADN Audiovisual a entender tu forma de consumir.</p>
+
+                  {sessions.length > 0 && (
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                      {sessions.map((session) => {
+                        const isJustSaved = session.id === justSavedId;
+                        const coverUrl = heroImg ?? getBackdropUrl(result.backdropPath, "w780");
+                        return (
+                          <div key={session.id} id={`session-${session.id}`} className={`frost-card relative rounded-[1.5rem] overflow-hidden ${isJustSaved ? "animate-saved-flash" : ""}`}>
+                            <div className="relative h-24 overflow-hidden">
+                              <div className="absolute -inset-3 bg-cover bg-center opacity-60" style={{ backgroundImage: `url(${coverUrl})`, filter: "blur(10px) saturate(150%)" }} />
+                              <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${tone.glow}, rgba(8,8,14,.85))` }} />
+                              <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap max-w-[80%]">
+                                <span className="liquid-glass-sm inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold text-white"><CalendarDays className="w-3 h-3" /> {session.watched_date ?? "Fecha sin registrar"}</span>
+                                {session.is_rewatch && <span className="liquid-glass-sm inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold text-white"><Repeat className="w-3 h-3" /> Re-ver</span>}
                               </div>
-                              <div className="p-4">
-                                <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap text-[11px] font-bold text-white/80">
-                                  <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" style={{ color: HABIT_GROUPS.venue.color }} /> {VENUE_LABELS[session.venue]}</span>
-                                  <span className="inline-flex items-center gap-1"><Users className="w-3 h-3" style={{ color: HABIT_GROUPS.companionship.color }} /> {COMPANIONSHIP_LABELS[session.companionship]}</span>
-                                  {session.platform !== "unknown" && (
-                                    <span className="inline-flex items-center gap-1"><MonitorPlay className="w-3 h-3" style={{ color: HABIT_GROUPS.platform.color }} /> {PLATFORM_LABELS[session.platform]}</span>
-                                  )}
-                                  {session.language_mode !== "unknown" && (
-                                    <span className="inline-flex items-center gap-1"><Languages className="w-3 h-3" style={{ color: HABIT_GROUPS.language.color }} /> {LANGUAGE_MODE_LABELS[session.language_mode]}</span>
-                                  )}
-                                </div>
-                                <div className="flex items-center justify-between gap-2 mt-3 border-t border-white/10 pt-2.5">
-                                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">{isJustSaved ? "Recién guardada" : "Vista registrada"}</span>
-                                  <div className="flex items-center gap-1">
-                                    <button onClick={() => startEditSession(session)} disabled={savingSession} title="Editar"
-                                      className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 disabled:opacity-50"><Pencil className="w-3.5 h-3.5" /></button>
-                                    <button onClick={() => handleDeleteSession(session.id)} disabled={savingSession} title="Eliminar"
-                                      className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 disabled:opacity-50" style={{ color: "#fca5a5" }}><Trash2 className="w-3.5 h-3.5" /></button>
-                                  </div>
+                              <span className="liquid-glass-sm absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold text-white">
+                                <Star className="w-3.5 h-3.5" fill={session.rating ? tone.accent : "none"} stroke={session.rating ? tone.accent : "currentColor"} /> {session.rating ? `${session.rating}/5` : "Sin nota"}
+                              </span>
+                            </div>
+                            <div className="p-4">
+                              <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap text-[11px] font-bold text-white/80">
+                                <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" style={{ color: HABIT_GROUPS.venue.color }} /> {VENUE_LABELS[session.venue]}</span>
+                                <span className="inline-flex items-center gap-1"><Users className="w-3 h-3" style={{ color: HABIT_GROUPS.companionship.color }} /> {COMPANIONSHIP_LABELS[session.companionship]}</span>
+                                {session.platform !== "unknown" && <span className="inline-flex items-center gap-1"><MonitorPlay className="w-3 h-3" style={{ color: HABIT_GROUPS.platform.color }} /> {PLATFORM_LABELS[session.platform]}</span>}
+                                {session.language_mode !== "unknown" && <span className="inline-flex items-center gap-1"><Languages className="w-3 h-3" style={{ color: HABIT_GROUPS.language.color }} /> {LANGUAGE_MODE_LABELS[session.language_mode]}</span>}
+                              </div>
+                              <div className="flex items-center justify-between gap-2 mt-3 border-t border-white/10 pt-2.5">
+                                <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">{isJustSaved ? "Recién guardada" : "Vista registrada"}</span>
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => startEditSession(session)} disabled={savingSession} title="Editar" className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 disabled:opacity-50"><Pencil className="w-3.5 h-3.5" /></button>
+                                  <button onClick={() => handleDeleteSession(session.id)} disabled={savingSession} title="Eliminar" className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 disabled:opacity-50" style={{ color: "#fca5a5" }}><Trash2 className="w-3.5 h-3.5" /></button>
                                 </div>
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    <div className="h-px bg-white/10" />
-
-                    <div className="flex items-center justify-between gap-2">
-                      <p className={label}>{editingSessionId ? "Editar sesión" : "Agregar sesión"}</p>
-                      {editingSessionId && (
-                        <button onClick={resetSessionDraft} className="text-[11px] font-extrabold hover:opacity-70" style={{ color: tone.accent }}>Cancelar edición</button>
-                      )}
+                          </div>
+                        );
+                      })}
                     </div>
+                  )}
 
-                    <div>
-                      <p className="text-[11px] font-bold mb-2 text-white/70">¿Cuándo lo viste?</p>
-                      <div className="flex flex-col sm:flex-row gap-2.5">
-                        <input type="date" value={draft.watchedDate} onChange={(e) => setDraft((d) => ({ ...d, watchedDate: e.target.value }))} className="glass-input flex-1 !h-12 !text-sm" />
-                        <input type="time" value={timeValue} onChange={(e) => setTimeValue(e.target.value)} className="glass-input sm:!w-36 !h-12 !text-sm" placeholder="Hora" />
-                      </div>
-                      <p className="mt-2 text-[10px] leading-relaxed text-white/55">
-                        La hora es opcional. Si la completás, se guarda la zona horaria ({tzValue || "del navegador"}) para calcular la franja del día correctamente.
-                      </p>
-                    </div>
+                  <div className="h-px bg-white/10" />
 
-                    <div>
-                      <p className="text-[11px] font-extrabold mb-2.5 uppercase tracking-wider text-white/70">Nota de esta vista (opcional)</p>
-                      <div className="flex gap-1.5">
-                        {[1, 2, 3, 4, 5].map((star) => {
-                          const on = (sessionHover || sessionRating) >= star;
-                          return (
-                            <button key={star} onMouseEnter={() => setSessionHover(star)} onMouseLeave={() => setSessionHover(0)}
-                              onClick={() => setSessionRating(sessionRating === star ? 0 : star)} className="transition-transform hover:scale-125">
-                              <Star className="w-6 h-6" fill={on ? tone.accent : "none"} stroke={on ? tone.accent : "rgba(255,255,255,.45)"} strokeWidth={1.6} />
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <p className="mt-1.5 text-[10px] text-white/55">Independiente de la calificación del título.</p>
-                    </div>
-
-                    <PillGroup groupKey="venue" pills={VENUE_PILLS} selected={draft.venue} onSelect={(value) => setDraft((d) => ({ ...d, venue: value as ViewingVenue }))} />
-                    <PillGroup groupKey="companionship" pills={COMPANIONSHIP_PILLS} selected={draft.companionship} onSelect={(value) => setDraft((d) => ({ ...d, companionship: value as ViewingCompanionship }))} />
-                    <PillGroup groupKey="language" pills={LANGUAGE_MODE_PILLS} selected={draft.languageMode} onSelect={(value) => setDraft((d) => ({ ...d, languageMode: value as ViewingLanguageMode }))} />
-                    <PillGroup groupKey="platform" pills={PLATFORM_PILLS} selected={draft.platform} onSelect={(value) => setDraft((d) => ({ ...d, platform: value as ViewingPlatform }))} />
-                    <PillGroup groupKey="rewatch" pills={REWATCH_PILLS} selected={draft.isRewatch ? "rewatch" : "first"} onSelect={(value) => setDraft((d) => ({ ...d, isRewatch: value === "rewatch" }))} />
-
-                    {reactionTags.length > 0 && (
-                      <div>
-                        <div className="flex items-center justify-between gap-2 mb-2">
-                          <p className="text-[11px] font-extrabold uppercase tracking-wider text-white/70">¿Qué te dejó?</p>
-                          <span className="text-[10px] text-white/55">{selectedReactions.length}/3 elegidas</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {reactionTags.map((tag) => {
-                            const selected = selectedReactions.includes(tag.slug);
-                            const locked = !selected && selectedReactions.length >= 3;
-                            return (
-                              <button key={tag.slug} type="button" role="switch" aria-checked={selected} tabIndex={locked ? -1 : 0}
-                                onClick={() => toggleReaction(tag)}
-                                onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); if (!locked) toggleReaction(tag); } }}
-                                disabled={savingSession || locked} data-active={selected}
-                                className="frost-tab !py-1.5 !px-3.5 !text-[11px] disabled:opacity-40">
-                                {tag.name}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {sessionError && <p className="text-xs font-bold text-red-300">{sessionError}</p>}
-
-                    <button onClick={handleSaveSession} disabled={savingSession}
-                      className={`w-full inline-flex items-center justify-center gap-2 h-12 rounded-full text-sm font-extrabold transition-transform hover:scale-[1.01] disabled:opacity-50 ${sessionSaved ? "animate-pop" : ""}`}
-                      style={sessionSaved ? { backgroundColor: "#4ade80", color: "#052e16", boxShadow: "0 8px 28px rgba(74,222,128,.45)" } : { background: "#fff", color: "#111" }}>
-                      {sessionSaved ? (
-                        <><Check className="w-4 h-4" strokeWidth={3} />{editingSessionId ? "Cambios guardados" : "Sesión guardada"}</>
-                      ) : savingSession ? (
-                        <><RotateCw className="w-4 h-4 animate-spin" />Guardando...</>
-                      ) : (
-                        <><Plus className="w-4 h-4" />{editingSessionId ? "Guardar cambios" : "Guardar sesión"}</>
-                      )}
-                    </button>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={label}>{editingSessionId ? "Editar sesión" : "Agregar sesión"}</p>
+                    {editingSessionId && <button onClick={resetSessionDraft} className="text-[11px] font-extrabold hover:opacity-70" style={{ color: tone.accent }}>Cancelar edición</button>}
                   </div>
+
+                  <div>
+                    <p className="text-[11px] font-bold mb-2 text-white/70">¿Cuándo lo viste?</p>
+                    <div className="flex flex-col sm:flex-row gap-2.5">
+                      <input type="date" value={draft.watchedDate} onChange={(e) => setDraft((d) => ({ ...d, watchedDate: e.target.value }))} className="glass-input flex-1 !h-12 !text-sm" />
+                      <input type="time" value={timeValue} onChange={(e) => setTimeValue(e.target.value)} className="glass-input sm:!w-36 !h-12 !text-sm" placeholder="Hora" />
+                    </div>
+                    <p className="mt-2 text-[10px] leading-relaxed text-white/55">La hora es opcional. Si la completás, se guarda la zona horaria ({tzValue || "del navegador"}) para calcular la franja del día correctamente.</p>
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-extrabold mb-2.5 uppercase tracking-wider text-white/70">Nota de esta vista (opcional)</p>
+                    <div className="flex gap-1.5">
+                      {[1, 2, 3, 4, 5].map((star) => {
+                        const on = (sessionHover || sessionRating) >= star;
+                        return (
+                          <button key={star} onMouseEnter={() => setSessionHover(star)} onMouseLeave={() => setSessionHover(0)} onClick={() => setSessionRating(sessionRating === star ? 0 : star)} className="transition-transform hover:scale-125">
+                            <Star className="w-6 h-6" fill={on ? tone.accent : "none"} stroke={on ? tone.accent : "rgba(255,255,255,.45)"} strokeWidth={1.6} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <PillGroup groupKey="venue" pills={VENUE_PILLS} selected={draft.venue} onSelect={(value) => setDraft((d) => ({ ...d, venue: value as ViewingVenue }))} />
+                  <PillGroup groupKey="companionship" pills={COMPANIONSHIP_PILLS} selected={draft.companionship} onSelect={(value) => setDraft((d) => ({ ...d, companionship: value as ViewingCompanionship }))} />
+                  <PillGroup groupKey="language" pills={LANGUAGE_MODE_PILLS} selected={draft.languageMode} onSelect={(value) => setDraft((d) => ({ ...d, languageMode: value as ViewingLanguageMode }))} />
+                  <PillGroup groupKey="platform" pills={PLATFORM_PILLS} selected={draft.platform} onSelect={(value) => setDraft((d) => ({ ...d, platform: value as ViewingPlatform }))} />
+                  <PillGroup groupKey="rewatch" pills={REWATCH_PILLS} selected={draft.isRewatch ? "rewatch" : "first"} onSelect={(value) => setDraft((d) => ({ ...d, isRewatch: value === "rewatch" }))} />
+
+                  {reactionTags.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <p className="text-[11px] font-extrabold uppercase tracking-wider text-white/70">¿Qué te dejó?</p>
+                        <span className="text-[10px] text-white/55">{selectedReactions.length}/3 elegidas</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {reactionTags.map((tag) => {
+                          const selected = selectedReactions.includes(tag.slug);
+                          const locked = !selected && selectedReactions.length >= 3;
+                          return (
+                            <button key={tag.slug} type="button" role="switch" aria-checked={selected} tabIndex={locked ? -1 : 0} onClick={() => toggleReaction(tag)}
+                              onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); if (!locked) toggleReaction(tag); } }}
+                              disabled={savingSession || locked} data-active={selected} className="frost-tab !py-1.5 !px-3.5 !text-[11px] disabled:opacity-40">{tag.name}</button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {sessionError && <p className="text-xs font-bold text-red-300">{sessionError}</p>}
+
+                  <button onClick={handleSaveSession} disabled={savingSession}
+                    className={`w-full inline-flex items-center justify-center gap-2 h-12 rounded-full text-sm font-extrabold transition-transform hover:scale-[1.01] disabled:opacity-50 ${sessionSaved ? "animate-pop" : ""}`}
+                    style={sessionSaved ? { backgroundColor: "#4ade80", color: "#052e16", boxShadow: "0 8px 28px rgba(74,222,128,.45)" } : { background: "#fff", color: "#111" }}>
+                    {sessionSaved ? (<><Check className="w-4 h-4" strokeWidth={3} />{editingSessionId ? "Cambios guardados" : "Sesión guardada"}</>)
+                      : savingSession ? (<><RotateCw className="w-4 h-4 animate-spin" />Guardando...</>)
+                      : (<><Plus className="w-4 h-4" />{editingSessionId ? "Guardar cambios" : "Guardar sesión"}</>)}
+                  </button>
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
+            )}
+          </main>
         </div>
       </div>
     </div>
