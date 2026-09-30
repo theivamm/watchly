@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Search, Film, BookOpen, List, Map, User, Dna, ChevronUp, Settings, MonitorPlay } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
+import "@/styles/cinema.css";
 
 const navItems = [
   { to: "/inicio", label: "Inicio", icon: Film },
@@ -61,14 +62,7 @@ export default function MobileNavigation() {
       {/* Dropdown upward: app-style menu */}
       {open && (
         <div
-          className="pointer-events-auto mb-3 w-72 rounded-3xl p-4 animate-slide-up"
-          style={{
-            backgroundColor: "rgba(15,15,26,0.95)",
-            border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
-            boxShadow: "0 24px 60px rgba(0,0,0,0.55)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-          }}
+          className="liquid-menu pointer-events-auto mb-3 w-72 rounded-[2rem] p-4 animate-slide-up"
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--text-secondary)" }}>
@@ -130,14 +124,7 @@ export default function MobileNavigation() {
         onClick={() => setOpen((v) => !v)}
         aria-label="Abrir menú"
         aria-expanded={open}
-        className="pointer-events-auto mb-3 flex items-center gap-2.5 pl-3 pr-3.5 py-2 rounded-full transition-transform active:scale-95"
-        style={{
-          backgroundColor: "rgba(11,11,20,0.9)",
-          border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.45)",
-        }}
+        className="liquid-menu pointer-events-auto mb-3 flex items-center gap-2.5 pl-3 pr-3.5 py-2 rounded-full transition-transform active:scale-95"
       >
         <span
           className="w-9 h-9 rounded-xl flex items-center justify-center"

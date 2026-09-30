@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { Mail } from "lucide-react";
+import AuthShell from "@/components/auth/AuthShell";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function RecoverPasswordPage() {
@@ -28,91 +30,40 @@ export default function RecoverPasswordPage() {
 
   if (sent) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden"
-        style={{ backgroundColor: "transparent" }}
-      >
-        <div
-          className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full blur-[130px] animate-glow pointer-events-none"
-          style={{ background: "var(--glow-violet)" }}
-        />
-        <div className="relative text-center max-w-md">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-            style={{
-              background: "var(--gradient-accent)",
-              boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 40%, transparent)",
-            }}
-          >
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-3" style={{ color: "var(--text-primary)" }}>Revisá tu email</h1>
-          <p style={{ color: "var(--text-secondary)" }}>
-            Te enviamos un enlace para recuperar tu contraseña.
-          </p>
-        </div>
-      </div>
+      <AuthShell title="Revisá tu email" subtitle="Te enviamos un enlace para recuperar tu contraseña.">
+        <a href="/login"
+          className="h-14 rounded-full bg-white text-[#111] hover:text-[#111] font-extrabold flex items-center justify-center shadow-[0_12px_40px_rgba(0,0,0,.35)] transition-transform hover:scale-[1.02]">
+          Volver al login
+        </a>
+      </AuthShell>
     );
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-6 md:px-8 py-8 md:py-12 relative overflow-hidden"
-      style={{ backgroundColor: "transparent" }}
+    <AuthShell
+      title="Recuperar contraseña"
+      subtitle="Ingresá tu email y te enviaremos un enlace"
+      footer={<a href="/login" className="font-bold text-white hover:underline">Volver al login</a>}
     >
-      <div
-        className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full blur-[130px] animate-glow pointer-events-none"
-        style={{ background: "var(--glow-violet)" }}
-      />
-      <div className="relative w-full max-w-md">
-        <div className="text-center mb-10">
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>Recuperar contraseña</h1>
-          <p style={{ color: "var(--text-secondary)" }}>Ingresá tu email y te enviaremos un enlace</p>
-        </div>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <label className="flex flex-col gap-2">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-white/70">Email</span>
+          <span className="relative block">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/60" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+              className="auth-input" placeholder="tu@email.com" autoComplete="email" />
+          </span>
+        </label>
 
-        <div
-          className="rounded-3xl border p-6 md:p-8"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}
-        >
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: "var(--text-secondary)" }}>
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3.5 rounded-xl text-base outline-none"
-                style={{ backgroundColor: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
-                placeholder="tu@email.com"
-              />
-            </div>
+        {error && (
+          <div className="px-4 py-3 rounded-2xl text-sm font-semibold border border-red-400/30 bg-red-500/15 text-red-200">{error}</div>
+        )}
 
-            {error && (
-              <p className="text-sm px-3 py-2 rounded-lg" style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#ef4444" }}>
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 rounded-full text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}
-            >
-              {loading ? "Enviando..." : "Enviar enlace"}
-            </button>
-          </form>
-        </div>
-
-        <p className="text-center mt-6 text-sm" style={{ color: "var(--text-secondary)" }}>
-          <a href="/login" className="font-semibold" style={{ color: "var(--accent-light)" }}>Volver al login</a>
-        </p>
-      </div>
-    </div>
+        <button type="submit" disabled={loading}
+          className="h-14 rounded-full bg-white text-[#111] font-extrabold text-base shadow-[0_12px_40px_rgba(0,0,0,.35)] transition-transform hover:scale-[1.02] disabled:opacity-50">
+          {loading ? "Enviando..." : "Enviar enlace"}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

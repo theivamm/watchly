@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Link, useLocation } from "react-router-dom";
-import { Mail, Lock, ArrowLeft } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { Mail, Lock } from "lucide-react";
+import AuthShell from "@/components/auth/AuthShell";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function LoginPage() {
@@ -24,70 +25,46 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-5 py-12 relative overflow-hidden" style={{ backgroundColor: "transparent" }}>
-      {from && (
-        <Link to={from}
-          className="absolute top-5 left-5 z-10 inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-all hover:scale-[1.02]"
-          style={{ backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--text-primary)", backdropFilter: "blur(8px)" }}>
-          <ArrowLeft className="w-3.5 h-3.5" /> Volver
-        </Link>
-      )}
-      <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full blur-[130px] animate-glow pointer-events-none"
-        style={{ background: "var(--glow-violet)" }} />
-      <div className="relative w-full max-w-[420px]">
-        {/* Logo */}
-        <div className="text-center mb-10">
-          <a href="/" className="inline-block text-3xl font-extrabold tracking-tight mb-4 text-gradient">Watchly</a>
-          <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "var(--text-primary)" }}>Bienvenido de nuevo</h1>
-          <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>Accedé a tu biblioteca</p>
-        </div>
+    <AuthShell
+      title="Bienvenido de nuevo"
+      subtitle="Accedé a tu biblioteca"
+      back={from}
+      footer={<>¿No tenés cuenta? <a href="/registro" className="font-bold text-white hover:underline">Registrate</a></>}
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <label className="flex flex-col gap-2">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-white/70">Email</span>
+          <span className="relative block">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/60" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+              className="auth-input" placeholder="tu@email.com" autoComplete="email" />
+          </span>
+        </label>
 
-        {/* Card */}
-        <div className="glass p-8 rounded-[1.75rem]" style={{ boxShadow: "0 24px 60px -20px color-mix(in srgb, var(--accent) 35%, transparent)" }}>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px]" style={{ color: "var(--text-secondary)" }} />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-                  className="!pl-11" placeholder="tu@email.com" />
-              </div>
-            </div>
+        <label className="flex flex-col gap-2">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-white/70">Contraseña</span>
+          <span className="relative block">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/60" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
+              className="auth-input" placeholder="••••••••" autoComplete="current-password" />
+          </span>
+        </label>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>Contraseña</label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px]" style={{ color: "var(--text-secondary)" }} />
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
-                  className="!pl-11" placeholder="••••••••" />
-              </div>
-            </div>
-
-            {error && (
-              <div className="px-4 py-3 rounded-xl text-sm font-medium" style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#ef4444" }}>
-                {error}
-              </div>
-            )}
-
-            <button type="submit" disabled={loading}
-              className="w-full h-12 rounded-full text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50"
-              style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
-              {loading ? "Ingresando..." : "Iniciar sesión"}
-            </button>
-          </form>
-
-          <div className="mt-5 text-center">
-            <a href="/recuperar-password" className="text-sm font-semibold" style={{ color: "var(--accent-light)" }}>
-              ¿Olvidaste tu contraseña?
-            </a>
+        {error && (
+          <div className="px-4 py-3 rounded-2xl text-sm font-semibold border border-red-400/30 bg-red-500/15 text-red-200">
+            {error}
           </div>
-        </div>
+        )}
 
-        <p className="text-center mt-6 text-sm" style={{ color: "var(--text-secondary)" }}>
-          ¿No tenés cuenta?{" "}
-          <a href="/registro" className="font-semibold" style={{ color: "var(--accent-light)" }}>Registrate</a>
-        </p>
-      </div>
-    </div>
+        <button type="submit" disabled={loading}
+          className="h-14 rounded-full bg-white text-[#111] font-extrabold text-base shadow-[0_12px_40px_rgba(0,0,0,.35)] transition-transform hover:scale-[1.02] disabled:opacity-50">
+          {loading ? "Ingresando..." : "Iniciar sesión"}
+        </button>
+
+        <a href="/recuperar-password" className="text-center text-sm font-bold text-white/80 hover:text-white">
+          ¿Olvidaste tu contraseña?
+        </a>
+      </form>
+    </AuthShell>
   );
 }

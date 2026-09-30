@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { Lock } from "lucide-react";
+import AuthShell from "@/components/auth/AuthShell";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function UpdatePasswordPage() {
@@ -27,64 +29,30 @@ export default function UpdatePasswordPage() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-6 md:px-8 py-8 md:py-12 relative overflow-hidden"
-      style={{ backgroundColor: "transparent" }}
-    >
-      <div
-        className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full blur-[130px] animate-glow pointer-events-none"
-        style={{ background: "var(--glow-violet)" }}
-      />
-      <div className="relative w-full max-w-md">
-        <div className="text-center mb-10">
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>Nueva contraseña</h1>
-          <p style={{ color: "var(--text-secondary)" }}>Ingresá tu nueva contraseña</p>
-        </div>
+    <AuthShell title="Nueva contraseña" subtitle="Ingresá tu nueva contraseña">
+      {success ? (
+        <p className="text-center py-4 font-bold">Contraseña actualizada. Redirigiendo...</p>
+      ) : (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <label className="flex flex-col gap-2">
+            <span className="text-xs font-extrabold uppercase tracking-widest text-white/70">Nueva contraseña</span>
+            <span className="relative block">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/60" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
+                className="auth-input" placeholder="Mínimo 6 caracteres" autoComplete="new-password" />
+            </span>
+          </label>
 
-        <div
-          className="rounded-3xl border p-6 md:p-8"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}
-        >
-          {success ? (
-            <div className="text-center py-4">
-              <p style={{ color: "var(--accent-light)" }}>Contraseña actualizada. Redirigiendo...</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: "var(--text-secondary)" }}>
-                  Nueva contraseña
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="w-full px-4 py-3.5 rounded-xl text-base outline-none"
-                  style={{ backgroundColor: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
-                  placeholder="Mínimo 6 caracteres"
-                />
-              </div>
-
-              {error && (
-                <p className="text-sm px-3 py-2 rounded-lg" style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#ef4444" }}>
-                  {error}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full h-12 rounded-full text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50"
-                style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}
-              >
-                {loading ? "Actualizando..." : "Actualizar contraseña"}
-              </button>
-            </form>
+          {error && (
+            <div className="px-4 py-3 rounded-2xl text-sm font-semibold border border-red-400/30 bg-red-500/15 text-red-200">{error}</div>
           )}
-        </div>
-      </div>
-    </div>
+
+          <button type="submit" disabled={loading}
+            className="h-14 rounded-full bg-white text-[#111] font-extrabold text-base shadow-[0_12px_40px_rgba(0,0,0,.35)] transition-transform hover:scale-[1.02] disabled:opacity-50">
+            {loading ? "Actualizando..." : "Actualizar contraseña"}
+          </button>
+        </form>
+      )}
+    </AuthShell>
   );
 }
