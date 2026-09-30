@@ -8,4 +8,8 @@ Ronda 5:
 - pages/LibraryPage: resumen por estado clicable, búsqueda, tipo, orden, vista cuadrícula/lista
 - media/MediaDetailModal: nueva organización (panel izquierdo: póster + estado + nota + acciones; derecha: "Sobre el título" / "Mi diario")
 
+Ronda 6:
+- pages/HomePage: rework completo (hero sin cortes, "Quiero verla" con guardado directo, panel "Tu cine", "Seguí donde quedaste", "Tu lista para ver" + "Elegir por mí", recientes, tendencia con botón +, populares, listas)
+- home/HeroBackdrop: nuevo modo soft (la imagen se funde con el fondo global por todos los bordes)
+
 Rondas previas: Home, Landing, Auth, Roadmap, Sidebar, Buscar, Listas, menús, modales y demás.
