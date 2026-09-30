@@ -1,3 +1,4 @@
+import "@/styles/cinema.css";
 import { getPosterUrl } from "@/services/tmdb";
 import type { MediaType, EntryStatus } from "@/types";
 
@@ -24,11 +25,11 @@ const STATUS_LABELS: Record<EntryStatus, string> = {
 };
 
 const STATUS_COLORS: Record<EntryStatus, string> = {
-  want_to_watch: "var(--accent)",
-  watching: "#4ade80",
-  completed: "#60a5fa",
-  paused: "#facc15",
-  dropped: "#f87171",
+  want_to_watch: "hsl(265 90% 78%)",
+  watching: "hsl(145 70% 65%)",
+  completed: "hsl(210 90% 72%)",
+  paused: "hsl(48 95% 68%)",
+  dropped: "hsl(0 90% 74%)",
 };
 
 export default function MediaCard({
@@ -54,82 +55,48 @@ export default function MediaCard({
       onKeyDown={(e) => {
         if (e.key === "Enter" && onClick) onClick();
       }}
-      className="relative text-left group w-full poster-card rounded-2xl cursor-pointer"
-      style={{
-        backgroundColor: "var(--surface-1)",
-        border: "1px solid var(--border)",
-        padding: "0.75rem",
-      }}
+      className="frost-card relative text-left group w-full rounded-[1.9rem] cursor-pointer p-2.5 transition-all duration-500 hover:-translate-y-2 overflow-hidden"
     >
-      {/* Blurred cover backdrop on hover */}
-      <div className="absolute inset-0 z-0 rounded-2xl overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-        <img
-          src={posterUrl}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover blur-xl scale-110"
-          loading="lazy"
-        />
-        <div
-          className="absolute inset-0"
-          style={{ background: "linear-gradient(180deg, rgba(11,11,20,0.12) 0%, rgba(11,11,20,0.65) 100%)" }}
-        />
-      </div>
+      {/* Color del póster filtrándose por el vidrio al hacer hover */}
+      <img src={posterUrl} alt="" aria-hidden="true" loading="lazy"
+        className="absolute inset-0 w-full h-full object-cover blur-2xl scale-125 opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none" />
 
-      <div className="relative z-10 aspect-[2/3] rounded-xl overflow-hidden">
+      <div className="relative aspect-[2/3] rounded-[1.4rem] overflow-hidden">
         <img
           src={posterUrl}
           alt={title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           loading="lazy"
         />
-
-        {/* Rating badge (top-right) */}
-        {showTmdb && (
-          <span
-            className="absolute top-2 right-2 px-2 py-1 rounded-lg text-[11px] font-extrabold backdrop-blur-md"
-            style={{ backgroundColor: "rgba(11,11,20,0.7)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}
-          >
-            {tmdbRating!.toFixed(1)}★
-          </span>
-        )}
-
-        {/* Status badge */}
         {status && (
           <span
-            className="absolute top-2 left-2 px-2.5 py-1 rounded-lg text-[10px] font-bold backdrop-blur-md"
-            style={{ backgroundColor: STATUS_COLORS[status], color: "#000" }}
+            className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 pl-2 pr-3 py-1.5 rounded-full text-[11px] font-extrabold liquid-glass-sm text-white"
           >
+            <span className="w-2 h-2 rounded-full" style={{ background: STATUS_COLORS[status] }} />
             {STATUS_LABELS[status]}
           </span>
         )}
-
-        {/* Custom badge */}
         {!status && badge && (
-          <span
-            className="absolute top-2 left-2 px-2.5 py-1 rounded-lg text-[10px] font-bold"
-            style={{ background: "var(--gradient-accent)", color: "#fff" }}
-          >
+          <span className="absolute top-2.5 left-2.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold bg-white text-[#111]">
             {badge}
           </span>
         )}
+        {showTmdb && (
+          <span className="absolute top-2.5 right-2.5 px-2.5 py-1.5 rounded-full text-[11px] font-extrabold liquid-glass-sm text-white">
+            ★ {tmdbRating!.toFixed(1)}
+          </span>
+        )}
       </div>
-      <div className="relative z-10 px-1 pt-3 pb-1">
-        <p className="text-sm font-bold truncate transition-colors group-hover:text-[var(--accent-light)]"
-          style={{ color: "var(--text-primary)" }}>
-          {title}
-        </p>
-        <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+
+      <div className="relative px-2 pt-3 pb-1.5">
+        <p className="text-sm font-extrabold truncate text-white">{title}</p>
+        <p className="text-xs mt-1 font-medium text-white/65">
           {year || ""}
           {year && mediaType && " · "}
           {mediaType === "movie" ? "Película" : "Serie"}
           {rating != null && ` · ${"★".repeat(rating)}${"☆".repeat(5 - rating)}`}
         </p>
-        {notes ? (
-          <p className="text-xs mt-1.5 leading-snug line-clamp-2" style={{ color: "var(--text-secondary)" }}>
-            {notes}
-          </p>
-        ) : null}
+        {notes ? <p className="text-xs mt-1.5 leading-snug line-clamp-2 text-white/70">{notes}</p> : null}
       </div>
     </div>
   );

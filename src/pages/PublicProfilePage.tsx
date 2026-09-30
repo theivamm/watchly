@@ -16,6 +16,7 @@ import { getPosterUrl } from "@/services/tmdb";
 import { getDominantColor, rgba, rgbString, lighten, DEFAULT_TINT, type RGB } from "@/lib/posterColor";
 import type { Profile, List, Entry, EntryStatus, TMDBSearchResult, ListItem, UserDNA } from "@/types";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import "@/styles/cinema.css";
 
 type Section = "resumen" | "quierover" | "peliculas" | "series" | "listas";
 
@@ -28,13 +29,6 @@ const STATUS_FILTERS: { value: EntryStatus | "all"; label: string }[] = [
   { value: "dropped", label: "Abandonados" },
 ];
 
-const STATUS_COLORS: Record<EntryStatus, string> = {
-  want_to_watch: "var(--accent)",
-  watching: "#4ade80",
-  completed: "#60a5fa",
-  paused: "#facc15",
-  dropped: "#f87171",
-};
 
 export default function PublicProfilePage() {
   const { username = "" } = useParams();
@@ -146,8 +140,6 @@ export default function PublicProfilePage() {
   }, [activeCover?.poster_path]);
 
   const accentText = rgbString(lighten(tint, 0.45));
-  const accentSoft = rgba(tint, 0.14);
-  const accentBorder = rgba(tint, 0.3);
   const tintGlow = rgba(tint, 0.4);
   const tintGradient = `linear-gradient(135deg, ${rgbString(tint)} 0%, ${rgbString(lighten(tint, 0.28))} 55%, ${rgbString(lighten(tint, 0.5))} 100%)`;
 
@@ -228,10 +220,9 @@ export default function PublicProfilePage() {
   ];
 
   const renderEmpty = (msg: string) => (
-    <div className="flex flex-col items-center justify-center py-16 rounded-2xl border"
-      style={{ backgroundColor: "var(--surface-1)", borderColor: "var(--border)" }}>
-      <BookOpen className="w-8 h-8 mb-3" style={{ color: "var(--text-secondary)" }} />
-      <p className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>{msg}</p>
+    <div className="frost-card flex flex-col items-center justify-center py-16 rounded-[2.5rem]">
+      <BookOpen className="w-8 h-8 mb-3 text-white/70" />
+      <p className="text-sm font-bold text-white/75">{msg}</p>
     </div>
   );
 
@@ -294,8 +285,7 @@ export default function PublicProfilePage() {
   const SectionTitle = ({ eyebrow, title, subtitle, icon: Icon }: {
     eyebrow: string; title: string; subtitle: string; icon: typeof Film;
   }) => (
-    <div className="relative overflow-hidden rounded-3xl border p-7 md:p-9 mb-8"
-      style={{ backgroundColor: "var(--surface-1)", borderColor: accentBorder }}>
+    <div className="liquid-glass relative overflow-hidden rounded-[2.5rem] p-7 md:p-9 mb-8">
       <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full blur-[80px] animate-glow pointer-events-none"
         style={{ background: rgba(tint, 0.3) }} />
       <div className="absolute -bottom-20 -left-14 w-44 h-44 rounded-full blur-[70px] pointer-events-none"
@@ -307,10 +297,10 @@ export default function PublicProfilePage() {
         </div>
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: `rgb(${accentText})` }}>{eyebrow}</p>
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight" style={{ color: "var(--text-primary)" }}>
+          <h2 className="font-cinema text-4xl md:text-5xl leading-none text-white">
             {title}
           </h2>
-          <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>{subtitle}</p>
+          <p className="text-sm mt-2 text-white/75">{subtitle}</p>
         </div>
       </div>
     </div>
@@ -326,8 +316,7 @@ export default function PublicProfilePage() {
           { icon: Star, label: "Destacadas", value: favorites.length },
           { icon: ListIcon, label: "Listas", value: lists.length },
         ].map(({ icon: Icon, label, value }) => (
-          <div key={label} className="group relative overflow-hidden rounded-3xl border p-6 transition-all duration-300 hover:-translate-y-1"
-            style={{ backgroundColor: "var(--surface-1)", borderColor: accentBorder }}>
+          <div key={label} className="liquid-glass group relative overflow-hidden rounded-[2rem] p-6 transition-all duration-300 hover:-translate-y-1">
             <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full blur-[50px] opacity-0 group-hover:opacity-70 transition-opacity duration-500"
               style={{ background: tintGradient }} />
             <div className="relative">
@@ -335,8 +324,8 @@ export default function PublicProfilePage() {
                 style={{ background: tintGradient, boxShadow: `0 4px 14px ${tintGlow}` }}>
                 <Icon className="w-5 h-5 text-white" />
               </div>
-              <p className="text-3xl font-extrabold leading-none text-gradient">{value}</p>
-              <p className="text-xs font-semibold mt-1.5" style={{ color: "var(--text-secondary)" }}>{label}</p>
+              <p className="font-cinema text-5xl leading-none" style={{ color: `rgb(${accentText})` }}>{value}</p>
+              <p className="text-xs font-bold mt-2 text-white/75">{label}</p>
             </div>
           </div>
         ))}
@@ -345,8 +334,7 @@ export default function PublicProfilePage() {
       {/* ADN block */}
       {dna && dna.status !== "locked" && (
         <Link to={`/perfil/${profile.username}/adn`}
-          className="group relative overflow-hidden rounded-3xl border p-6 md:p-8 block transition-all duration-300 hover:-translate-y-1"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: accentBorder }}>
+          className="liquid-glass group relative overflow-hidden rounded-[2.5rem] p-6 md:p-8 block transition-all duration-300 hover:-translate-y-1 text-white hover:text-white">
           <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-[80px] animate-glow pointer-events-none"
             style={{ background: rgba(tint, 0.3) }} />
           <div className="relative flex flex-col md:flex-row items-start md:items-center gap-5">
@@ -358,17 +346,16 @@ export default function PublicProfilePage() {
               <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: `rgb(${accentText})` }}>
                 ADN Audiovisual
               </p>
-              <p className="text-lg font-extrabold tracking-tight mb-1" style={{ color: "var(--text-primary)" }}>
+              <p className="font-cinema text-3xl leading-tight mb-1 text-white">
                 {dna.topGenres.slice(0, 3).map((g) => g.label).join(" · ")}
               </p>
               {dna.decadeDistribution[0] && (
-                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                <p className="text-sm text-white/75">
                   Década dominante: {dna.decadeDistribution[0].label}
                 </p>
               )}
             </div>
-            <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shrink-0 transition-transform group-hover:scale-[1.02]"
-              style={{ backgroundColor: "var(--surface-2)", color: "var(--text-primary)", border: "1.5px solid var(--border)" }}>
+            <span className="inline-flex items-center gap-2 h-12 px-6 rounded-full text-sm font-extrabold shrink-0 transition-transform group-hover:scale-[1.03] bg-white text-[#111]">
               Ver ADN completo
             </span>
           </div>
@@ -380,7 +367,7 @@ export default function PublicProfilePage() {
         <section>
           <div className="flex items-center gap-3 mb-5">
             <Star className="w-5 h-5 fill-current" style={{ color: `rgb(${accentText})` }} />
-            <h2 className="text-xl font-extrabold tracking-tight" style={{ color: "var(--text-primary)" }}>
+            <h2 className="font-cinema text-3xl md:text-4xl leading-none text-white">
               Más valoradas
             </h2>
           </div>
@@ -392,7 +379,7 @@ export default function PublicProfilePage() {
       <section>
         <div className="flex items-center gap-3 mb-5">
           <Sparkles className="w-5 h-5" style={{ color: `rgb(${accentText})` }} />
-          <h2 className="text-xl font-extrabold tracking-tight" style={{ color: "var(--text-primary)" }}>
+          <h2 className="font-cinema text-3xl md:text-4xl leading-none text-white">
             Últimos agregados
           </h2>
         </div>
@@ -405,8 +392,7 @@ export default function PublicProfilePage() {
     <div className="w-full px-5 md:px-8 py-8 md:py-12 max-w-7xl mx-auto">
 
       {/* ===== Profile banner with cycling blurred covers ===== */}
-      <section className="relative overflow-hidden rounded-[2rem] border mb-8"
-        style={{ borderColor: accentBorder }}>
+      <section className="relative overflow-hidden rounded-[2.5rem] border border-white/18 mb-8 shadow-[0_30px_60px_-20px_rgba(0,0,0,.7)]">
         {heroCovers.length > 0 && (
           <div className="absolute inset-0">
             {heroCovers.map((entry, i) => (
@@ -445,17 +431,16 @@ export default function PublicProfilePage() {
 
           {/* Info */}
           <div className="flex-1 min-w-0 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-3"
-              style={{ backgroundColor: accentSoft, color: `rgb(${accentText})`, border: `1px solid ${accentBorder}` }}>
+            <div className="liquid-glass-sm inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-extrabold uppercase tracking-widest mb-4 text-white">
               <Sparkles className="w-3.5 h-3.5" /> Perfil público
             </div>
-            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-1" style={{ color: "var(--text-primary)" }}>
+            <h1 className="font-cinema text-5xl md:text-7xl leading-none mb-2 text-white">
               {profile.display_name || profile.username}
             </h1>
             <p className="text-sm font-bold mb-3" style={{ color: `rgb(${accentText})` }}>@{profile.username}</p>
 
             {profile.bio && (
-              <p className="text-sm md:text-base leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>
+              <p className="text-sm md:text-base leading-relaxed mb-4 text-white/80">
                 {profile.bio}
               </p>
             )}
@@ -470,8 +455,7 @@ export default function PublicProfilePage() {
                 )}
                 {socials.map(({ icon: Icon, href, key }) => (
                   <a key={key} href={href} target="_blank" rel="noreferrer"
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-full transition-transform hover:scale-110"
-                    style={{ backgroundColor: "var(--surface-2)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}>
+                    className="liquid-glass-sm inline-flex items-center justify-center w-9 h-9 rounded-full transition-transform hover:scale-110 text-white">
                     <Icon className="w-4 h-4" />
                   </a>
                 ))}
@@ -481,30 +465,27 @@ export default function PublicProfilePage() {
 
           {/* Mini stats + actions */}
           <div className="shrink-0 flex flex-col items-center gap-4">
-            <div className="flex items-center gap-5 px-6 py-4 rounded-2xl"
-              style={{ backgroundColor: "rgba(11,11,20,0.45)", border: `1px solid ${accentBorder}`, backdropFilter: "blur(8px)" }}>
+            <div className="liquid-glass flex items-center gap-5 px-7 py-4 rounded-[1.75rem]">
               {[
                 { n: movies.length, l: "Películas" },
                 { n: series.length, l: "Series" },
                 { n: favorites.length, l: "Fav" },
               ].map(({ n, l }) => (
                 <div key={l} className="text-center">
-                  <p className="text-xl font-extrabold leading-none text-gradient">{n}</p>
-                  <p className="text-[10px] font-bold mt-1 uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>{l}</p>
+                  <p className="font-cinema text-3xl leading-none" style={{ color: `rgb(${accentText})` }}>{n}</p>
+                  <p className="text-[10px] font-extrabold mt-1.5 uppercase tracking-wider text-white/70">{l}</p>
                 </div>
               ))}
             </div>
 
             {isOwner ? (
               <Link to="/configuracion/perfil"
-                className="block text-center px-6 py-3 rounded-full text-sm font-bold transition-all hover:scale-[1.02] w-full"
-                style={{ backgroundColor: "var(--surface-2)", color: "var(--text-primary)", border: "1.5px solid var(--border)" }}>
+                className="block text-center px-6 py-3.5 rounded-full text-sm font-extrabold transition-all hover:scale-[1.02] w-full bg-white text-[#111] hover:text-[#111] shadow-[0_12px_40px_rgba(0,0,0,.35)]">
                 Editar perfil
               </Link>
             ) : (
               <button onClick={handleShare}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all hover:scale-[1.02] w-full"
-                style={{ background: tintGradient, color: "#fff", boxShadow: `0 4px 18px ${rgba(tint, 0.45)}` }}>
+                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-full text-sm font-extrabold transition-all hover:scale-[1.02] w-full bg-white text-[#111] shadow-[0_12px_40px_rgba(0,0,0,.35)]">
                 {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
                 {copied ? "¡Link copiado!" : "Compartir perfil"}
               </button>
@@ -519,16 +500,11 @@ export default function PublicProfilePage() {
           const active = section === key;
           return (
             <button key={key} onClick={() => setSection(key)}
-              className="flex items-center gap-2.5 px-5 py-3 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200"
-              style={{
-                backgroundColor: active ? accentSoft : "var(--surface-1)",
-                color: active ? `rgb(${accentText})` : "var(--text-secondary)",
-                border: `1.5px solid ${active ? accentBorder : "var(--border)"}`,
-              }}>
+              data-active={active} className="frost-tab">
               <Icon className="w-4 h-4" strokeWidth={active ? 2.4 : 2} />
               <span>{label}</span>
-              <span className="px-2 py-0.5 rounded-md text-[11px] font-extrabold"
-                style={{ backgroundColor: active ? rgba(tint, 0.25) : "var(--surface-2)", color: active ? "#fff" : "var(--text-secondary)" }}>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold"
+                style={{ backgroundColor: active ? "rgba(0,0,0,.12)" : "rgba(255,255,255,.14)" }}>
                 {count}
               </span>
             </button>
@@ -573,11 +549,9 @@ export default function PublicProfilePage() {
               />
             )}
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-3"
-                style={{ color: "var(--text-primary)" }}>
+              <h2 className="font-cinema text-3xl md:text-4xl leading-none flex items-center gap-3 text-white">
                 {section === "peliculas" ? "Películas" : "Series"}
-                <span className="px-2.5 py-1 rounded-lg text-xs font-extrabold"
-                  style={{ backgroundColor: accentSoft, color: `rgb(${accentText})` }}>
+                <span className="liquid-glass-sm px-3 py-1.5 rounded-full text-xs font-extrabold font-sans normal-case text-white">
                   {filtered.length}
                 </span>
               </h2>
@@ -587,12 +561,7 @@ export default function PublicProfilePage() {
             <div className="flex gap-2 flex-wrap">
               {STATUS_FILTERS.map((f) => (
                 <button key={f.value} onClick={() => setStatusFilter(f.value)}
-                  className="px-4 py-2 rounded-full text-xs font-bold transition-all"
-                  style={{
-                    backgroundColor: statusFilter === f.value ? STATUS_COLORS[f.value as EntryStatus] || "var(--accent)" : "var(--surface-2)",
-                    color: statusFilter === f.value ? "#000" : "var(--text-secondary)",
-                    border: `1.5px solid ${statusFilter === f.value ? STATUS_COLORS[f.value as EntryStatus] || "var(--accent)" : "var(--border)"}`,
-                  }}>
+                  data-active={statusFilter === f.value} className="frost-tab !py-2 !px-4 !text-xs">
                   {f.label}
                 </button>
               ))}
@@ -618,12 +587,7 @@ export default function PublicProfilePage() {
                   const expanded = expandedListId === list.id;
                   return (
                     <div key={list.id}
-                      className="overflow-hidden rounded-[2rem] border transition-all duration-300"
-                      style={{
-                        backgroundColor: "var(--surface-1)",
-                        borderColor: expanded ? rgba(tint, 0.5) : accentBorder,
-                        boxShadow: "0 20px 50px -20px rgba(0,0,0,0.6)",
-                      }}>
+                      className="frost-card overflow-hidden rounded-[2.25rem] transition-all duration-300">
                       <button
                         onClick={() => setExpandedListId(expanded ? null : list.id)}
                         title={expanded ? "Ocultar títulos" : "Ver títulos"}
@@ -680,19 +644,13 @@ export default function PublicProfilePage() {
                               )}
                             </div>
                             <span
-                              className="w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-transform duration-300"
-                              style={{
-                                backgroundColor: "rgba(11,11,20,0.55)",
-                                color: "var(--accent-light)",
-                                border: "1px solid rgba(255,255,255,0.08)",
-                                transform: expanded ? "rotate(180deg)" : "none",
-                              }}>
+                              className="liquid-glass-sm w-9 h-9 rounded-full flex items-center justify-center transition-transform duration-300 text-white"
+                              style={{ transform: expanded ? "rotate(180deg)" : "none" }}>
                               <ChevronDown className="w-4 h-4" />
                             </span>
                           </div>
                           <div>
-                            <h3 className="text-lg font-extrabold tracking-tight mb-1 drop-shadow-md"
-                              style={{ color: "var(--text-primary)" }}>
+                            <h3 className="font-cinema text-3xl leading-none mb-1 drop-shadow-md text-white">
                               {list.name}
                             </h3>
                             {list.description && (
@@ -705,7 +663,7 @@ export default function PublicProfilePage() {
                       </button>
 
                       {expanded && (
-                        <div className="p-6 pt-5 animate-slide-up" style={{ backgroundColor: "rgba(11,11,20,0.45)" }}>
+                        <div className="p-6 pt-5 animate-slide-up border-t border-white/10">
                           {items.length > 0 ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                               {items.map((item) => (

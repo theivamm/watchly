@@ -4,6 +4,7 @@ import { useAuth } from "@/app/auth-context";
 import { getUserLibrary } from "@/services/library";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
+import PageHeader from "@/components/ui/PageHeader";
 import type { Entry, EntryStatus, TMDBSearchResult } from "@/types";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
@@ -15,6 +16,8 @@ const STATUS_TABS: { value: EntryStatus | "all"; label: string }[] = [
   { value: "paused", label: "Pausados" },
   { value: "dropped", label: "Abandonados" },
 ];
+
+const GRID = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-5";
 
 export default function LibraryPage() {
   usePageTitle("Mi biblioteca | Watchly");
@@ -52,37 +55,33 @@ export default function LibraryPage() {
   });
 
   return (
-    <div className="w-full px-5 md:px-8 py-8 md:py-12">
-      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-8" style={{ color: "var(--text-primary)" }}>
-        Biblioteca
-      </h1>
+    <div className="w-full px-5 md:px-10 py-8 md:py-12 text-white">
+      <PageHeader
+        title="Biblioteca"
+        eyebrow="Tu historial"
+        subtitle={!loading ? `${entries.length} ${entries.length === 1 ? "título" : "títulos"}` : undefined}
+      />
 
-      <div className="flex gap-2 mb-8 flex-wrap">
+      <div className="flex gap-2.5 mb-10 flex-wrap">
         {STATUS_TABS.map((tab) => (
-          <button key={tab.value} onClick={() => setActiveTab(tab.value)}
-            className="px-5 py-2.5 rounded-full text-sm font-semibold transition-all"
-            style={{
-              backgroundColor: activeTab === tab.value ? "var(--accent-soft)" : "var(--surface-2)",
-              color: activeTab === tab.value ? "var(--accent-light)" : "var(--text-secondary)",
-              border: `1.5px solid ${activeTab === tab.value ? "var(--accent)" : "var(--border)"}`,
-            }}>
+          <button key={tab.value} onClick={() => setActiveTab(tab.value)} data-active={activeTab === tab.value} className="frost-tab">
             {tab.label}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+        <div className={GRID}>
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="aspect-[2/3] rounded-2xl mb-3" style={{ backgroundColor: "var(--surface-2)" }} />
-              <div className="h-4 rounded-lg mb-2 w-4/5" style={{ backgroundColor: "var(--surface-2)" }} />
-              <div className="h-3 rounded-lg w-2/5" style={{ backgroundColor: "var(--surface-2)" }} />
+            <div key={i} className="frost-card rounded-[1.9rem] p-2.5 animate-pulse">
+              <div className="aspect-[2/3] rounded-[1.4rem] bg-white/10 mb-3" />
+              <div className="h-4 rounded-lg mb-2 w-4/5 bg-white/10 mx-2" />
+              <div className="h-3 rounded-lg w-2/5 bg-white/10 mx-2 mb-2" />
             </div>
           ))}
         </div>
       ) : entries.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+        <div className={GRID}>
           {entries.map((entry) => (
             <MediaCard
               key={entry.id}
@@ -99,14 +98,12 @@ export default function LibraryPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-24 rounded-2xl border"
-          style={{ backgroundColor: "var(--surface-1)", borderColor: "var(--border)" }}>
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
-            style={{ backgroundColor: "var(--surface-2)" }}>
-            <BookOpen className="w-7 h-7" style={{ color: "var(--text-secondary)" }} />
+        <div className="frost-card flex flex-col items-center justify-center py-24 rounded-[2.5rem]">
+          <div className="liquid-glass-sm w-16 h-16 rounded-full flex items-center justify-center mb-5">
+            <BookOpen className="w-7 h-7" />
           </div>
-          <p className="text-base font-bold mb-1" style={{ color: "var(--text-primary)" }}>Sin títulos aún</p>
-          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Agregá películas y series desde el buscador</p>
+          <p className="font-cinema text-3xl mb-1">Sin títulos aún</p>
+          <p className="text-sm text-white/70">Agregá películas y series desde el buscador</p>
         </div>
       )}
       {selected && (

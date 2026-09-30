@@ -4,8 +4,11 @@ import { useMediaSearch } from "@/hooks/useMedia";
 import { useDebounce } from "@/hooks/useDebounce";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
+import PageHeader from "@/components/ui/PageHeader";
 import type { TMDBSearchResult } from "@/types";
 import { usePageTitle } from "@/hooks/usePageTitle";
+
+const GRID = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-5";
 
 export default function SearchPage() {
   usePageTitle("Buscar | Watchly");
@@ -17,60 +20,46 @@ export default function SearchPage() {
   const results = data?.results || [];
 
   return (
-    <div className="w-full px-5 md:px-8 py-8 md:py-12">
-      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-8" style={{ color: "var(--text-primary)" }}>
-        Buscar
-      </h1>
+    <div className="w-full px-5 md:px-10 py-8 md:py-12 text-white">
+      <PageHeader title="Buscar" eyebrow="Descubrí títulos" subtitle="Películas y series de todo el mundo, con sinopsis y puntajes reales." />
 
-      {/* Search input */}
-      <div className="relative mb-6 max-w-xl">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: "var(--text-secondary)" }} />
+      <div className="relative mb-6 max-w-2xl">
+        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
         <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
-          className="!pl-12 !py-4 !text-base !rounded-full" placeholder="¿Qué querés agregar?" />
+          className="glass-input with-icon !h-16 !text-base" placeholder="¿Qué querés agregar?" autoFocus />
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-8">
+      <div className="flex gap-2.5 mb-10">
         {([["all", "Todo"], ["movie", "Películas"], ["tv", "Series"]] as const).map(([key, label]) => (
-          <button key={key} onClick={() => setActiveTab(key)}
-            className="px-5 py-2.5 rounded-full text-sm font-semibold transition-all"
-            style={{
-              backgroundColor: activeTab === key ? "var(--accent-soft)" : "var(--surface-2)",
-              color: activeTab === key ? "var(--accent-light)" : "var(--text-secondary)",
-              border: `1.5px solid ${activeTab === key ? "var(--accent)" : "var(--border)"}`,
-            }}>
+          <button key={key} onClick={() => setActiveTab(key)} data-active={activeTab === key} className="frost-tab">
             {label}
           </button>
         ))}
       </div>
 
-      {/* Empty state */}
       {!query && (
-        <div className="flex flex-col items-center py-24">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-            style={{ backgroundColor: "var(--surface-2)", boxShadow: "0 0 30px color-mix(in srgb, var(--accent) 20%, transparent)" }}>
-            <Search className="w-7 h-7" style={{ color: "var(--text-secondary)" }} />
+        <div className="frost-card rounded-[2.5rem] flex flex-col items-center py-24 max-w-2xl">
+          <div className="liquid-glass-sm w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            <Search className="w-7 h-7" />
           </div>
-          <p className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>Escribí al menos 3 caracteres</p>
+          <p className="text-sm font-bold text-white/75">Escribí al menos 3 caracteres</p>
         </div>
       )}
 
-      {/* Loading skeletons */}
       {isLoading && results.length === 0 && debouncedQuery.length >= 3 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+        <div className={GRID}>
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="aspect-[2/3] rounded-2xl mb-3" style={{ backgroundColor: "var(--surface-2)" }} />
-              <div className="h-4 rounded-lg mb-2 w-4/5" style={{ backgroundColor: "var(--surface-2)" }} />
-              <div className="h-3 rounded-lg w-2/5" style={{ backgroundColor: "var(--surface-2)" }} />
+            <div key={i} className="frost-card rounded-[1.9rem] p-2.5 animate-pulse">
+              <div className="aspect-[2/3] rounded-[1.4rem] bg-white/10 mb-3" />
+              <div className="h-4 rounded-lg mb-2 w-4/5 bg-white/10 mx-2" />
+              <div className="h-3 rounded-lg w-2/5 bg-white/10 mx-2 mb-2" />
             </div>
           ))}
         </div>
       )}
 
-      {/* Results */}
       {results.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+        <div className={GRID}>
           {results.map((item) => (
             <MediaCard
               key={`${item.mediaType}-${item.tmdbId}`}
@@ -86,18 +75,13 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* No results */}
       {debouncedQuery.length >= 3 && !isLoading && results.length === 0 && (
-        <div className="flex flex-col items-center py-24">
-          <p className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>
-            No se encontraron resultados
-          </p>
+        <div className="frost-card rounded-[2.5rem] flex flex-col items-center py-20 max-w-2xl">
+          <p className="text-sm font-bold text-white/75">No se encontraron resultados</p>
         </div>
       )}
 
-      {selectedResult && (
-        <MediaDetailModal result={selectedResult} onClose={() => setSelectedResult(null)} />
-      )}
+      {selectedResult && <MediaDetailModal result={selectedResult} onClose={() => setSelectedResult(null)} />}
     </div>
   );
 }

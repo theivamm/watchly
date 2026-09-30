@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Globe, Lock, List, Pencil, Trash2 } from "lucide-react";
 import { getList, deleteList, updateList, removeItemFromList } from "@/services/lists";
+import { getPosterUrl } from "@/services/tmdb";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import ListFormModal from "@/components/lists/ListFormModal";
@@ -52,9 +53,7 @@ export default function ListDetailPage() {
     setRemovingId(itemId);
     try {
       await removeItemFromList(itemId);
-      setList((prev) =>
-        prev ? { ...prev, items: prev.items.filter((i) => i.id !== itemId) } : prev
-      );
+      setList((prev) => (prev ? { ...prev, items: prev.items.filter((i) => i.id !== itemId) } : prev));
     } catch (err) {
       console.error("Failed to remove item:", err);
     } finally {
@@ -78,134 +77,82 @@ export default function ListDetailPage() {
 
   if (loading) {
     return (
-      <div className="w-full px-5 md:px-8 py-8 md:py-12 flex justify-center">
-        <div
-          className="w-8 h-8 rounded-full border-2 animate-spin"
-          style={{
-            borderColor: "var(--border)",
-            borderTopColor: "var(--accent)",
-          }}
-        />
+      <div className="w-full px-5 md:px-10 py-8 md:py-12 flex justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin" />
       </div>
     );
   }
 
   if (!list) {
     return (
-      <div className="w-full px-5 md:px-8 py-8 md:py-12">
-        <p style={{ color: "var(--text-secondary)" }}>Lista no encontrada</p>
+      <div className="w-full px-5 md:px-10 py-8 md:py-12 text-white">
+        <p className="text-white/70">Lista no encontrada</p>
       </div>
     );
   }
 
-  return (
-    <div className="w-full px-5 md:px-8 py-8 md:py-12">
-      <button
-        onClick={() => navigate("/listas")}
-        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-[1.02] mb-6"
-        style={{
-          backgroundColor: "var(--surface-2)",
-          color: "var(--text-primary)",
-          border: "1.5px solid var(--border)",
-        }}
-      >
-        <ArrowLeft className="w-4 h-4" /> Volver a listas
-      </button>
+  const posters = list.items.filter((i) => i.poster_path).slice(0, 5).map((i) => i.poster_path as string);
+  const count = list.items.length;
 
-      <div className="flex items-start justify-between mb-8">
-        <div className="flex-1 min-w-0 mr-4">
-          <h1
-            className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2"
-            style={{ color: "var(--text-primary)" }}
-          >
-            {list.name}
-          </h1>
-          {list.description && (
-            <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>
-              {list.description}
-            </p>
-          )}
-          <div className="flex items-center gap-2">
-            <span
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold"
-              style={{
-                backgroundColor: list.is_public
-                  ? "rgba(74,222,128,0.1)"
-                  : "var(--surface-2)",
-                color: list.is_public ? "#4ade80" : "var(--text-secondary)",
-              }}
-            >
-              {list.is_public ? (
-                <Globe className="w-3 h-3" />
-              ) : (
-                <Lock className="w-3 h-3" />
-              )}
-              {list.is_public ? "Pública" : "Privada"}
-            </span>
-            <span
-              className="text-xs font-bold"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              {list.items.length} {list.items.length === 1 ? "título" : "títulos"}
-            </span>
+  return (
+    <div className="w-full px-5 md:px-10 py-8 md:py-12 text-white">
+      {/* Banner */}
+      <section className="relative overflow-hidden rounded-[2.5rem] border border-white/18 mb-10 shadow-[0_30px_60px_-20px_rgba(0,0,0,.7)]"
+        style={{ background: "linear-gradient(160deg, rgba(139,92,246,.35), rgba(20,20,32,.9))" }}>
+        {posters.length > 0 && (
+          <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${posters.length}, 1fr)` }}>
+            {posters.map((p, i) => (
+              <img key={i} src={getPosterUrl(p, "w342")} alt="" aria-hidden="true" className="w-full h-full object-cover blur-md scale-110" />
+            ))}
+          </div>
+        )}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(7,7,13,.88) 0%, rgba(7,7,13,.55) 60%, rgba(7,7,13,.75) 100%)" }} />
+
+        <div className="relative p-7 md:p-12">
+          <button onClick={() => navigate("/listas")}
+            className="liquid-glass-sm inline-flex items-center gap-2 h-11 px-5 rounded-full text-sm font-bold text-white mb-8 transition-transform hover:scale-[1.03]">
+            <ArrowLeft className="w-4 h-4" /> Volver a listas
+          </button>
+
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div className="min-w-0 max-w-3xl">
+              <h1 className="font-cinema text-6xl md:text-8xl leading-[1.02] drop-shadow-[0_10px_50px_rgba(0,0,0,.5)]">{list.name}</h1>
+              {list.description && <p className="text-base md:text-lg mt-4 text-white/80 text-pretty">{list.description}</p>}
+              <div className="flex items-center gap-2.5 mt-5">
+                <span className="liquid-glass-sm inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-extrabold">
+                  {list.is_public ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                  {list.is_public ? "Pública" : "Privada"}
+                </span>
+                <span className="liquid-glass-sm px-4 py-2 rounded-full text-xs font-extrabold">
+                  {count} {count === 1 ? "título" : "títulos"}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <button onClick={() => setEditing(true)}
+                className="liquid-glass-sm inline-flex items-center gap-2 h-12 px-6 rounded-full text-sm font-bold text-white transition-transform hover:scale-[1.03]">
+                <Pencil className="w-4 h-4" /> Editar lista
+              </button>
+              <button onClick={handleDeleteList} disabled={deleting}
+                className="liquid-glass-sm h-12 px-6 rounded-full text-sm font-bold transition-transform hover:scale-[1.03] disabled:opacity-50"
+                style={{ color: "#fca5a5" }}>
+                Eliminar lista
+              </button>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setEditing(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-all hover:scale-[1.02]"
-            style={{
-              backgroundColor: "var(--surface-2)",
-              color: "var(--accent-light)",
-              border: "1.5px solid var(--border)",
-            }}
-          >
-            <Pencil className="w-3.5 h-3.5" /> Editar lista
-          </button>
-          <button
-            onClick={handleDeleteList}
-            disabled={deleting}
-            className="px-4 py-2.5 rounded-full text-xs font-bold transition-all hover:scale-[1.02] disabled:opacity-50"
-            style={{
-              backgroundColor: "var(--surface-2)",
-              color: "#f87171",
-              border: "1.5px solid var(--border)",
-            }}
-          >
-            Eliminar lista
-          </button>
-        </div>
-      </div>
+      </section>
 
       {list.items.length === 0 ? (
-        <div
-          className="flex flex-col items-center justify-center py-24 rounded-3xl border"
-          style={{
-            backgroundColor: "var(--surface-1)",
-            borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)",
-          }}
-        >
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
-            style={{
-              background: "var(--gradient-accent)",
-              boxShadow: "0 0 30px color-mix(in srgb, var(--accent) 35%, transparent)",
-            }}
-          >
-            <List className="w-7 h-7 text-white" />
+        <div className="frost-card flex flex-col items-center justify-center py-24 rounded-[2.5rem]">
+          <div className="liquid-glass-sm w-16 h-16 rounded-full flex items-center justify-center mb-5">
+            <List className="w-7 h-7" />
           </div>
-          <p
-            className="text-base font-bold mb-1"
-            style={{ color: "var(--text-primary)" }}
-          >
-            Lista vacía
-          </p>
-          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-            Agregá títulos desde la búsqueda o el detalle de una película
-          </p>
+          <p className="font-cinema text-3xl mb-1">Lista vacía</p>
+          <p className="text-sm text-white/70">Agregá títulos desde la búsqueda o el detalle de una película</p>
         </div>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid gap-5 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
           {list.items.map((item) => (
             <div key={item.id} className="relative group">
               <MediaCard
@@ -223,17 +170,13 @@ export default function ListDetailPage() {
                 onClick={() => handleRemoveItem(item.id)}
                 disabled={removingId === item.id}
                 title="Sacar de la lista"
-                className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 disabled:opacity-40"
-                style={{
-                  backgroundColor: "rgba(15,15,23,0.8)",
-                  border: "1px solid rgba(248,113,113,0.4)",
-                  color: "#f87171",
-                }}
+                className="liquid-glass-sm absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 disabled:opacity-40"
+                style={{ color: "#fca5a5" }}
               >
                 {removingId === item.id ? (
-                  <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin" />
+                  <div className="w-3.5 h-3.5 rounded-full border border-current border-t-transparent animate-spin" />
                 ) : (
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                 )}
               </button>
             </div>
@@ -246,9 +189,7 @@ export default function ListDetailPage() {
           result={selected}
           onClose={() => setSelected(null)}
           onSaved={() => {
-            if (id) {
-              getList(id).then(setList).catch(console.error);
-            }
+            if (id) getList(id).then(setList).catch(console.error);
           }}
         />
       )}

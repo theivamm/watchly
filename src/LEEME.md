@@ -1,11 +1,10 @@
 # Watchly — rediseño (carpeta src completa)
 
-Reemplazá TODA la carpeta `src/` de App-Peliculas con esta.
+Reemplazá TODA la carpeta src/ de App-Peliculas con esta.
 
-Cambios respecto a tu versión:
-- pages/HomePage, LandingPage, LoginPage, RegisterPage, RecoverPasswordPage, UpdatePasswordPage, RoadmapPage
-- components/auth/AuthShell (nuevo) · components/home/HeroBackdrop (nuevo)
-- components/layout/UserMenu y MobileNavigation (menús liquid glass)
-- hooks/useHeroCycle (nuevo) · lib/genres (nuevo) · styles/cinema.css (nuevo; también estiliza <select>)
-
-El resto de los archivos es idéntico al original.
+Ronda 3 (vidrio esmerilado + páginas internas):
+- styles/cinema.css: vidrio más opaco (frost), .frost-card, .frost-tab, .glass-input, menús
+- layout/Sidebar (cápsula flotante de vidrio) y AppShell (manchas de ambiente)
+- media/MediaCard (tarjeta esmerilada) · ui/PageHeader (nuevo)
+- pages: Search, Library, Lists, ListDetail, PublicProfile · lists/ListFormModal
+Rondas previas: Home, Landing, Login, Registro, Recuperar/Actualizar contraseña, Roadmap, menús.
