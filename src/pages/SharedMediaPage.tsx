@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "@/styles/cinema.css";
 import { Link, useParams } from "react-router-dom";
 import { Share2, Check, Star, Film, Tv, Quote, Lock, ArrowLeft, Plus, User } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
@@ -118,7 +119,7 @@ export default function SharedMediaPage() {
           style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 0 40px color-mix(in srgb, var(--accent) 40%, transparent)" }}>
           ?
         </div>
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-1" style={{ color: "var(--text-primary)" }}>
+        <h1 className="font-cinema text-4xl md:text-6xl leading-none mb-2 text-white">
           Perfil no encontrado
         </h1>
         <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
@@ -139,7 +140,7 @@ export default function SharedMediaPage() {
           style={{ background: "var(--surface-2)" }}>
           <Lock className="w-10 h-10" style={{ color: "var(--text-secondary)" }} />
         </div>
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-1" style={{ color: "var(--text-primary)" }}>
+        <h1 className="font-cinema text-4xl md:text-6xl leading-none mb-2 text-white">
           Perfil privado
         </h1>
         <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
@@ -160,7 +161,7 @@ export default function SharedMediaPage() {
           style={{ background: "var(--surface-2)" }}>
           ?
         </div>
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-1" style={{ color: "var(--text-primary)" }}>
+        <h1 className="font-cinema text-4xl md:text-6xl leading-none mb-2 text-white">
           Esta tarjeta ya no está disponible
         </h1>
         <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
@@ -247,7 +248,7 @@ export default function SharedMediaPage() {
                 </span>
               </div>
 
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>
+              <h1 className="font-cinema text-4xl md:text-6xl leading-none mb-3 text-white">
                 {entry.title}
               </h1>
 

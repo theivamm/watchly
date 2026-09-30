@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import "@/styles/cinema.css";
 import { Link } from "react-router-dom";
 import {
   Clapperboard, Calendar, Globe, Languages, Clock, Star,
@@ -192,7 +193,7 @@ function LockedState({ dna }: { dna: UserDNA }) {
           <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "var(--accent-light)" }}>
             ADN Audiovisual
           </p>
-          <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-3" style={{ color: "var(--text-primary)" }}>
+          <h1 className="font-cinema text-4xl md:text-6xl leading-none mb-3 text-white">
             Tu ADN Audiovisual está tomando forma
           </h1>
           <p className="text-sm md:text-base leading-relaxed mb-8" style={{ color: "var(--text-secondary)" }}>

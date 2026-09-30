@@ -1,6 +1,7 @@
+import "@/styles/cinema.css";
 import { useEffect, useState } from "react";
-import { X, Star, Film, Tv, Plus, Quote, Share2, Check } from "lucide-react";
-import { getPosterUrl, getMediaDetails } from "@/services/tmdb";
+import { X, Star, Plus, Quote, Share2, Check } from "lucide-react";
+import { getPosterUrl, getBackdropUrl, getMediaDetails } from "@/services/tmdb";
 import type { Entry, EntryStatus, TMDBMediaDetails } from "@/types";
 
 interface EntryDetailModalProps {
@@ -19,28 +20,24 @@ const STATUS_LABELS: Record<EntryStatus, string> = {
 };
 
 const STATUS_COLORS: Record<EntryStatus, string> = {
-  want_to_watch: "var(--accent)",
-  watching: "#4ade80",
-  completed: "#60a5fa",
-  paused: "#facc15",
-  dropped: "#f87171",
+  want_to_watch: "hsl(265 90% 78%)",
+  watching: "hsl(145 70% 65%)",
+  completed: "hsl(210 90% 72%)",
+  paused: "hsl(48 95% 68%)",
+  dropped: "hsl(0 90% 74%)",
 };
 
 export default function EntryDetailModal({ entry, onClose, onAction, shareUrl }: EntryDetailModalProps) {
   const [details, setDetails] = useState<TMDBMediaDetails | null>(null);
   const [copied, setCopied] = useState(false);
-  const rating = entry.rating;
+  const rating = entry.rating ?? 0;
 
   useEffect(() => {
     let active = true;
     getMediaDetails(entry.media_type, entry.tmdb_id)
-      .then((d) => {
-        if (active) setDetails(d);
-      })
+      .then((d) => { if (active) setDetails(d); })
       .catch(() => {});
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [entry.media_type, entry.tmdb_id]);
 
   const handleShare = async () => {
@@ -56,136 +53,76 @@ export default function EntryDetailModal({ entry, onClose, onAction, shareUrl }:
 
   const description = details?.overview || entry.description;
   const year = details?.year ?? null;
+  const genres = details?.genres ?? [];
+  const posterUrl = getPosterUrl(entry.poster_path, "w500");
+  const heroImg = details?.backdropPath ? getBackdropUrl(details.backdropPath, "w1280") : null;
+  const roundBtn = "liquid-glass-sm w-11 h-11 rounded-full flex items-center justify-center text-white transition-transform hover:scale-110";
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in"
-      onClick={onClose}
-      style={{ backgroundColor: "rgba(5,5,12,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
-    >
-      <div
-        className="relative w-full max-w-lg overflow-hidden rounded-[2rem] border animate-pop"
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in text-white" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-2xl" />
+      <div className="relative w-full max-w-3xl max-h-[92vh] overflow-hidden rounded-[2.5rem] border border-white/20 animate-pop"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          backgroundColor: "var(--surface-1)",
-          borderColor: "color-mix(in srgb, var(--accent) 35%, transparent)",
-          boxShadow: "0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent), 0 40px 80px -20px color-mix(in srgb, var(--accent) 50%, transparent), 0 0 120px 20px color-mix(in srgb, var(--accent) 15%, transparent)",
-        }}
-      >
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        style={{ backgroundColor: "#0b0b14", boxShadow: "0 40px 120px -24px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.2)" }}>
+        <div className="absolute inset-0 pointer-events-none">
+          <img src={heroImg ?? posterUrl} alt="" aria-hidden="true" className="absolute top-0 inset-x-0 w-full h-[360px] object-cover"
+            style={heroImg ? undefined : { filter: "blur(36px) saturate(1.3)", transform: "scale(1.4)" }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(11,11,20,.3) 0, rgba(11,11,20,.8) 220px, #0b0b14 380px)" }} />
+        </div>
+
+        <div className="absolute top-5 right-5 z-20 flex items-center gap-2">
           {shareUrl && (
-            <button
-              onClick={handleShare}
-              className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
-              style={{ backgroundColor: "rgba(11,11,20,0.6)", border: "1px solid var(--border)", color: copied ? "#4ade80" : "var(--accent-light)", backdropFilter: "blur(6px)" }}
-              title={copied ? "¡Link copiado!" : "Copiar link para compartir"}
-            >
+            <button onClick={handleShare} className={roundBtn} title={copied ? "¡Link copiado!" : "Copiar link para compartir"} style={{ color: copied ? "#86efac" : undefined }}>
               {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
             </button>
           )}
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
-            style={{ backgroundColor: "rgba(11,11,20,0.6)", border: "1px solid var(--border)", color: "#fff", backdropFilter: "blur(6px)" }}
-            aria-label="Cerrar"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <button onClick={onClose} className={roundBtn} aria-label="Cerrar"><X className="w-5 h-5" /></button>
         </div>
 
-        <div className="flex flex-col sm:flex-row">
-          {/* Poster */}
-          <div className="relative sm:w-44 shrink-0">
-            <img
-              src={getPosterUrl(entry.poster_path)}
-              alt={entry.title}
-              className="w-full h-48 sm:h-full object-cover"
-            />
-            <div
-              className="absolute inset-0 sm:bg-none"
-              style={{ background: "linear-gradient(0deg, var(--surface-1) 0%, transparent 40%)" }}
-            />
-            <div
-              className="absolute inset-0 hidden sm:block"
-              style={{ background: "linear-gradient(90deg, transparent 60%, var(--surface-1) 100%)" }}
-            />
-          </div>
-
-          {/* Content */}
-          <div className="relative flex-1 p-6">
-            <div className="flex items-center gap-2 mb-3">
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold"
-                style={{ backgroundColor: STATUS_COLORS[entry.status], color: "#000" }}
-              >
-                {STATUS_LABELS[entry.status]}
-              </span>
-              <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                {entry.media_type === "movie" ? (
-                  <span className="inline-flex items-center gap-1"><Film className="w-3 h-3" /> Película</span>
-                ) : (
-                  <span className="inline-flex items-center gap-1"><Tv className="w-3 h-3" /> Serie</span>
-                )}
-                {year ? ` · ${year}` : ""}
-              </span>
-            </div>
-
-            <h2 className="text-2xl font-extrabold tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>
-              {entry.title}
-            </h2>
-
-            {rating != null && rating > 0 && (
-              <div className="flex items-center gap-1 mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className="w-4 h-4"
-                    style={{
-                      fill: rating >= star ? "var(--accent)" : "none",
-                      color: rating >= star ? "var(--accent)" : "var(--text-secondary)",
-                    }}
-                  />
-                ))}
-                <span className="ml-2 text-sm font-bold" style={{ color: "var(--accent-light)" }}>
-                  {rating}/5
+        <div className="relative z-10 max-h-[92vh] overflow-y-auto no-scrollbar p-7 md:p-10 pt-20">
+          <div className="flex flex-col sm:flex-row gap-7 items-start sm:items-end">
+            <img src={posterUrl} alt={entry.title} className="w-36 sm:w-44 shrink-0 aspect-[2/3] object-cover rounded-[1.75rem] border border-white/25 shadow-[0_30px_70px_-15px_rgba(0,0,0,.85)]" />
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <span className="inline-flex items-center gap-1.5 pl-3 pr-4 py-2 rounded-full text-xs font-extrabold liquid-glass-sm">
+                  <span className="w-2 h-2 rounded-full" style={{ background: STATUS_COLORS[entry.status] }} />
+                  {STATUS_LABELS[entry.status]}
+                </span>
+                <span className="liquid-glass-sm px-4 py-2 rounded-full text-xs font-extrabold">
+                  {entry.media_type === "movie" ? "Película" : "Serie"}{year ? ` · ${year}` : ""}
                 </span>
               </div>
-            )}
-
-            {description ? (
-              <>
-                <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--text-secondary)" }}>
-                  Descripción
-                </p>
-                <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>
-                  {description}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm italic" style={{ color: "var(--text-secondary)" }}>
-                Sin descripción disponible.
-              </p>
-            )}
-
-            {entry.notes && (
-              <div className="mt-4 rounded-xl border p-3"
-                style={{ backgroundColor: "var(--surface-2)", borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)" }}>
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <Quote className="w-3.5 h-3.5" style={{ color: "var(--accent-light)" }} />
-                  <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                    Mi comentario
-                  </p>
+              <h2 className="font-cinema text-5xl md:text-6xl leading-[1.02] mb-3">{entry.title}</h2>
+              {genres.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {genres.map((g) => <span key={g} className="px-3 py-1 rounded-full text-[11px] font-bold border border-white/25 text-white/85">{g}</span>)}
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>{entry.notes}</p>
+              )}
+              {rating > 0 && (
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} className="w-5 h-5" fill={rating >= s ? "#fff" : "none"} stroke={rating >= s ? "#fff" : "rgba(255,255,255,.5)"} strokeWidth={1.6} />
+                  ))}
+                  <span className="ml-2 text-sm font-extrabold">{rating}/5</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-8 space-y-4">
+            <div className="frost-card rounded-[1.75rem] p-6">
+              <p className="text-xs font-extrabold uppercase tracking-widest text-white/60 mb-3">Descripción</p>
+              <p className="text-sm leading-relaxed text-white/90">{description || "Sin descripción disponible."}</p>
+            </div>
+            {entry.notes && (
+              <div className="frost-card rounded-[1.75rem] p-6">
+                <div className="flex items-center gap-2 mb-3"><Quote className="w-4 h-4 text-white/70" /><p className="text-xs font-extrabold uppercase tracking-widest text-white/60">Mi comentario</p></div>
+                <p className="text-sm leading-relaxed text-white/90">{entry.notes}</p>
               </div>
             )}
-
             {onAction && (
-              <button
-                onClick={onAction}
-                className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all hover:scale-[1.02]"
-                style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px color-mix(in srgb, var(--accent) 55%, transparent)" }}
-              >
+              <button onClick={onAction}
+                className="w-full inline-flex items-center justify-center gap-2 h-14 rounded-full bg-white text-[#111] font-extrabold shadow-[0_12px_40px_rgba(0,0,0,.35)] transition-transform hover:scale-[1.02]">
                 <Plus className="w-4 h-4" strokeWidth={2.6} /> Agregar a mi biblioteca
               </button>
             )}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import "@/styles/cinema.css";
 import { Link, useLocation, useParams } from "react-router-dom";
 import {
   Sparkles, Clapperboard, Tv, Calendar, Globe, Languages, Star,
@@ -135,7 +136,7 @@ export default function PublicDNAPage() {
         style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
         {icon}
       </div>
-      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>
+      <h1 className="font-cinema text-4xl md:text-6xl leading-none mb-3 text-white">
         {title}
       </h1>
       <p className="text-sm mb-6 max-w-md" style={{ color: "var(--text-secondary)" }}>{body}</p>
@@ -225,7 +226,7 @@ export default function PublicDNAPage() {
               style={{ backgroundColor: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}>
               <Sparkles className="w-3.5 h-3.5" /> ADN Audiovisual
             </div>
-            <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-1 text-gradient">
+            <h1 className="font-cinema text-5xl md:text-7xl leading-none mb-2 text-white">
               {profile.display_name || profile.username}
             </h1>
             <p className="text-sm font-bold mb-4" style={{ color: accentText }}>@{profile.username}</p>

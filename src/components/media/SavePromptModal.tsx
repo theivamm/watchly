@@ -1,4 +1,5 @@
-import { X, Sparkles, Clapperboard } from "lucide-react";
+import "@/styles/cinema.css";
+import { X, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface SavePromptModalProps {
@@ -7,72 +8,30 @@ interface SavePromptModalProps {
 
 export default function SavePromptModal({ onClose }: SavePromptModalProps) {
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in"
-      onClick={onClose}
-      style={{ backgroundColor: "rgba(5,5,12,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
-    >
-      <div
-        className="relative w-full max-w-md overflow-hidden rounded-[2rem] border p-8 md:p-10 text-center animate-pop"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          backgroundColor: "var(--surface-1)",
-          borderColor: "color-mix(in srgb, var(--accent) 35%, transparent)",
-          boxShadow: "0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent), 0 40px 80px -20px color-mix(in srgb, var(--accent) 50%, transparent), 0 0 120px 20px color-mix(in srgb, var(--accent) 15%, transparent)",
-        }}
-      >
-        {/* Glow orbs */}
-        <div className="absolute -top-20 -right-16 w-56 h-56 rounded-full blur-[90px] animate-glow pointer-events-none"
-          style={{ background: "var(--glow-violet)" }} />
-        <div className="absolute -bottom-24 -left-16 w-52 h-52 rounded-full blur-[80px] animate-glow pointer-events-none"
-          style={{ background: "var(--glow-pink)" }} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in text-white" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+      <div className="liquid-glass relative w-full max-w-md overflow-hidden rounded-[2.5rem] p-9 md:p-11 text-center animate-pop" onClick={(e) => e.stopPropagation()}>
+        <div className="absolute -top-24 -right-16 w-60 h-60 rounded-full blur-[90px] cinema-drift-a pointer-events-none" style={{ background: "hsl(265 80% 50% / .6)" }} />
+        <div className="absolute -bottom-28 -left-16 w-56 h-56 rounded-full blur-[90px] cinema-drift-b pointer-events-none" style={{ background: "hsl(320 75% 45% / .5)" }} />
 
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
-          style={{ backgroundColor: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text-secondary)" }}
-          aria-label="Cerrar"
-        >
+        <button onClick={onClose} aria-label="Cerrar"
+          className="liquid-glass-sm absolute top-5 right-5 w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
           <X className="w-4 h-4" />
         </button>
 
         <div className="relative">
-          {/* Floating icon */}
-          <div className="relative w-20 h-20 mx-auto mb-7">
-            <div className="absolute -inset-3 rounded-full opacity-60 blur-2xl animate-pulse"
-              style={{ background: "var(--gradient-accent)" }} />
-            <div className="absolute -inset-1 rounded-full"
-              style={{ background: "var(--gradient-accent)" }} />
-            <div className="relative w-20 h-20 rounded-full bg-[#0b0b14] flex items-center justify-center animate-float"
-              style={{ boxShadow: "0 20px 50px -10px color-mix(in srgb, var(--accent) 60%, transparent)" }}>
-              <Clapperboard className="w-8 h-8" style={{ color: "var(--accent-light)" }} />
-            </div>
-          </div>
-
-          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest mb-4"
-            style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
+          <span className="liquid-glass-sm inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-extrabold uppercase tracking-widest mb-5">
             <Sparkles className="w-3.5 h-3.5" /> ¡Buen ojo!
           </span>
-
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight mb-3"
-            style={{ color: "var(--text-primary)" }}>
-            ¿Vos también querés <span className="text-gradient">guardar tus películas</span>?
-          </h2>
-
-          <p className="text-sm leading-relaxed mb-8" style={{ color: "var(--text-secondary)" }}>
+          <h2 className="font-cinema text-5xl leading-[1.02] mb-4">¿Vos también querés guardar tus películas?</h2>
+          <p className="text-sm leading-relaxed mb-8 text-white/80">
             Armá tu biblioteca, marcá lo que querés ver, puntuá tus favoritas y compartí tu perfil.
             Es gratis, sin tarjeta y te lleva 30 segundos.
           </p>
-
-          <Link to="/"
-            className="block w-full px-6 py-4 rounded-full text-sm font-bold transition-all hover:scale-[1.03]"
-            style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 8px 28px color-mix(in srgb, var(--accent) 55%, transparent)" }}>
+          <Link to="/" className="block w-full h-14 leading-[3.5rem] rounded-full bg-white text-[#111] hover:text-[#111] font-extrabold shadow-[0_12px_40px_rgba(0,0,0,.35)] transition-transform hover:scale-[1.03]">
             Empezar ahora
           </Link>
-
-          <Link to="/login"
-            className="block mt-3 text-sm font-bold transition-opacity hover:opacity-70"
-            style={{ color: "var(--accent-light)" }}>
+          <Link to="/login" className="block mt-4 text-sm font-bold text-white/80 hover:text-white">
             Ya tengo cuenta · Iniciar sesión
           </Link>
         </div>

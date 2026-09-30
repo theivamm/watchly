@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import "@/styles/cinema.css";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import {
@@ -185,7 +186,7 @@ export default function RoomsPage() {
             <MonitorPlay className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold" style={{ color: "var(--text-primary)" }}>
+            <h1 className="font-cinema text-5xl md:text-6xl leading-none text-white">
               Salas
             </h1>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>

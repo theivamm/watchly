@@ -1,6 +1,7 @@
+import "@/styles/cinema.css";
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { X, Star, ListPlus, ListIcon, ChevronDown, Check, Sparkles, Quote, Share2, CalendarDays, MapPin, Users, Languages, MonitorPlay, Repeat, Trash2, Pencil, Plus, HelpCircle, RotateCw } from "lucide-react";
+import { X, Star, ListPlus, ListIcon, ChevronDown, Check, Sparkles, Quote, Share2, CalendarDays, MapPin, Users, Languages, MonitorPlay, Repeat, Trash2, Pencil, Plus, HelpCircle, RotateCw, Play, Clock } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { getPosterUrl, getBackdropUrl, getMediaDetails } from "@/services/tmdb";
 import { addToLibrary, updateEntry, removeFromLibrary, getEntry } from "@/services/library";
@@ -35,11 +36,11 @@ const STATUS_LABELS: Record<EntryStatus, string> = {
 };
 
 const STATUS_COLORS: Record<EntryStatus, string> = {
-  want_to_watch: "var(--accent)",
-  watching: "#4ade80",
-  completed: "#60a5fa",
-  paused: "#facc15",
-  dropped: "#f87171",
+  want_to_watch: "hsl(265 90% 78%)",
+  watching: "hsl(145 70% 65%)",
+  completed: "hsl(210 90% 72%)",
+  paused: "hsl(48 95% 68%)",
+  dropped: "hsl(0 90% 74%)",
 };
 
 const emptyDraft = () => ({
@@ -51,13 +52,24 @@ const emptyDraft = () => ({
   isRewatch: false,
 });
 
-const glass = {
-  backgroundColor: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.1)",
-  backdropFilter: "blur(28px) saturate(150%)",
-  WebkitBackdropFilter: "blur(28px) saturate(150%)",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.3)",
-} as const;
+function toneFromRgb(c: [number, number, number] | null) {
+  let hue = 265;
+  if (c) {
+    const [r, g, b] = c.map((v) => v / 255);
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    if (d > 0.06) {
+      let h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      h = Math.round(h * 60);
+      hue = h < 0 ? h + 360 : h;
+    }
+  }
+  return {
+    hue,
+    accent: `hsl(${hue} 85% 74%)`,
+    glow: `hsl(${hue} 75% 45% / .5)`,
+    glow2: `hsl(${(hue + 40) % 360} 75% 40% / .4)`,
+  };
+}
 
 function PillGroup({
   groupKey,
@@ -74,7 +86,7 @@ function PillGroup({
   const GroupIcon = meta.icon;
   return (
     <div>
-      <p className="text-[11px] font-bold mb-1.5 inline-flex items-center gap-1.5" style={{ color: "var(--text-secondary)" }}>
+      <p className="text-[11px] font-extrabold mb-2 inline-flex items-center gap-1.5 text-white/70">
         <GroupIcon className="w-3.5 h-3.5" style={{ color: meta.color }} />
         {meta.label}
       </p>
@@ -87,23 +99,10 @@ function PillGroup({
               key={pill.value}
               type="button"
               onClick={() => onSelect(pill.value)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all"
-              style={
-                isSelected
-                  ? {
-                      backgroundColor: `color-mix(in srgb, ${pill.color} 22%, transparent)`,
-                      color: pill.color,
-                      border: `1px solid color-mix(in srgb, ${pill.color} 50%, transparent)`,
-                      boxShadow: `0 2px 10px color-mix(in srgb, ${pill.color} 20%, transparent)`,
-                    }
-                  : {
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      color: "var(--text-secondary)",
-                      border: "1px solid var(--border)",
-                    }
-              }
+              data-active={isSelected}
+              className="frost-tab !py-1.5 !px-3.5 !text-[11px]"
             >
-              <PillIcon className="w-3 h-3" />
+              <PillIcon className="w-3 h-3" style={{ color: isSelected ? "#111" : pill.color }} />
               {pill.label}
             </button>
           );
@@ -119,24 +118,11 @@ function HelpTooltip({ text }: { text: string }) {
       <button
         type="button"
         aria-label="Qué significa este módulo"
-        className="w-[18px] h-[18px] rounded-full inline-flex items-center justify-center text-[10px] font-extrabold transition-opacity hover:opacity-70 cursor-help"
-        style={{
-          backgroundColor: "color-mix(in srgb, var(--accent) 18%, transparent)",
-          color: "var(--accent-light)",
-          border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)",
-        }}
+        className="liquid-glass-sm w-6 h-6 rounded-full inline-flex items-center justify-center text-white cursor-help"
       >
         <HelpCircle className="w-3.5 h-3.5" />
       </button>
-      <span
-        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 max-w-[calc(100vw-2rem)] px-3.5 py-2.5 rounded-xl text-[11px] font-semibold leading-relaxed opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity pointer-events-none z-30 text-left"
-        style={{
-          backgroundColor: "var(--surface-2)",
-          color: "var(--text-primary)",
-          border: "1px solid var(--border)",
-          boxShadow: "0 10px 28px rgba(0,0,0,0.4)",
-        }}
-      >
+      <span className="liquid-menu absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 max-w-[calc(100vw-2rem)] px-4 py-3 rounded-2xl text-[11px] font-semibold leading-relaxed text-white opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity pointer-events-none z-30 text-left normal-case tracking-normal">
         {text}
       </span>
     </span>
@@ -299,6 +285,15 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
       active = false;
     };
   }, [readOnlyEntry, isReadOnly, result.overview]);
+
+  useEffect(() => {
+    if (isReadOnly) return;
+    let active = true;
+    getMediaDetails(result.mediaType as "movie" | "tv", result.tmdbId)
+      .then((d) => { if (active) setDetails(d); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [isReadOnly, result.mediaType, result.tmdbId]);
 
   const fillDescription = async () => {
     if (fetchingDesc) return;
@@ -605,516 +600,287 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
   };
 
   const displayRating = isReadOnly ? (readOnlyEntry?.rating ?? 0) : rating;
+  const tone = toneFromRgb(coverColor);
+  const backdropPath = details?.backdropPath || result.backdropPath;
+  const heroImg = backdropPath ? getBackdropUrl(backdropPath, "w1280") : null;
+  const genres = details?.genres ?? [];
+  const runtimeMin = details?.runtime ?? null;
+  const runtimeLabel = runtimeMin ? `${Math.floor(runtimeMin / 60)}h ${runtimeMin % 60}m` : null;
+  const score = details?.tmdbRating ?? result.tmdbRating;
+  const cast = details?.cast ?? [];
+  const trailerKey = details?.videos?.find((v) => v.site === "YouTube" && v.key)?.key;
+  const yearLabel = details?.year ?? result.year ?? "Sin año";
+  const chip = "liquid-glass-sm px-4 py-2 rounded-full text-xs font-extrabold text-white";
+  const card = "frost-card rounded-[2rem] p-6";
+  const label = "text-xs font-extrabold uppercase tracking-widest text-white/60";
+  const roundBtn = "liquid-glass-sm w-11 h-11 rounded-full flex items-center justify-center text-white transition-transform hover:scale-110 active:scale-90";
+  const whiteBtn = "inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full bg-white text-[#111] text-sm font-extrabold shadow-[0_12px_40px_rgba(0,0,0,.35)] transition-transform hover:scale-[1.03] active:scale-95 disabled:opacity-50";
+  const glassBtn = "liquid-glass-sm inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full text-sm font-bold text-white transition-transform hover:scale-[1.03]";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 text-white" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-2xl" />
 
       <div
-        className="relative w-[min(96vw,1200px)] h-full max-h-[92vh] overflow-hidden rounded-[36px] animate-pop"
+        className="relative w-[min(96vw,1240px)] h-full max-h-[94vh] overflow-hidden rounded-[2.5rem] animate-pop border border-white/20"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          backgroundColor: "rgba(20,20,32,0.72)",
-          border: "1px solid rgba(255,255,255,0.14)",
-          boxShadow: "0 40px 120px -24px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.12)",
-        }}
+        style={{ backgroundColor: "#0b0b14", boxShadow: "0 40px 120px -24px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.2)" }}
       >
-        {/* Liquid glass: blurred cover */}
-        <div className="absolute inset-0 pointer-events-none">
+        {/* Fondo: backdrop grande + manchas del color del póster */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <img
-            src={posterUrl}
+            src={heroImg ?? posterUrl}
             alt=""
             aria-hidden="true"
-            className="absolute inset-0 w-full h-full object-cover blur-[60px] saturate-150 opacity-50 animate-breathe-cover"
-            loading="lazy"
+            className="absolute top-0 inset-x-0 w-full h-[560px] object-cover cinema-kenburns"
+            style={heroImg ? undefined : { filter: "blur(40px) saturate(1.3)", transform: "scale(1.4)" }}
           />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(12,12,22,0.35) 0%, rgba(12,12,22,0.78) 45%, rgba(12,12,22,0.94) 100%)",
-            }}
-          />
-          <div className="absolute inset-0 bg-white/[0.04] backdrop-blur-2xl" />
+          <div className="absolute -top-40 -left-24 w-[620px] h-[620px] rounded-full blur-[130px] cinema-drift-a" style={{ background: tone.glow }} />
+          <div className="absolute top-40 -right-24 w-[560px] h-[560px] rounded-full blur-[130px] cinema-drift-b" style={{ background: tone.glow2 }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(11,11,20,.25) 0, rgba(11,11,20,.7) 300px, rgba(11,11,20,.94) 520px, #0b0b14 640px)" }} />
         </div>
 
-        {/* Floating close button (mobile, always visible) */}
-        <button
-          onClick={onClose}
-          aria-label="Cerrar"
-          className="lg:hidden absolute top-4 right-4 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-90"
-          style={{
-            backgroundColor: "rgba(15,15,25,0.65)",
-            border: "1px solid rgba(255,255,255,0.18)",
-            color: "#fff",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
-          }}
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {/* Acciones flotantes */}
+        <div className="absolute top-5 right-5 z-30 flex items-center gap-2">
+          {shareUrl && (
+            <button onClick={handleShare} className={roundBtn} title={copied ? "¡Link copiado!" : "Copiar link para compartir"} style={{ color: copied ? "#86efac" : undefined }}>
+              {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+            </button>
+          )}
+          <button onClick={onClose} aria-label="Cerrar" className={roundBtn}>
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-        <div className="relative z-10 flex h-full">
-          {/* Left: big poster (fixed) */}
-          <div className="absolute inset-y-0 left-0 hidden lg:flex flex-col items-center justify-start gap-4 w-[380px] px-6 pt-12 border-r border-white/[0.08]">
-            <div className="relative w-full max-w-[320px]">
-              <div
-                className="absolute -inset-6 rounded-full opacity-40 blur-3xl"
-                style={{ background: "color-mix(in srgb, var(--accent) 50%, transparent)" }}
-              />
+        <div className="relative z-10 h-full overflow-y-auto no-scrollbar">
+          <div className="px-6 sm:px-10 pt-24 sm:pt-32 pb-12">
+            {/* ───────── HERO ───────── */}
+            <section className="flex flex-col md:flex-row gap-8 md:gap-10 items-start md:items-end">
               <img
                 src={posterUrl}
                 alt={result.title}
-                className="relative w-full aspect-[2/3] object-cover rounded-[28px] animate-breathe"
-                style={{
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  boxShadow: "0 30px 80px -15px rgba(0,0,0,0.85), 0 10px 30px color-mix(in srgb, var(--accent) 30%, transparent)",
-                }}
-                loading="lazy"
+                className="w-40 md:w-[250px] shrink-0 aspect-[2/3] object-cover rounded-[2rem] border border-white/25 animate-breathe"
+                style={{ boxShadow: `0 30px 80px -15px rgba(0,0,0,.85), 0 10px 40px ${tone.glow}` }}
               />
-            </div>
-          </div>
-
-          <div className="relative flex-1 min-w-0 flex flex-col lg:pl-[380px] lg:overflow-hidden overflow-y-auto overflow-x-hidden">
-          {/* Mobile hero poster (single column) */}
-          <div className="lg:hidden relative w-full shrink-0">
-            <div
-              className="absolute -inset-6 rounded-full opacity-40 blur-3xl pointer-events-none"
-              style={{ background: "color-mix(in srgb, var(--accent) 50%, transparent)" }}
-            />
-            <div className="relative w-full max-h-[52vh] overflow-hidden">
-              <img
-                src={posterUrl}
-                alt={result.title}
-                className="w-full h-full object-cover object-top animate-breathe"
-                style={{
-                  borderBottom: "1px solid rgba(255,255,255,0.12)",
-                  boxShadow: "0 30px 80px -15px rgba(0,0,0,0.85)",
-                }}
-                loading="lazy"
-              />
-              <div
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(180deg, rgba(12,12,22,0.1) 0%, rgba(12,12,22,0.55) 100%)" }}
-              />
-            </div>
-          </div>
-
-          {/* Header: title + actions */}
-          <div className="flex items-start gap-4 p-5 sm:p-6 pb-4">
-            <div className="flex-1 min-w-0 pt-0.5">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight leading-tight" style={{ color: "var(--text-primary)" }}>
-                  {result.title}
-                </h2>
-                {!isReadOnly ? (
-                  <span className="flex gap-1 flex-shrink-0">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onMouseEnter={() => setHoverRating(star)}
-                        onMouseLeave={() => setHoverRating(0)}
-                        onClick={() => setRating(rating === star ? 0 : star)}
-                        className="transition-transform hover:scale-110"
-                      >
-                        <Star
-                          className="w-5 h-5"
-                          fill={(hoverRating || rating) >= star ? "var(--accent)" : "none"}
-                          stroke={(hoverRating || rating) >= star ? "var(--accent)" : "var(--text-secondary)"}
-                          strokeWidth={1.5}
-                        />
-                      </button>
-                    ))}
-                  </span>
-                ) : (
-                  <span className="flex gap-0.5 flex-shrink-0">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className="w-4 h-4"
-                        style={{
-                          fill: displayRating >= star ? "var(--accent)" : "none",
-                          color: displayRating >= star ? "var(--accent)" : "var(--text-secondary)",
-                        }}
-                      />
-                    ))}
-                  </span>
-                )}
-              </div>
-              {memberLists.length > 0 && (
-                <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                    En:
-                  </span>
-                  {memberLists.map((list) => (
-                    <span
-                      key={list.id}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-                      style={{
-                        backgroundColor: "color-mix(in srgb, var(--accent) 15%, transparent)",
-                        color: "var(--accent-light)",
-                        border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)",
-                      }}
-                    >
-                      <ListIcon className="w-2.5 h-2.5" />
-                      {list.name}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={chip}>{yearLabel}</span>
+                  <span className={chip}>{result.mediaType === "movie" ? "Película" : "Serie"}</span>
+                  {runtimeLabel && (
+                    <span className={`${chip} inline-flex items-center gap-1.5`}><Clock className="w-3.5 h-3.5" /> {runtimeLabel}</span>
+                  )}
+                  {score ? (
+                    <span className="px-4 py-2 rounded-full text-xs font-extrabold text-[#111]" style={{ background: tone.accent }}>TMDB {score.toFixed(1)}</span>
+                  ) : null}
+                  {isReadOnly && readOnlyEntry && (
+                    <span className="inline-flex items-center gap-1.5 pl-3 pr-4 py-2 rounded-full text-xs font-extrabold liquid-glass-sm text-white">
+                      <span className="w-2 h-2 rounded-full" style={{ background: STATUS_COLORS[readOnlyEntry.status] }} />
+                      {STATUS_LABELS[readOnlyEntry.status]}
                     </span>
-                  ))}
+                  )}
                 </div>
-              )}
-              <p className="text-xs font-semibold mt-1.5 mb-2" style={{ color: "var(--text-secondary)" }}>
-                {(isReadOnly ? details?.year : result.year) || "Sin año"} · {result.mediaType === "movie" ? "Película" : "Serie"}
-              </p>
-              <div className="flex items-center gap-2 flex-wrap">
-                {isReadOnly && readOnlyEntry && (
-                  <span
-                    className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold"
-                    style={{ backgroundColor: STATUS_COLORS[readOnlyEntry.status], color: "#000" }}
-                  >
-                    {STATUS_LABELS[readOnlyEntry.status]}
-                  </span>
-                )}
-                {!isReadOnly && (
-                  <div ref={dropdownRef} className="relative">
-                    <button
-                      onClick={() => setShowListDropdown((v) => !v)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all"
-                      style={{
-                        backgroundColor: addedToListId ? "rgba(74,222,128,0.15)" : "rgba(255,255,255,0.05)",
-                        color: addedToListId ? "#4ade80" : "var(--text-secondary)",
-                        border: `1px solid ${addedToListId ? "rgba(74,222,128,0.45)" : "var(--border)"}`,
-                      }}
-                    >
-                      <ListPlus className="w-3 h-3" />
-                      {addedToListId ? "¡Agregado!" : "Agregar a lista"}
-                      <ChevronDown
-                        className={`w-3 h-3 transition-transform ${showListDropdown ? "rotate-180" : ""}`}
-                        style={{ color: "var(--text-secondary)" }}
-                      />
-                    </button>
-                    {showListDropdown && (
-                      <div
-                        className="absolute z-30 mt-2 left-0 w-64 rounded-xl border overflow-hidden"
-                        style={{
-                          backgroundColor: "rgba(19,19,31,0.96)",
-                          borderColor: "var(--border)",
-                          boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
-                          backdropFilter: "blur(16px)",
-                          WebkitBackdropFilter: "blur(16px)",
-                        }}
-                      >
-                        <div className="max-h-44 overflow-y-auto">
-                          {lists.length === 0 ? (
-                            <div className="px-4 py-3 text-xs" style={{ color: "var(--text-secondary)" }}>
-                              No tenés listas aún. Creá una abajo.
-                            </div>
-                          ) : (
-                            lists.map((list) => {
-                              const justAdded = addedToListId === list.id;
-                              const isInList = justAdded || listsContaining.has(list.id);
-                              return (
-                                <button
-                                  key={list.id}
-                                  onClick={() => handleAddToList(list.id)}
-                                  disabled={addingToList === list.id}
-                                  className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-bold transition-colors text-left"
-                                  style={{
-                                    color: "var(--text-primary)",
-                                    backgroundColor: justAdded
-                                      ? "rgba(74,222,128,0.1)"
-                                      : isInList
-                                        ? "color-mix(in srgb, var(--accent) 12%, transparent)"
-                                        : "transparent",
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    if (!justAdded && !isInList) {
-                                      e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)";
-                                    }
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    if (!justAdded && !isInList) {
-                                      e.currentTarget.style.backgroundColor = "transparent";
-                                    }
-                                  }}
-                                >
-                                  <span className="truncate">{list.name}</span>
-                                  {justAdded ? (
-                                    <Check className="w-4 h-4 flex-shrink-0" style={{ color: "#4ade80" }} />
-                                  ) : isInList ? (
-                                    <Check className="w-4 h-4 flex-shrink-0" style={{ color: "var(--accent-light)" }} />
-                                  ) : addingToList === list.id ? (
-                                    <div
-                                      className="w-4 h-4 rounded-full border-2 animate-spin flex-shrink-0"
-                                      style={{ borderColor: "var(--border)", borderTopColor: "var(--accent)" }}
-                                    />
-                                  ) : null}
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-                        <div className="p-2 border-t" style={{ borderColor: "var(--border)" }}>
-                          <input
-                            value={newListName}
-                            onChange={(e) => setNewListName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleCreateList();
-                            }}
-                            placeholder="Nombre de la lista nueva..."
-                            className="w-full !rounded-lg !text-xs !px-2.5 !py-2"
-                            style={{
-                              backgroundColor: "rgba(255,255,255,0.05)",
-                              border: "1.5px solid var(--border)",
-                              color: "var(--text-primary)",
-                            }}
-                          />
-                          <button
-                            onClick={handleCreateList}
-                            disabled={creatingList || !newListName.trim()}
-                            className="mt-1.5 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50"
-                            style={{
-                              background: "color-mix(in srgb, var(--accent) 20%, transparent)",
-                              color: "var(--accent-light)",
-                              border: "1px solid color-mix(in srgb, var(--accent) 40%, transparent)",
-                            }}
-                          >
-                            <Plus className="w-3 h-3" />
-                            {creatingList ? "Creando..." : "Crear lista y agregar"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                {genres.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {genres.map((g) => (
+                      <span key={g} className="px-3 py-1 rounded-full text-[11px] font-bold border border-white/25 text-white/85">{g}</span>
+                    ))}
                   </div>
                 )}
-              </div>
-            </div>
 
-            <div className="flex flex-col gap-2 flex-shrink-0 items-end">
-              <div className="flex items-center gap-2">
-                {shareUrl && (
-                  <button
-                    onClick={handleShare}
-                    className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90"
-                    style={{
-                      backgroundColor: "rgba(255,255,255,0.07)",
-                      border: "1px solid rgba(255,255,255,0.15)",
-                      color: copied ? "#4ade80" : "var(--accent-light)",
-                      backdropFilter: "blur(12px)",
-                      WebkitBackdropFilter: "blur(12px)",
-                    }}
-                    title={copied ? "¡Link copiado!" : "Copiar link para compartir"}
-                  >
-                    {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-                  </button>
-                )}
-                {!isReadOnly && (
-                  <>
-                    <button
-                      onClick={handleSave}
-                      disabled={saving || loading}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-[11px] font-bold transition-all hover:scale-[1.03] active:scale-95 disabled:opacity-50"
-                      style={{
-                        background: "var(--gradient-accent)",
-                        color: "#fff",
-                        boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent)",
-                      }}
-                    >
-                      {saving ? (
-                        <div
-                          className="w-3 h-3 rounded-full border-2 animate-spin"
-                          style={{ borderColor: "rgba(255,255,255,0.4)", borderTopColor: "#fff" }}
-                        />
-                      ) : (
-                        <Pencil className="w-3 h-3" />
-                      )}
-                      {saving ? "Guardando..." : existingEntry ? "Actualizar" : "Guardar"}
-                    </button>
-                    {existingEntry && (
-                      <button
-                        onClick={handleRemove}
-                        disabled={saving}
-                        title="Eliminar de mis películas"
-                        className="w-9 h-9 rounded-full inline-flex items-center justify-center transition-all hover:scale-110 active:scale-90 disabled:opacity-50"
-                        style={{
-                          ...glass,
-                          color: "#f87171",
-                          border: "1px solid rgba(248,113,113,0.35)",
-                        }}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </>
-                )}
-                <button
-                  onClick={onClose}
-                  className="hidden lg:flex w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.07)",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    color: "var(--text-primary)",
-                    backdropFilter: "blur(12px)",
-                    WebkitBackdropFilter: "blur(12px)",
-                  }}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              {!isReadOnly && saveError && (
-                <p className="max-w-[240px] text-right text-[11px] font-bold leading-snug" style={{ color: "#f87171" }}>
-                  {saveError}
+                <h2 className="font-cinema mt-5 mb-4 text-5xl md:text-7xl leading-[1.02] drop-shadow-[0_10px_50px_rgba(0,0,0,.5)]">{result.title}</h2>
+
+                <p className="text-base md:text-lg leading-relaxed font-medium text-white/85 max-w-2xl text-pretty line-clamp-5">
+                  {description || result.overview || "Sin sinopsis disponible."}
                 </p>
-              )}
-            </div>
-          </div>
 
-          {/* Body */}
-          <div className="relative z-10 lg:flex-1 lg:min-h-0 lg:overflow-y-auto px-5 sm:px-6 pb-6">
-            <div className="space-y-5">
-              <div className="min-w-0 space-y-5">
-          {isReadOnly && readOnlyEntry ? (
-                <div className="space-y-5">
-                  <div className="rounded-2xl p-5" style={glass}>
-                    <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "var(--text-secondary)" }}>
-                      Descripción
-                    </p>
-                    <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>
-                      {description || "Sin descripción disponible."}
-                    </p>
+                {/* Nota + acciones */}
+                <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-4">
+                  <div>
+                    <p className={`${label} mb-2`}>{isReadOnly ? "Su nota" : "Tu nota"}</p>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => {
+                        const on = (isReadOnly ? displayRating : hoverRating || rating) >= star;
+                        const icon = <Star className="w-7 h-7" fill={on ? tone.accent : "none"} stroke={on ? tone.accent : "rgba(255,255,255,.5)"} strokeWidth={1.6} />;
+                        return isReadOnly ? (
+                          <span key={star}>{icon}</span>
+                        ) : (
+                          <button key={star} onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)}
+                            onClick={() => setRating(rating === star ? 0 : star)} className="transition-transform hover:scale-125">
+                            {icon}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  {readOnlyEntry.notes && (
-                    <div className="rounded-2xl p-5" style={glass}>
-                      <div className="flex items-center gap-1.5 mb-2.5">
-                        <Quote className="w-3.5 h-3.5" style={{ color: "var(--accent-light)" }} />
-                        <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                          Comentario
-                        </p>
+                  {!isReadOnly && (
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <button onClick={handleSave} disabled={saving || loading} className={whiteBtn}>
+                        {saving ? <RotateCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" strokeWidth={3} />}
+                        {saving ? "Guardando..." : existingEntry ? "Actualizar" : "Guardar en mi biblioteca"}
+                      </button>
+
+                      <div ref={dropdownRef} className="relative">
+                        <button onClick={() => setShowListDropdown((v) => !v)} className={glassBtn} style={addedToListId ? { color: "#86efac" } : undefined}>
+                          <ListPlus className="w-4 h-4" />
+                          {addedToListId ? "¡Agregado!" : "Agregar a lista"}
+                          <ChevronDown className={`w-4 h-4 transition-transform ${showListDropdown ? "rotate-180" : ""}`} />
+                        </button>
+                        {showListDropdown && (
+                          <div className="liquid-menu absolute z-40 mt-3 left-0 w-72 rounded-[1.75rem] overflow-hidden animate-slide-up">
+                            <div className="max-h-52 overflow-y-auto p-2">
+                              {lists.length === 0 ? (
+                                <div className="px-3 py-3 text-xs text-white/70">No tenés listas aún. Creá una abajo.</div>
+                              ) : (
+                                lists.map((list) => {
+                                  const justAdded = addedToListId === list.id;
+                                  const isInList = justAdded || listsContaining.has(list.id);
+                                  return (
+                                    <button key={list.id} onClick={() => handleAddToList(list.id)} disabled={addingToList === list.id}
+                                      className="liquid-menu-item justify-between">
+                                      <span className="truncate">{list.name}</span>
+                                      {isInList ? (
+                                        <Check className="w-4 h-4 shrink-0" style={{ color: justAdded ? "#86efac" : tone.accent }} />
+                                      ) : addingToList === list.id ? (
+                                        <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
+                                      ) : null}
+                                    </button>
+                                  );
+                                })
+                              )}
+                            </div>
+                            <div className="p-3 border-t border-white/10 space-y-2">
+                              <input value={newListName} onChange={(e) => setNewListName(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter") handleCreateList(); }}
+                                placeholder="Nombre de la lista nueva..." className="glass-input !h-11 !text-xs" />
+                              <button onClick={handleCreateList} disabled={creatingList || !newListName.trim()}
+                                className="w-full inline-flex items-center justify-center gap-1.5 h-10 rounded-full bg-white text-[#111] text-xs font-extrabold disabled:opacity-50">
+                                <Plus className="w-3.5 h-3.5" />
+                                {creatingList ? "Creando..." : "Crear lista y agregar"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>{readOnlyEntry.notes}</p>
+
+                      {trailerKey && (
+                        <a href={`https://www.youtube.com/watch?v=${trailerKey}`} target="_blank" rel="noreferrer" className={`${glassBtn} hover:text-white`}>
+                          <Play className="w-4 h-4" fill="currentColor" /> Tráiler
+                        </a>
+                      )}
+
+                      {existingEntry && (
+                        <button onClick={handleRemove} disabled={saving} title="Eliminar de mi biblioteca" className={roundBtn} style={{ color: "#fca5a5" }}>
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   )}
-
-                  <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                    <Link to="/login"
-                      className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all hover:scale-[1.02]"
-                      style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--text-primary)", border: "1.5px solid rgba(255,255,255,0.12)" }}>
-                      Iniciar sesión
-                    </Link>
-                    <Link to="/registro"
-                      className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all hover:scale-[1.02]"
-                      style={{ background: "var(--gradient-accent)", color: "#fff", boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent)" }}>
-                      Crear cuenta
-                    </Link>
-                  </div>
                 </div>
-                ) : (
-                <div className="space-y-6">
-                {/* Description */}
-                <div className="rounded-2xl p-5" style={glass}>
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                      Descripción
-                    </p>
-                    <button
-                      onClick={fillDescription}
-                      disabled={fetchingDesc}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all hover:scale-[1.03] disabled:opacity-60"
-                      style={{
-                        backgroundColor: "color-mix(in srgb, var(--accent) 18%, transparent)",
-                        color: "var(--accent-light)",
-                        border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)",
-                      }}
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      {fetchingDesc ? "Buscando..." : "Obtener automáticamente"}
-                    </button>
-                  </div>
-                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>
-                    {description || "Sin descripción disponible. Tocá “Obtener automáticamente” para cargarla desde TMDB."}
-                  </p>
-                </div>
+                {!isReadOnly && saveError && <p className="mt-3 text-xs font-bold text-red-300">{saveError}</p>}
 
-                {/* Comment */}
-                <div className="rounded-2xl p-5" style={glass}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Quote className="w-3.5 h-3.5" style={{ color: "var(--accent-light)" }} />
-                    <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                      Mi comentario
-                    </p>
-                  </div>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Escribí un breve comentario personal..."
-                    rows={4}
-                    className="w-full !rounded-xl !text-sm !p-3 resize-none"
-                    style={{
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      border: "1.5px solid rgba(255,255,255,0.1)",
-                      color: "var(--text-primary)",
-                    }}
-                  />
-                </div>
-
-                {/* Estado */}
-                <div className="rounded-2xl p-5" style={glass}>
-                  <p className="text-xs font-bold mb-3 uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                    Estado
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {STATUSES.map((s) => (
-                      <button
-                        key={s.value}
-                        onClick={() => setStatus(s.value)}
-                        className="px-4 py-2 rounded-xl text-xs font-bold transition-all"
-                        style={{
-                          backgroundColor: status === s.value ? STATUS_COLORS[s.value] : "rgba(255,255,255,0.05)",
-                          color: status === s.value ? "#000" : "var(--text-secondary)",
-                          border: `1.5px solid ${status === s.value ? STATUS_COLORS[s.value] : "rgba(255,255,255,0.1)"}`,
-                        }}
-                      >
-                        {s.label}
-                      </button>
+                {memberLists.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap mt-5">
+                    <span className={label}>En:</span>
+                    {memberLists.map((list) => (
+                      <span key={list.id} className="liquid-glass-sm inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold text-white">
+                        <ListIcon className="w-3 h-3" /> {list.name}
+                      </span>
                     ))}
                   </div>
-                </div>
-
+                )}
               </div>
-            )}
+            </section>
+
+            {/* ───────── CUERPO ───────── */}
+            <div className={`mt-10 grid gap-5 ${isReadOnly ? "max-w-3xl" : "lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"}`}>
+              <div className="min-w-0 space-y-5">
+                {isReadOnly && readOnlyEntry ? (
+                  <>
+                    <div className={card}>
+                      <p className={`${label} mb-3`}>Descripción</p>
+                      <p className="text-sm leading-relaxed text-white/90">{description || "Sin descripción disponible."}</p>
+                    </div>
+                    {readOnlyEntry.notes && (
+                      <div className={card}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Quote className="w-4 h-4" style={{ color: tone.accent }} />
+                          <p className={label}>Comentario</p>
+                        </div>
+                        <p className="text-sm leading-relaxed text-white/90">{readOnlyEntry.notes}</p>
+                      </div>
+                    )}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Link to="/login" className={`${glassBtn} flex-1 hover:text-white`}>Iniciar sesión</Link>
+                      <Link to="/registro" className={`${whiteBtn} flex-1 hover:text-[#111]`}>Crear cuenta</Link>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Estado */}
+                    <div className={card}>
+                      <p className={`${label} mb-4`}>Estado</p>
+                      <div className="flex flex-wrap gap-2">
+                        {STATUSES.map((s) => (
+                          <button key={s.value} onClick={() => setStatus(s.value)} data-active={status === s.value} className="frost-tab !py-2 !px-4 !text-xs">
+                            <span className="w-2 h-2 rounded-full" style={{ background: STATUS_COLORS[s.value] }} />
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Comentario */}
+                    <div className={card}>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Quote className="w-4 h-4" style={{ color: tone.accent }} />
+                        <p className={label}>Mi comentario</p>
+                      </div>
+                      <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Escribí un breve comentario personal..." rows={4} className="glass-input" />
+                    </div>
+
+                    {/* Descripción */}
+                    <div className={card}>
+                      <div className="flex items-center justify-between gap-3 mb-4">
+                        <p className={label}>Descripción</p>
+                        <button onClick={fillDescription} disabled={fetchingDesc} className="liquid-glass-sm inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[11px] font-extrabold text-white disabled:opacity-60">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          {fetchingDesc ? "Buscando..." : "Obtener automáticamente"}
+                        </button>
+                      </div>
+                      <p className="text-sm leading-relaxed text-white/85">
+                        {description || "Sin descripción disponible. Tocá “Obtener automáticamente” para cargarla desde TMDB."}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {cast.length > 0 && (
+                  <div className={card}>
+                    <p className={`${label} mb-4`}>Reparto</p>
+                    <div className="flex flex-wrap gap-2">
+                      {cast.map((c) => (
+                        <span key={c.name} className="liquid-glass-sm px-3.5 py-1.5 rounded-full text-xs font-bold text-white">{c.name}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Registro: cómo lo viste */}
               {!isReadOnly && (
-                <div className="min-w-0 space-y-5">
-                  <div
-                    className="rounded-2xl p-5 space-y-4"
-                    style={{
-                      backgroundColor: "rgba(255,255,255,0.03)",
-                      border: "1.5px solid color-mix(in srgb, var(--accent) 30%, transparent)",
-                    }}
-                  >
-                    <div className="flex items-center justify-between gap-2 text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-                      <span className="inline-flex items-center gap-2">
-                        <CalendarDays className="w-4 h-4" style={{ color: "var(--accent-light)" }} />
-                        ¿Cómo lo viste?
-                        {sessions.length > 0 && (
-                          <span
-                            className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                            style={{
-                              backgroundColor: "color-mix(in srgb, var(--accent) 20%, transparent)",
-                              color: "var(--accent-light)",
-                            }}
-                          >
-                            {sessions.length}
-                          </span>
-                        )}
-                        <HelpTooltip text={HOW_YOU_WATCHED_HELP} />
-                      </span>
+                <div className="min-w-0">
+                  <div className="liquid-glass rounded-[2rem] p-6 md:p-7 space-y-5">
+                    <div className="flex items-center gap-2.5 text-base font-extrabold">
+                      <CalendarDays className="w-5 h-5" style={{ color: tone.accent }} />
+                      ¿Cómo lo viste?
+                      {sessions.length > 0 && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold text-[#111]" style={{ background: tone.accent }}>{sessions.length}</span>
+                      )}
+                      <HelpTooltip text={HOW_YOU_WATCHED_HELP} />
                     </div>
-
-                    <p className="text-[11px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                    <p className="text-xs leading-relaxed text-white/70">
                       Contanos dónde y cómo lo viste: ayuda a tu ADN Audiovisual a entender tu forma de consumir.
                     </p>
 
@@ -1122,96 +888,46 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {sessions.map((session) => {
                           const isJustSaved = session.id === justSavedId;
-                          const coverUrl = getBackdropUrl(result.backdropPath, "w780");
-                          const main = coverColor ?? [124, 94, 250];
-                          const coverGradient = `linear-gradient(135deg, rgba(${main[0]},${main[1]},${main[2]},0.95) 0%, rgba(${Math.max(main[0] - 60, 0)},${Math.max(main[1] - 60, 0)},${Math.max(main[2] - 60, 0)},0.85) 55%, rgba(8,8,14,0.94) 100%)`;
-                          const accentChip = `rgba(${main[0]},${main[1]},${main[2]},0.5)`;
+                          const coverUrl = heroImg ?? getBackdropUrl(result.backdropPath, "w780");
                           return (
-                            <div
-                              key={session.id}
-                              id={`session-${session.id}`}
-                              className={`relative rounded-2xl overflow-hidden ${isJustSaved ? "animate-saved-flash" : ""}`}
-                              style={{
-                                backgroundColor: "rgba(255,255,255,0.04)",
-                                border: "1px solid rgba(255,255,255,0.12)",
-                                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-                              }}
-                            >
+                            <div key={session.id} id={`session-${session.id}`}
+                              className={`frost-card relative rounded-[1.5rem] overflow-hidden ${isJustSaved ? "animate-saved-flash" : ""}`}>
                               <div className="relative h-28 overflow-hidden">
-                                <div
-                                  className="absolute -inset-3 bg-cover bg-center opacity-45"
-                                  style={{
-                                    backgroundImage: `url(${coverUrl})`,
-                                    filter: "blur(16px) saturate(160%)",
-                                  }}
-                                />
-                                <div className="absolute inset-0" style={{ background: coverGradient }} />
-                                <div className="absolute top-2.5 left-3 flex items-center gap-1.5 flex-wrap max-w-[80%]">
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-md"
-                                    style={{ backgroundColor: "rgba(0,0,0,0.55)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }}>
+                                <div className="absolute -inset-3 bg-cover bg-center opacity-60" style={{ backgroundImage: `url(${coverUrl})`, filter: "blur(10px) saturate(150%)" }} />
+                                <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${tone.glow}, rgba(8,8,14,.85))` }} />
+                                <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap max-w-[80%]">
+                                  <span className="liquid-glass-sm inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold text-white">
                                     <CalendarDays className="w-3 h-3" /> {session.watched_date ?? "Fecha sin registrar"}
                                   </span>
                                   {session.is_rewatch && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-md"
-                                      style={{ backgroundColor: "rgba(0,0,0,0.55)", color: "#fff", border: `1px solid ${accentChip}` }}>
+                                    <span className="liquid-glass-sm inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold text-white">
                                       <Repeat className="w-3 h-3" /> Re-ver
                                     </span>
                                   )}
                                 </div>
-                                {session.rating != null && session.rating > 0 ? (
-                                  <span className="absolute bottom-2.5 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold backdrop-blur-md"
-                                    style={{ backgroundColor: "rgba(0,0,0,0.55)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.5)" }}>
-                                    <Star className="w-3.5 h-3.5" fill="#fbbf24" stroke="#fbbf24" /> {session.rating}/5
-                                  </span>
-                                ) : (
-                                  <span className="absolute bottom-2.5 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold backdrop-blur-md"
-                                    style={{ backgroundColor: "rgba(0,0,0,0.45)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.2)" }}>
-                                    <Star className="w-3.5 h-3.5" /> Sin nota
-                                  </span>
-                                )}
+                                <span className="liquid-glass-sm absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold text-white">
+                                  <Star className="w-3.5 h-3.5" fill={session.rating ? tone.accent : "none"} stroke={session.rating ? tone.accent : "currentColor"} />
+                                  {session.rating ? `${session.rating}/5` : "Sin nota"}
+                                </span>
                               </div>
-                              <div className="p-3.5">
-                                <div className="flex items-center gap-2.5 flex-wrap text-[11px] font-bold" style={{ color: "var(--text-secondary)" }}>
-                                  <span className="inline-flex items-center gap-1">
-                                    <MapPin className="w-3 h-3" style={{ color: HABIT_GROUPS.venue.color }} /> {VENUE_LABELS[session.venue]}
-                                  </span>
-                                  <span className="inline-flex items-center gap-1">
-                                    <Users className="w-3 h-3" style={{ color: HABIT_GROUPS.companionship.color }} /> {COMPANIONSHIP_LABELS[session.companionship]}
-                                  </span>
+                              <div className="p-4">
+                                <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap text-[11px] font-bold text-white/80">
+                                  <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" style={{ color: HABIT_GROUPS.venue.color }} /> {VENUE_LABELS[session.venue]}</span>
+                                  <span className="inline-flex items-center gap-1"><Users className="w-3 h-3" style={{ color: HABIT_GROUPS.companionship.color }} /> {COMPANIONSHIP_LABELS[session.companionship]}</span>
                                   {session.platform !== "unknown" && (
-                                    <span className="inline-flex items-center gap-1">
-                                      <MonitorPlay className="w-3 h-3" style={{ color: HABIT_GROUPS.platform.color }} /> {PLATFORM_LABELS[session.platform]}
-                                    </span>
+                                    <span className="inline-flex items-center gap-1"><MonitorPlay className="w-3 h-3" style={{ color: HABIT_GROUPS.platform.color }} /> {PLATFORM_LABELS[session.platform]}</span>
                                   )}
                                   {session.language_mode !== "unknown" && (
-                                    <span className="inline-flex items-center gap-1">
-                                      <Languages className="w-3 h-3" style={{ color: HABIT_GROUPS.language.color }} /> {LANGUAGE_MODE_LABELS[session.language_mode]}
-                                    </span>
+                                    <span className="inline-flex items-center gap-1"><Languages className="w-3 h-3" style={{ color: HABIT_GROUPS.language.color }} /> {LANGUAGE_MODE_LABELS[session.language_mode]}</span>
                                   )}
                                 </div>
-                                <div className="flex items-center justify-between gap-2 mt-3 border-t pt-2.5" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--text-secondary)" }}>
-                                    {isJustSaved ? "Recién guardada" : "Vista registrada"}
-                                  </span>
+                                <div className="flex items-center justify-between gap-2 mt-3 border-t border-white/10 pt-2.5">
+                                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">{isJustSaved ? "Recién guardada" : "Vista registrada"}</span>
                                   <div className="flex items-center gap-1">
-                                    <button
-                                      onClick={() => startEditSession(session)}
-                                      disabled={savingSession}
-                                      className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 disabled:opacity-50"
-                                      style={{ color: "var(--text-secondary)" }}
-                                      title="Editar"
-                                    >
-                                      <Pencil className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteSession(session.id)}
-                                      disabled={savingSession}
-                                      className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 disabled:opacity-50"
-                                      style={{ color: "#f87171" }}
-                                      title="Eliminar"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
+                                    <button onClick={() => startEditSession(session)} disabled={savingSession} title="Editar"
+                                      className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 disabled:opacity-50"><Pencil className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => handleDeleteSession(session.id)} disabled={savingSession} title="Eliminar"
+                                      className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 disabled:opacity-50" style={{ color: "#fca5a5" }}><Trash2 className="w-3.5 h-3.5" /></button>
                                   </div>
                                 </div>
                               </div>
@@ -1221,161 +937,64 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                       </div>
                     )}
 
-                    <div className="h-px" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
+                    <div className="h-px bg-white/10" />
 
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                        {editingSessionId ? "Editar sesión" : "Agregar sesión"}
-                      </p>
+                      <p className={label}>{editingSessionId ? "Editar sesión" : "Agregar sesión"}</p>
                       {editingSessionId && (
-                        <button
-                          onClick={resetSessionDraft}
-                          className="text-[11px] font-bold transition-opacity hover:opacity-70"
-                          style={{ color: "var(--accent-light)" }}
-                        >
-                          Cancelar edición
-                        </button>
+                        <button onClick={resetSessionDraft} className="text-[11px] font-extrabold hover:opacity-70" style={{ color: tone.accent }}>Cancelar edición</button>
                       )}
                     </div>
 
                     <div>
-                      <p className="text-[11px] font-bold mb-1.5" style={{ color: "var(--text-secondary)" }}>
-                        ¿Cuándo lo viste?
-                      </p>
+                      <p className="text-[11px] font-bold mb-2 text-white/70">¿Cuándo lo viste?</p>
                       <div className="flex flex-col sm:flex-row gap-2.5">
-                        <input
-                          type="date"
-                          value={draft.watchedDate}
-                          onChange={(e) => setDraft((d) => ({ ...d, watchedDate: e.target.value }))}
-                          className="flex-1 !rounded-xl !text-sm !px-3 !py-2"
-                          style={{
-                            backgroundColor: "rgba(255,255,255,0.05)",
-                            border: "1.5px solid var(--border)",
-                            color: "var(--text-primary)",
-                          }}
-                        />
-                        <input
-                          type="time"
-                          value={timeValue}
-                          onChange={(e) => setTimeValue(e.target.value)}
-                          className="!w-32 !rounded-xl !text-sm !px-3 !py-2"
-                          style={{
-                            backgroundColor: "rgba(255,255,255,0.05)",
-                            border: "1.5px solid var(--border)",
-                            color: "var(--text-primary)",
-                          }}
-                          placeholder="Hora"
-                        />
+                        <input type="date" value={draft.watchedDate} onChange={(e) => setDraft((d) => ({ ...d, watchedDate: e.target.value }))} className="glass-input flex-1 !h-12 !text-sm" />
+                        <input type="time" value={timeValue} onChange={(e) => setTimeValue(e.target.value)} className="glass-input sm:!w-36 !h-12 !text-sm" placeholder="Hora" />
                       </div>
-                      <p className="mt-1.5 text-[10px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                        La hora es opcional. Si la completás, se guarda la zona horaria ({tzValue || "del navegador"}) para calculá la franja del día correctamente.
+                      <p className="mt-2 text-[10px] leading-relaxed text-white/55">
+                        La hora es opcional. Si la completás, se guarda la zona horaria ({tzValue || "del navegador"}) para calcular la franja del día correctamente.
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-[11px] font-bold mb-2.5 uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                        Nota de esta vista (opcional)
-                      </p>
+                      <p className="text-[11px] font-extrabold mb-2.5 uppercase tracking-wider text-white/70">Nota de esta vista (opcional)</p>
                       <div className="flex gap-1.5">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            onMouseEnter={() => setSessionHover(star)}
-                            onMouseLeave={() => setSessionHover(0)}
-                            onClick={() => setSessionRating(sessionRating === star ? 0 : star)}
-                            className="transition-transform hover:scale-110"
-                          >
-                            <Star
-                              className="w-6 h-6"
-                              fill={(sessionHover || sessionRating) >= star ? "var(--accent)" : "none"}
-                              stroke={(sessionHover || sessionRating) >= star ? "var(--accent)" : "var(--border)"}
-                              strokeWidth={1.5}
-                            />
-                          </button>
-                        ))}
+                        {[1, 2, 3, 4, 5].map((star) => {
+                          const on = (sessionHover || sessionRating) >= star;
+                          return (
+                            <button key={star} onMouseEnter={() => setSessionHover(star)} onMouseLeave={() => setSessionHover(0)}
+                              onClick={() => setSessionRating(sessionRating === star ? 0 : star)} className="transition-transform hover:scale-125">
+                              <Star className="w-6 h-6" fill={on ? tone.accent : "none"} stroke={on ? tone.accent : "rgba(255,255,255,.45)"} strokeWidth={1.6} />
+                            </button>
+                          );
+                        })}
                       </div>
-                      <p className="mt-1.5 text-[10px]" style={{ color: "var(--text-secondary)" }}>
-                        Independiente de la calificación del título.
-                      </p>
+                      <p className="mt-1.5 text-[10px] text-white/55">Independiente de la calificación del título.</p>
                     </div>
 
-                    <PillGroup
-                      groupKey="venue"
-                      pills={VENUE_PILLS}
-                      selected={draft.venue}
-                      onSelect={(value) => setDraft((d) => ({ ...d, venue: value as ViewingVenue }))}
-                    />
-
-                    <PillGroup
-                      groupKey="companionship"
-                      pills={COMPANIONSHIP_PILLS}
-                      selected={draft.companionship}
-                      onSelect={(value) => setDraft((d) => ({ ...d, companionship: value as ViewingCompanionship }))}
-                    />
-
-                    <PillGroup
-                      groupKey="language"
-                      pills={LANGUAGE_MODE_PILLS}
-                      selected={draft.languageMode}
-                      onSelect={(value) => setDraft((d) => ({ ...d, languageMode: value as ViewingLanguageMode }))}
-                    />
-
-                    <PillGroup
-                      groupKey="platform"
-                      pills={PLATFORM_PILLS}
-                      selected={draft.platform}
-                      onSelect={(value) => setDraft((d) => ({ ...d, platform: value as ViewingPlatform }))}
-                    />
-
-                    <PillGroup
-                      groupKey="rewatch"
-                      pills={REWATCH_PILLS}
-                      selected={draft.isRewatch ? "rewatch" : "first"}
-                      onSelect={(value) => setDraft((d) => ({ ...d, isRewatch: value === "rewatch" }))}
-                    />
+                    <PillGroup groupKey="venue" pills={VENUE_PILLS} selected={draft.venue} onSelect={(value) => setDraft((d) => ({ ...d, venue: value as ViewingVenue }))} />
+                    <PillGroup groupKey="companionship" pills={COMPANIONSHIP_PILLS} selected={draft.companionship} onSelect={(value) => setDraft((d) => ({ ...d, companionship: value as ViewingCompanionship }))} />
+                    <PillGroup groupKey="language" pills={LANGUAGE_MODE_PILLS} selected={draft.languageMode} onSelect={(value) => setDraft((d) => ({ ...d, languageMode: value as ViewingLanguageMode }))} />
+                    <PillGroup groupKey="platform" pills={PLATFORM_PILLS} selected={draft.platform} onSelect={(value) => setDraft((d) => ({ ...d, platform: value as ViewingPlatform }))} />
+                    <PillGroup groupKey="rewatch" pills={REWATCH_PILLS} selected={draft.isRewatch ? "rewatch" : "first"} onSelect={(value) => setDraft((d) => ({ ...d, isRewatch: value === "rewatch" }))} />
 
                     {reactionTags.length > 0 && (
                       <div>
-                        <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                            ¿Qué te dejó?
-                          </p>
-                          <span className="text-[10px]" style={{ color: "var(--text-secondary)" }}>
-                            {selectedReactions.length}/3 elegidas
-                          </span>
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <p className="text-[11px] font-extrabold uppercase tracking-wider text-white/70">¿Qué te dejó?</p>
+                          <span className="text-[10px] text-white/55">{selectedReactions.length}/3 elegidas</span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {reactionTags.map((tag) => {
                             const selected = selectedReactions.includes(tag.slug);
                             const locked = !selected && selectedReactions.length >= 3;
                             return (
-                              <button
-                                key={tag.slug}
-                                type="button"
-                                role="switch"
-                                aria-checked={selected}
-                                tabIndex={locked ? -1 : 0}
+                              <button key={tag.slug} type="button" role="switch" aria-checked={selected} tabIndex={locked ? -1 : 0}
                                 onClick={() => toggleReaction(tag)}
-                                onKeyDown={(e) => {
-                                  if (e.key === " " || e.key === "Enter") {
-                                    e.preventDefault();
-                                    if (!locked) toggleReaction(tag);
-                                  }
-                                }}
-                                disabled={savingSession || locked}
-                                className="px-3 py-1.5 rounded-full text-[11px] font-bold transition-all disabled:opacity-40"
-                                style={{
-                                  backgroundColor: selected
-                                    ? "color-mix(in srgb, var(--accent) 25%, transparent)"
-                                    : "rgba(255,255,255,0.05)",
-                                  color: selected ? "var(--accent-light)" : "var(--text-secondary)",
-                                  border: `1px solid ${
-                                    selected
-                                      ? "color-mix(in srgb, var(--accent) 45%, transparent)"
-                                      : "var(--border)"
-                                  }`,
-                                }}
-                              >
+                                onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); if (!locked) toggleReaction(tag); } }}
+                                disabled={savingSession || locked} data-active={selected}
+                                className="frost-tab !py-1.5 !px-3.5 !text-[11px] disabled:opacity-40">
                                 {tag.name}
                               </button>
                             );
@@ -1384,50 +1003,23 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                       </div>
                     )}
 
-                    {sessionError && (
-                      <p className="text-xs font-bold" style={{ color: "#f87171" }}>{sessionError}</p>
-                    )}
+                    {sessionError && <p className="text-xs font-bold text-red-300">{sessionError}</p>}
 
-                    <button
-                      onClick={handleSaveSession}
-                      disabled={savingSession}
-                      className={`w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.01] disabled:opacity-50 ${sessionSaved ? "animate-pop" : ""}`}
-                      style={
-                        sessionSaved
-                          ? {
-                              backgroundColor: "#22c55e",
-                              color: "#fff",
-                              boxShadow: "0 6px 22px rgba(34,197,94,0.5)",
-                            }
-                          : {
-                              background: "var(--gradient-accent)",
-                              color: "#fff",
-                            }
-                      }
-                    >
+                    <button onClick={handleSaveSession} disabled={savingSession}
+                      className={`w-full inline-flex items-center justify-center gap-2 h-12 rounded-full text-sm font-extrabold transition-transform hover:scale-[1.01] disabled:opacity-50 ${sessionSaved ? "animate-pop" : ""}`}
+                      style={sessionSaved ? { backgroundColor: "#4ade80", color: "#052e16", boxShadow: "0 8px 28px rgba(74,222,128,.45)" } : { background: "#fff", color: "#111" }}>
                       {sessionSaved ? (
-                        <>
-                          <Check className="w-4 h-4" strokeWidth={3} />
-                          {editingSessionId ? "Cambios guardados" : "Sesión guardada"}
-                        </>
+                        <><Check className="w-4 h-4" strokeWidth={3} />{editingSessionId ? "Cambios guardados" : "Sesión guardada"}</>
                       ) : savingSession ? (
-                        <>
-                          <RotateCw className="w-3.5 h-3.5 animate-spin" />
-                          Guardando...
-                        </>
+                        <><RotateCw className="w-4 h-4 animate-spin" />Guardando...</>
                       ) : (
-                        <>
-                          <Plus className="w-3.5 h-3.5" />
-                          {editingSessionId ? "Guardar cambios" : "Guardar sesión"}
-                        </>
+                        <><Plus className="w-4 h-4" />{editingSessionId ? "Guardar cambios" : "Guardar sesión"}</>
                       )}
                     </button>
                   </div>
                 </div>
               )}
             </div>
-          </div>
-
           </div>
         </div>
       </div>

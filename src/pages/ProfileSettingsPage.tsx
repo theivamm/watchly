@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "@/styles/cinema.css";
 import { User, Share2, Check, AtSign, MapPin, Globe, Aperture, X } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { updateProfile, getProfileLink } from "@/services/profile";
@@ -70,7 +71,7 @@ export default function ProfileSettingsPage() {
 
   return (
     <div className="w-full px-5 md:px-8 py-8 md:py-12 max-w-4xl">
-      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-8" style={{ color: "var(--text-primary)" }}>
+      <h1 className="font-cinema text-5xl md:text-7xl leading-none mb-8 text-white">
         Perfil
       </h1>
 

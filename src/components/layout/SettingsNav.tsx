@@ -1,3 +1,4 @@
+import "@/styles/cinema.css";
 import { Link, useLocation } from "react-router-dom";
 
 const settingsItems = [
@@ -9,24 +10,12 @@ export default function SettingsNav() {
   const location = useLocation();
 
   return (
-    <nav className="flex gap-1.5 mb-8 p-1.5 rounded-full border"
-      style={{ backgroundColor: "var(--surface-1)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}>
-      {settingsItems.map(({ to, label }) => {
-        const active = location.pathname === to;
-        return (
-          <Link
-            key={to}
-            to={to}
-            className="px-5 py-2.5 rounded-full text-sm font-semibold transition-all"
-            style={{
-              backgroundColor: active ? "var(--accent-soft)" : "transparent",
-              color: active ? "var(--accent-light)" : "var(--text-secondary)",
-            }}
-          >
-            {label}
-          </Link>
-        );
-      })}
+    <nav className="flex gap-2.5 mb-8">
+      {settingsItems.map(({ to, label }) => (
+        <Link key={to} to={to} data-active={location.pathname === to} className="frost-tab hover:text-white data-[active=true]:hover:text-[#111]">
+          {label}
+        </Link>
+      ))}
     </nav>
   );
 }
