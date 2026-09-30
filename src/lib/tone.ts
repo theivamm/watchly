@@ -14,6 +14,7 @@ export function hueFromRgb({ r, g, b }: RGB, fallback = 265): number {
 export function accentVars(hue: number): Record<string, string> {
   const h = (n: number) => (hue + n + 360) % 360;
   return {
+    "--accent-h": String(hue),
     "--accent": `hsl(${hue} 80% 66%)`,
     "--accent-2": `hsl(${h(15)} 80% 62%)`,
     "--accent-3": `hsl(${h(30)} 85% 74%)`,

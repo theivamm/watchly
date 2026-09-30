@@ -829,7 +829,7 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                   <>
                     {readOnlyEntry.notes && (
                       <div className={card}>
-                        <div className="flex items-center gap-2 mb-3"><Quote className="w-4 h-4" style={{ color: tone.accent }} /><p className={label}>Comentario</p></div>
+                        <div className="flex items-center gap-2 mb-3"><Quote className="w-4 h-4" style={{ color: "#fff" }} /><p className={label}>Comentario</p></div>
                         <p className="text-sm leading-relaxed text-white/90">{readOnlyEntry.notes}</p>
                       </div>
                     )}
@@ -845,14 +845,14 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
             {showDiary && (
               <div className="space-y-5">
                 <div className={card}>
-                  <div className="flex items-center gap-2 mb-4"><Quote className="w-4 h-4" style={{ color: tone.accent }} /><p className={label}>Mi comentario</p></div>
+                  <div className="flex items-center gap-2 mb-4"><Quote className="w-4 h-4" style={{ color: "#fff" }} /><p className={label}>Mi comentario</p></div>
                   <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="¿Qué te pareció? Escribí tu opinión personal..." rows={4} className="glass-input" />
                   <p className="text-[11px] mt-2 text-white/55">Se guarda con el botón “{existingEntry ? "Actualizar" : "Guardar en mi biblioteca"}”.</p>
                 </div>
 
                 <div className="liquid-glass rounded-[2rem] p-6 md:p-7 space-y-5">
                   <div className="flex items-center gap-2.5 text-base font-extrabold">
-                    <CalendarDays className="w-5 h-5" style={{ color: tone.accent }} />
+                    <CalendarDays className="w-5 h-5" style={{ color: "#fff" }} />
                     ¿Cómo lo viste?
                     <HelpTooltip text={HOW_YOU_WATCHED_HELP} />
                   </div>
@@ -901,7 +901,7 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
 
                   <div className="flex items-center justify-between gap-2">
                     <p className={label}>{editingSessionId ? "Editar sesión" : "Agregar sesión"}</p>
-                    {editingSessionId && <button onClick={resetSessionDraft} className="text-[11px] font-extrabold hover:opacity-70" style={{ color: tone.accent }}>Cancelar edición</button>}
+                    {editingSessionId && <button onClick={resetSessionDraft} className="text-[11px] font-extrabold hover:opacity-70" style={{ color: "#fff" }}>Cancelar edición</button>}
                   </div>
 
                   <div>

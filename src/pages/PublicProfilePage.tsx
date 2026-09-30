@@ -329,18 +329,18 @@ export default function PublicProfilePage() {
           <Link to={`/perfil/${profile.username}/adn`} className="liquid-glass group relative overflow-hidden rounded-[2.25rem] p-7 flex flex-col text-white hover:text-white transition-transform hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <p className={label}>ADN Audiovisual</p>
-              <Dna className="w-5 h-5" style={{ color: "var(--accent)" }} />
+              <Dna className="w-5 h-5" style={{ color: "#fff" }} />
             </div>
             <p className="font-cinema text-4xl leading-tight mt-4">{dna.topGenres.slice(0, 3).map((g) => g.label).join(" · ")}</p>
             {dna.decadeDistribution[0] && <p className="text-sm mt-2 text-white/75">Década dominante: {dna.decadeDistribution[0].label}</p>}
-            <span className="mt-auto pt-5 inline-flex items-center gap-1.5 text-sm font-extrabold" style={{ color: "var(--accent-light)" }}>
+            <span className="mt-auto pt-5 inline-flex items-center gap-1.5 text-sm font-extrabold" style={{ color: "#fff" }}>
               Ver ADN completo <ArrowUpRight className="w-4 h-4" />
             </span>
           </Link>
         ) : (
           <div className="liquid-glass rounded-[2.25rem] p-7 flex flex-col">
             <p className={label}>Nota promedio</p>
-            <p className="font-cinema text-7xl leading-none mt-4" style={{ color: "var(--accent)" }}>{avgRating ? avgRating.toFixed(1) : "—"}</p>
+            <p className="font-cinema text-7xl leading-none mt-4" style={{ color: "#fff" }}>{avgRating ? avgRating.toFixed(1) : "—"}</p>
             <p className="text-sm mt-2 text-white/75">{rated.length} {rated.length === 1 ? "título calificado" : "títulos calificados"}</p>
           </div>
         )}
@@ -374,7 +374,7 @@ export default function PublicProfilePage() {
       )}
 
       <section>
-        <Heading aside={<button onClick={() => setSection("peliculas")} className="text-sm font-extrabold hover:opacity-80" style={{ color: "var(--accent-light)" }}>Ver todo →</button>}>Últimos agregados</Heading>
+        <Heading aside={<button onClick={() => setSection("peliculas")} className="text-sm font-extrabold hover:opacity-80" style={{ color: "#fff" }}>Ver todo →</button>}>Últimos agregados</Heading>
         {recent.length > 0 ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-4">
             {recent.map((e) => <PosterTile key={e.id} entry={e} onClick={() => openCard(e)} />)}
@@ -384,7 +384,7 @@ export default function PublicProfilePage() {
 
       {lists.length > 0 && (
         <section>
-          <Heading aside={<button onClick={() => setSection("listas")} className="text-sm font-extrabold hover:opacity-80" style={{ color: "var(--accent-light)" }}>Ver todas →</button>}>Listas</Heading>
+          <Heading aside={<button onClick={() => setSection("listas")} className="text-sm font-extrabold hover:opacity-80" style={{ color: "#fff" }}>Ver todas →</button>}>Listas</Heading>
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {lists.slice(0, 3).map((l) => <ListCard key={l.id} list={l} />)}
           </div>
@@ -408,7 +408,7 @@ export default function PublicProfilePage() {
               <div className="rounded-full overflow-hidden bg-[#0b0b14] p-1"><Avatar profile={profile} size={132} /></div>
             </div>
             <div className="min-w-0 text-center sm:text-left">
-              <span className="liquid-glass-sm inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold tracking-wider" style={{ color: "var(--accent-light)" }}>
+              <span className="liquid-glass-sm inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold tracking-wider" style={{ color: "#fff" }}>
                 @{profile.username}
               </span>
               <h1 className="font-cinema mt-3 text-6xl md:text-8xl leading-[1.02] drop-shadow-[0_10px_50px_rgba(0,0,0,.5)] break-words">
@@ -438,7 +438,7 @@ export default function PublicProfilePage() {
               ].map(({ icon: Icon, n, l }, i) => (
                 <div key={l} className="px-4 text-center" style={{ borderLeft: i ? "1px solid rgba(255,255,255,.14)" : "none" }}>
                   <Icon className="w-4 h-4 mx-auto mb-1.5 text-white/60" />
-                  <p className="font-cinema text-3xl leading-none" style={{ color: "var(--accent)" }}>{n}</p>
+                  <p className="font-cinema text-3xl leading-none" style={{ color: "#fff" }}>{n}</p>
                   <p className="text-[10px] font-extrabold mt-1.5 uppercase tracking-wider text-white/70">{l}</p>
                 </div>
               ))}

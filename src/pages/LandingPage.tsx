@@ -40,7 +40,7 @@ export default function LandingPage() {
     }
   }, []);
 
-  const accent = { color: hero.accent, transition: "color 1.2s" } as const;
+  const accent = { color: "#fff" } as const;
   const glassCard = "liquid-glass rounded-[2.5rem]";
 
   return (

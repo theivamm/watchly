@@ -112,7 +112,7 @@ export default function HomePage() {
     { icon: CheckCheck, label: "Vistas", value: completed.length },
     { icon: Star, label: "Favoritas", value: favorites.length },
   ];
-  const accent = { color: hero.accent, transition: "color 1.2s" } as const;
+  const accent = { color: "#fff" } as const;
   const whiteBtn = "inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full bg-white text-[#111] text-sm font-extrabold shadow-[0_12px_40px_rgba(0,0,0,.35)] transition-transform hover:scale-[1.03] active:scale-95 disabled:opacity-60";
   const glassBtn = "liquid-glass-sm inline-flex items-center justify-center gap-2 h-14 px-7 rounded-full text-sm font-bold text-white transition-transform hover:scale-[1.03]";
 

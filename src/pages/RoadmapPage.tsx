@@ -45,8 +45,8 @@ export default function RoadmapPage() {
   const { data } = useTrending("all");
   const items = (data?.results || []).filter((i) => i.posterPath && i.backdropPath).slice(0, 5);
   const hero = useHeroCycle(items.map((i) => i.posterPath));
-  const accent = { color: hero.accent, transition: "color 1.2s" } as const;
-  const colorOf = (p: Priority) => priorityMeta[p].color ?? hero.accent;
+  const accent = { color: "#fff" } as const;
+  const colorOf = (p: Priority) => priorityMeta[p].color ?? "#fff";
 
   return (
     <div className="min-h-screen flex flex-col text-white">

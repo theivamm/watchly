@@ -26,7 +26,7 @@ export default function AuthShell({ title, subtitle, back, footer, children }: P
 
       <header className="relative z-10 flex items-center justify-between px-5 md:px-10 pt-6">
         <Link to="/" className="liquid-glass h-14 px-7 rounded-full flex items-center font-cinema text-3xl text-white hover:text-white"
-          style={{ color: hero.accent, transition: "color 1.2s" }}>
+          style={{ color: "#fff" }}>
           Watchly
         </Link>
         {back && (
@@ -43,7 +43,7 @@ export default function AuthShell({ title, subtitle, back, footer, children }: P
           </span>
           <p className="font-cinema mt-7 text-7xl xl:text-[7rem] leading-[1.02] drop-shadow-[0_10px_60px_rgba(0,0,0,.4)]">
             Tu historial<br />
-            <span style={{ color: hero.accent, transition: "color 1.2s" }}>de cine.</span>
+            <span style={{ color: "#fff" }}>de cine.</span>
           </p>
           {active && (
             <p className="mt-8 text-sm font-bold text-white/70">

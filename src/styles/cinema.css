@@ -1,5 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Anton&display=swap");
 
+:root { --accent-h: 265; }
+
 .font-cinema {
   font-family: "Anton", Impact, "Arial Narrow", sans-serif;
   font-weight: 400;
