@@ -181,7 +181,7 @@ export default function LandingPage() {
         <h2 className="font-cinema text-5xl md:text-7xl text-center mt-4 mb-14">
           Todo tu cine, <span style={accent}>en un solo lugar</span>
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[1248px] mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-[1248px] mx-auto">
           {FEATURES.map((f, i) => (
             <div key={f.title} className={`${glassCard} relative overflow-hidden min-h-[320px] p-9 flex flex-col gap-3.5 transition-transform duration-300 hover:-translate-y-2`}>
               <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[80px] opacity-60 pointer-events-none"
