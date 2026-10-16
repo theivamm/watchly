@@ -43,7 +43,8 @@ export const getOverview = () => rpc<AdminOverview>("admin_overview");
 export const getDaily = (days = 30) => rpc<AdminDay[]>("admin_daily", { days });
 export const getFunnel = () => rpc<AdminFunnelWeek[]>("admin_funnel");
 export const getUsers = (q = "") => rpc<AdminUser[]>("admin_users", { q, lim: 200 });
-export const getTopEvents = (days = 7) => rpc<AdminEventCount[]>("admin_top_events", { days });
+export const deleteUser = (target: string) => rpc<void>("admin_delete_user", { target });
+export const getTopEvents =(days = 7) => rpc<AdminEventCount[]>("admin_top_events", { days });
 
 export async function getErrors(includeResolved: boolean): Promise<ClientError[]> {
   let query = supabase.from("client_errors").select("*").order("created_at", { ascending: false }).limit(500);

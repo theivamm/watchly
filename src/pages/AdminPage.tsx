@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, BarChart3, Check, ChevronDown, RotateCw, Search, Shield, Users, Activity } from "lucide-react";
+import { AlertTriangle, BarChart3, Check, ChevronDown, RotateCw, Search, Shield, Users, Activity, Trash2 } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import {
-  getDaily, getErrors, getFunnel, getOverview, getRecentEvents, getTopEvents, getUsers, resolveErrors,
+  deleteUser, getDaily, getErrors, getFunnel, getOverview, getRecentEvents, getTopEvents, getUsers, resolveErrors,
   type AdminDay, type AdminEventCount, type AdminFunnelWeek, type AdminOverview, type AdminUser, type AnalyticsEvent, type ClientError,
 } from "@/services/admin";
 
@@ -317,7 +317,9 @@ function UsersTab() {
   const [q, setQ] = useState("");
   const [query, setQuery] = useState("");
   useEffect(() => { const t = setTimeout(() => setQuery(q.trim()), 350); return () => clearTimeout(t); }, [q]);
-  const { data, error } = useLoad(() => getUsers(query), [query]);
+  const { data, error, reload } = useLoad(() => getUsers(query), [query]);
+  const [toDelete, setToDelete] = useState<AdminUser | null>(null);
+  const [deletedMsg, setDeletedMsg] = useState("");
 
   return (
     <div className="space-y-4">
@@ -326,12 +328,17 @@ function UsersTab() {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por email, usuario o nombre…"
           className="flex-1 bg-transparent outline-none text-sm placeholder:text-white/45" />
       </label>
+      {deletedMsg && <p className="text-sm font-bold text-emerald-300 animate-pop">{deletedMsg}</p>}
+      {toDelete && (
+        <DeleteUserDialog user={toDelete} onClose={() => setToDelete(null)}
+          onDeleted={() => { setDeletedMsg(`Se eliminó ${toDelete.email}.`); setToDelete(null); reload(); }} />
+      )}
       {!data ? <Loading error={error} /> : data.length === 0 ? <Empty text="Sin resultados." /> : (
         <div className={`${card} !p-0 overflow-x-auto`}>
           <table className="w-full text-sm min-w-[760px]">
             <thead><tr className="text-left text-white/55 text-xs">
               <th className="px-5 py-3 font-bold">Usuario</th><th className="font-bold">Alta</th><th className="font-bold">Último ingreso</th>
-              <th className="font-bold text-right">Títulos</th><th className="font-bold px-5">Estado</th>
+              <th className="font-bold text-right">Títulos</th><th className="font-bold px-5">Estado</th><th className="sr-only">Acciones</th>
             </tr></thead>
             <tbody>
               {data.map((u: AdminUser) => (
@@ -351,12 +358,67 @@ function UsersTab() {
                       {u.provider !== "email" && <Badge>{u.provider}</Badge>}
                     </div>
                   </td>
+                  <td className="pr-5 text-right">
+                    {!u.is_admin && (
+                      <button type="button" onClick={() => { setDeletedMsg(""); setToDelete(u); }} title="Eliminar usuario" aria-label={`Eliminar ${u.email}`}
+                        className="w-9 h-9 rounded-full inline-flex items-center justify-center text-red-300 hover:bg-red-500/20 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+    </div>
+  );
+}
+
+function DeleteUserDialog({ user, onClose, onDeleted }: { user: AdminUser; onClose: () => void; onDeleted: () => void }) {
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const ok = typed.trim().toLowerCase() === user.email.toLowerCase();
+
+  const confirm = async () => {
+    if (!ok) return;
+    setBusy(true);
+    setErr("");
+    try {
+      await deleteUser(user.id);
+      onDeleted();
+    } catch (e) {
+      setErr((e as { message?: string })?.message || "No se pudo eliminar.");
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/70" onClick={busy ? undefined : onClose} role="dialog" aria-modal="true">
+      <div className="liquid-glass rounded-[2rem] p-7 w-full max-w-md animate-pop" onClick={(e) => e.stopPropagation()}>
+        <span className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center"><Trash2 className="w-5 h-5 text-red-300" /></span>
+        <h2 className="font-cinema text-4xl leading-none mt-5">Eliminar usuario</h2>
+        <p className="text-sm text-white/75 mt-3 leading-relaxed">
+          Se va a borrar <strong className="text-white">{user.email}</strong>
+          {user.username && <> (@{user.username})</>} junto con su perfil, sus {user.entries} títulos, listas, sesiones y ADN.
+          <strong className="text-red-300"> No se puede deshacer.</strong>
+        </p>
+        <label className="block mt-5">
+          <span className="text-xs font-bold text-white/70">Escribí el email para confirmar</span>
+          <input autoFocus value={typed} onChange={(e) => setTyped(e.target.value)} onKeyDown={(e) => e.key === "Enter" && confirm()}
+            placeholder={user.email} className="mt-2 w-full h-12 rounded-full px-5 bg-white/10 border border-white/15 outline-none focus:border-white/40 text-sm" />
+        </label>
+        {err && <p className="text-xs font-bold text-red-300 mt-3">{err}</p>}
+        <div className="flex gap-3 mt-6">
+          <button type="button" onClick={onClose} disabled={busy} className="liquid-glass-sm flex-1 h-12 rounded-full text-sm font-bold">Cancelar</button>
+          <button type="button" onClick={confirm} disabled={!ok || busy}
+            className="flex-1 h-12 rounded-full text-sm font-extrabold bg-red-500 text-white inline-flex items-center justify-center gap-2 disabled:opacity-40 transition-opacity">
+            {busy ? <RotateCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Eliminar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
