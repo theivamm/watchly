@@ -29,8 +29,8 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false }
     <div className={`absolute inset-0 ${soft ? "" : "bg-[#07070d]"}`} aria-hidden="true">
       {!soft && (
         <>
-          <div className="absolute -top-52 -left-32 w-[760px] h-[760px] rounded-full blur-[120px] cinema-drift-a transition-colors duration-[1600ms]" style={{ background: glow }} />
-          <div className="absolute -bottom-64 right-[20%] w-[820px] h-[820px] rounded-full blur-[140px] cinema-drift-b transition-colors duration-[1600ms]" style={{ background: glow2 }} />
+          <div className="hidden md:block absolute -top-52 -left-32 w-[760px] h-[760px] rounded-full blur-[120px] cinema-drift-a transition-colors duration-[1600ms]" style={{ background: glow }} />
+          <div className="hidden md:block absolute -bottom-64 right-[20%] w-[820px] h-[820px] rounded-full blur-[140px] cinema-drift-b transition-colors duration-[1600ms]" style={{ background: glow2 }} />
         </>
       )}
 

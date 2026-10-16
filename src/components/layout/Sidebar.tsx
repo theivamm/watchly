@@ -1,6 +1,6 @@
 import "@/styles/cinema.css";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Film, BookOpen, List, Map, Dna, Settings, User, MonitorPlay, Sparkles } from "lucide-react";
+import { Search, Film, BookOpen, List, Map, Dna, Settings, MonitorPlay, Sparkles } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import Avatar from "@/components/ui/Avatar";
 
@@ -65,9 +65,6 @@ export default function Sidebar() {
         </Link>
         <Link to="/configuracion/perfil" title="Configuración" aria-label="Configuración" className={iconBtn}>
           <Settings className="w-5 h-5" />
-        </Link>
-        <Link to={profileHref} title="Ver mi perfil" aria-label="Ver mi perfil" className={iconBtn}>
-          <User className="w-5 h-5" />
         </Link>
       </div>
     </aside>

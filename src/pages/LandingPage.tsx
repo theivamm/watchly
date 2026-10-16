@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LogIn, UserPlus } from "lucide-react";
 import { useTrending } from "@/hooks/useMedia";
 import { useHeroCycle } from "@/hooks/useHeroCycle";
 import HeroBackdrop from "@/components/home/HeroBackdrop";
@@ -64,8 +65,12 @@ export default function LandingPage() {
             <a href="/roadmap" className="hidden sm:block px-4 py-2.5 text-sm font-semibold text-white/80 hover:text-white">Roadmap</a>
             {user ? <UserMenu /> : (
               <>
-                <a href="/login" className="liquid-glass-sm h-11 px-5 rounded-full flex items-center text-sm font-bold text-white hover:text-white">Iniciar sesión</a>
-                <a href="/registro" className="h-11 px-6 rounded-full bg-white text-[#111] hover:text-[#111] flex items-center text-sm font-extrabold">Crear cuenta</a>
+                <a href="/login" aria-label="Iniciar sesión" title="Iniciar sesión" className="liquid-glass-sm h-11 w-11 sm:w-auto sm:px-5 shrink-0 rounded-full flex items-center justify-center gap-2 text-sm font-bold text-white hover:text-white whitespace-nowrap">
+                  <LogIn className="w-[18px] h-[18px] sm:hidden" /><span className="hidden sm:inline">Iniciar sesión</span>
+                </a>
+                <a href="/registro" aria-label="Crear cuenta" title="Crear cuenta" className="h-11 w-11 sm:w-auto sm:px-6 shrink-0 rounded-full bg-white text-[#111] hover:text-[#111] flex items-center justify-center gap-2 text-sm font-extrabold whitespace-nowrap">
+                  <UserPlus className="w-[18px] h-[18px] sm:hidden" /><span className="hidden sm:inline">Crear cuenta</span>
+                </a>
               </>
             )}
           </div>
@@ -136,7 +141,7 @@ export default function LandingPage() {
                     className="w-full object-cover rounded-[18px] transition-all duration-700"
                     style={{ aspectRatio: "2/3", border: `1px solid rgba(255,255,255,${on ? 0.6 : 0.18})`, boxShadow: `0 20px 40px rgba(0,0,0,.45), 0 0 0 ${on ? 2 : 0}px ${hero.accent}` }} />
                   <span className="h-[3px] rounded-full bg-white/20 overflow-hidden" style={{ opacity: on ? 1 : 0 }}>
-                    <span className="block h-full" style={{ width: `${hero.progress}%`, background: hero.accent }} />
+                    <span key={hero.cycle} className="block h-full hero-progress" style={{ animationDuration: `${hero.duration}ms`, background: hero.accent }} />
                   </span>
                 </button>
               );

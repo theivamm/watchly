@@ -172,7 +172,7 @@ export default function RecommendationsPage() {
                   <img src={getPosterUrl(it.posterPath, "w342")} alt={it.title} className="w-full object-cover rounded-[1.1rem] transition-all duration-700"
                     style={{ aspectRatio: "2/3", border: `1px solid rgba(255,255,255,${on ? 0.6 : 0.18})`, boxShadow: `0 20px 40px rgba(0,0,0,.45), 0 0 0 ${on ? 2 : 0}px ${hero.accent}` }} />
                   <span className="h-[3px] rounded-full bg-white/20 overflow-hidden" style={{ opacity: on ? 1 : 0 }}>
-                    <span className="block h-full" style={{ width: `${hero.progress}%`, background: hero.accent }} />
+                    <span key={hero.cycle} className="block h-full hero-progress" style={{ animationDuration: `${hero.duration}ms`, background: hero.accent }} />
                   </span>
                 </button>
               );

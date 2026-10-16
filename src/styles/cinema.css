@@ -152,6 +152,9 @@ select option { background: #151520; color: #fff; }
 .cinema-drift-a { animation: cinema-drift-a 22s ease-in-out infinite; }
 .cinema-drift-b { animation: cinema-drift-b 28s ease-in-out infinite; }
 .cinema-kenburns { animation: cinema-kenburns 26s ease-in-out infinite; }
+@keyframes hero-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.hero-progress { transform-origin: left; animation-name: hero-progress; animation-timing-function: linear; animation-fill-mode: both; }
+
 @media (max-width: 767px), (prefers-reduced-motion: reduce) {
   .cinema-kenburns { animation: none; transform: scale(1.04); }
 }

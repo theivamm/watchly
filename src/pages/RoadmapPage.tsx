@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { LogIn, UserPlus } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import UserMenu from "@/components/layout/UserMenu";
 import HeroBackdrop from "@/components/home/HeroBackdrop";
@@ -89,8 +90,12 @@ export default function RoadmapPage() {
             <div className="flex-1" />
             {user ? <UserMenu /> : (
               <>
-                <Link to="/login" className="liquid-glass-sm h-11 px-5 rounded-full flex items-center text-sm font-bold text-white hover:text-white">Iniciar sesión</Link>
-                <Link to="/registro" className="h-11 px-6 rounded-full bg-white text-[#111] hover:text-[#111] flex items-center text-sm font-extrabold">Crear cuenta</Link>
+                <Link to="/login" aria-label="Iniciar sesión" title="Iniciar sesión" className="liquid-glass-sm h-11 w-11 sm:w-auto sm:px-5 shrink-0 rounded-full flex items-center justify-center gap-2 text-sm font-bold text-white hover:text-white whitespace-nowrap">
+                  <LogIn className="w-[18px] h-[18px] sm:hidden" /><span className="hidden sm:inline">Iniciar sesión</span>
+                </Link>
+                <Link to="/registro" aria-label="Crear cuenta" title="Crear cuenta" className="h-11 w-11 sm:w-auto sm:px-6 shrink-0 rounded-full bg-white text-[#111] hover:text-[#111] flex items-center justify-center gap-2 text-sm font-extrabold whitespace-nowrap">
+                  <UserPlus className="w-[18px] h-[18px] sm:hidden" /><span className="hidden sm:inline">Crear cuenta</span>
+                </Link>
               </>
             )}
           </div>
@@ -120,7 +125,7 @@ export default function RoadmapPage() {
 
       {/* ───────── ETAPAS ───────── */}
       <section className="relative px-5 md:px-14 lg:px-24 py-20 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[900px] h-[500px] rounded-full blur-[150px] opacity-50 cinema-drift-a pointer-events-none"
+        <div className="hidden md:block absolute top-0 left-1/4 w-[900px] h-[500px] rounded-full blur-[150px] opacity-50 cinema-drift-a pointer-events-none"
           style={{ background: hero.row, transition: "background 1.6s" }} />
         <div className="relative max-w-[1300px] mx-auto">
           <p className="text-xs font-extrabold tracking-[.25em] uppercase text-center" style={accent}>Las etapas</p>
@@ -212,7 +217,7 @@ export default function RoadmapPage() {
       {/* ───────── PRÓXIMO PASO ───────── */}
       <section className="relative px-5 md:px-14 lg:px-24 pb-24">
         <div className="liquid-glass relative max-w-[1100px] mx-auto rounded-[3.5rem] px-8 py-16 text-center overflow-hidden">
-          <div className="absolute -top-64 left-1/2 -ml-72 w-[580px] h-[580px] rounded-full blur-[110px] opacity-80 cinema-drift-a pointer-events-none"
+          <div className="hidden md:block absolute -top-64 left-1/2 -ml-72 w-[580px] h-[580px] rounded-full blur-[110px] opacity-80 cinema-drift-a pointer-events-none"
             style={{ background: hero.row, transition: "background 1.6s" }} />
           <div className="relative">
             <span className="liquid-glass-sm inline-flex px-[18px] py-2 rounded-full text-xs font-extrabold tracking-[.2em] uppercase mb-6">Próximo paso</span>
