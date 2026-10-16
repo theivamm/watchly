@@ -1,4 +1,5 @@
 import "@/styles/cinema.css";
+import { useEffect, useRef, useState } from "react";
 import { getBackdropUrl, getPosterUrl } from "@/services/tmdb";
 
 interface Props {
@@ -12,6 +13,15 @@ interface Props {
 
 /** Fondo cinematográfico: imagen grande con crossfade + manchas de color en movimiento. */
 export default function HeroBackdrop({ items, index, glow, glow2, soft = false }: Props) {
+  // Solo la capa activa y la saliente se animan; animar todas a la vez hace parpadear en mobile.
+  const prevRef = useRef(index);
+  const [prev, setPrev] = useState(index);
+  useEffect(() => {
+    if (prevRef.current === index) return;
+    setPrev(prevRef.current);
+    prevRef.current = index;
+  }, [index]);
+
   const mask = soft
     ? "linear-gradient(90deg, transparent 0, #000 34%), linear-gradient(180deg, transparent 0, #000 14%, #000 58%, transparent 100%)"
     : "linear-gradient(90deg, transparent 0, #000 38%)";
@@ -26,12 +36,18 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false }
 
       {items.map((it, i) => {
         const hasBackdrop = !!it.backdropPath;
+        const live = i === index || i === prev;
+        const upcoming = items.length > 1 && i === (index + 1) % items.length;
         return (
           <div
-            key={i}
+            key={`${it.backdropPath ?? it.posterPath}-${i}`}
             className="absolute top-0 right-0 h-full w-full lg:w-[74%] transition-opacity duration-[1800ms] ease-in-out"
             style={{
               opacity: i === index ? 1 : 0,
+              visibility: live || upcoming ? "visible" : "hidden",
+              willChange: live ? "opacity" : undefined,
+              transform: "translateZ(0)",
+              backfaceVisibility: "hidden",
               WebkitMaskImage: mask,
               maskImage: mask,
               WebkitMaskComposite: soft ? "source-in" : undefined,
@@ -40,9 +56,12 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false }
           >
             <img
               src={hasBackdrop ? getBackdropUrl(it.backdropPath) : getPosterUrl(it.posterPath, "w500")}
+              srcSet={hasBackdrop ? `${getBackdropUrl(it.backdropPath, "w780")} 780w, ${getBackdropUrl(it.backdropPath)} 1280w` : undefined}
+              sizes="100vw"
               alt=""
-              className="absolute inset-0 w-full h-full object-cover cinema-kenburns"
-              style={hasBackdrop ? undefined : { filter: "blur(28px) saturate(1.2)", transform: "scale(1.3)" }}
+              decoding="async"
+              className={`absolute inset-0 w-full h-full object-cover ${live ? "cinema-kenburns" : ""}`}
+              style={hasBackdrop ? { backfaceVisibility: "hidden" } : { filter: "blur(28px) saturate(1.2)", transform: "scale(1.3)" }}
             />
           </div>
         );

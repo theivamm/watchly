@@ -7,6 +7,7 @@ import { useHeroCycle } from "@/hooks/useHeroCycle";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 type Priority = "inmediata" | "media" | "expansión";
+type Status = "hecho" | "en progreso" | "pendiente";
 
 interface Stage {
   n: number;
@@ -15,22 +16,50 @@ interface Stage {
   desc: string;
   tag: string;
   priority: Priority;
+  status: Status;
+  note: string;
 }
 
 const stages: Stage[] = [
-  { n: 0, title: "Consolidación del núcleo", value: "Confianza y estabilidad", desc: "Auditoría completa de autenticación, emails, OAuth, RLS, rendimiento y analítica. Sin funciones nuevas hasta que la base sea sólida.", tag: "Base", priority: "inmediata" },
-  { n: 1, title: "ADN Audiovisual", value: "Identidad y viralidad", desc: "Transformá tu biblioteca en un perfil de gustos: géneros, décadas, países, directores y una frase resumen. Preliminar desde 5 títulos, completo desde 10. Tarjeta compartible.", tag: "Diferencial", priority: "inmediata" },
-  { n: 2, title: "¿Qué vemos hoy?", value: "Ayuda para decidir", desc: "Elegí un modo — Sorprendeme, Algo rápido, Quiero reírme — y Watchly elige entre lo que ya querías ver. Reglas deterministas, sin IA.", tag: "Diferencial", priority: "inmediata" },
-  { n: 3, title: "Compatibilidad", value: "Conexión entre perfiles", desc: "Al visitar un perfil público: porcentaje de compatibilidad, géneros compartidos, títulos en común y una sugerencia para ver juntos.", tag: "Social", priority: "inmediata" },
-  { n: 4, title: "Modo pareja o grupo", value: "Decisión compartida", desc: "Creá una sala con 2 a 8 personas, votá portadas con Sí / No / Me da igual y dejá que Watchly encuentre coincidencias.", tag: "Social", priority: "media" },
-  { n: 5, title: "Cápsula después de verla", value: "Recuerdo emocional", desc: "Al terminar un título: qué sensación te dejó, si la volverías a ver y a quién se la recomendarías. Notas con y sin spoilers.", tag: "Memoria", priority: "media" },
-  { n: 6, title: "Línea de tiempo y rewatch", value: "Memoria longitudinal", desc: "Mirá cómo cambió tu relación con las historias: cada rewatch con su calificación, su cápsula y sus hitos personales.", tag: "Memoria", priority: "media" },
-  { n: 7, title: "Pasaporte cinematográfico", value: "Exploración cultural", desc: "Mapa del mundo coloreado por lo que viste, países descubiertos y tarjeta compartible.", tag: "Exploración", priority: "media" },
-  { n: 8, title: "Retos personales", value: "Hábitos y retención", desc: "Retos de exploración sin rankings ni rachas punitivas: películas por año, países, décadas y sagas completas.", tag: "Exploración", priority: "expansión" },
-  { n: 9, title: "Estanterías por contexto", value: "Organización útil", desc: "Guardá cada historia para su momento: noche de lluvia, para ver en pareja, menos de 90 minutos, para llorar tranquilo.", tag: "Expansión", priority: "expansión" },
-  { n: 10, title: "Prestame tu perfil", value: "Recomendación social", desc: "Compartí una selección con URL propia — Mis 10 recomendaciones, Lo mejor del año — sin exponer toda la biblioteca.", tag: "Social", priority: "expansión" },
-  { n: 11, title: "Mensaje al futuro", value: "Vínculo emocional", desc: "Dejá una nota privada que se desbloquea en 6 meses, un año o la próxima vez que vuelvas a ver ese título.", tag: "Memoria", priority: "expansión" },
-  { n: 12, title: "Créditos personales del año", value: "Recapitulación compartible", desc: "Tus créditos finales: primera y última película del año, mejor calificada, países recorridos y evolución del ADN.", tag: "Expansión", priority: "expansión" },
+  { n: 0, title: "Consolidación del núcleo", value: "Confianza y estabilidad", desc: "Auditoría completa de autenticación, emails, OAuth, RLS, rendimiento y analítica. Sin funciones nuevas hasta que la base sea sólida.", tag: "Base", priority: "inmediata",
+    status: "en progreso", note: "Listo: registro, login, confirmación de email, recuperar contraseña y RLS en todas las tablas. Falta: login con Google (OAuth) y analítica." },
+  { n: 1, title: "ADN Audiovisual", value: "Identidad y viralidad", desc: "Transformá tu biblioteca en un perfil de gustos: géneros, décadas, países, directores y una frase resumen. Preliminar desde 5 títulos, completo desde 10. Tarjeta compartible.", tag: "Diferencial", priority: "inmediata",
+    status: "hecho", note: "ADN calculado en el servidor con géneros, décadas, países, directores, contexto y rewatch. Perfil de ADN público y compartible. Ya alimenta las recomendaciones." },
+  { n: 2, title: "¿Qué vemos hoy?", value: "Ayuda para decidir", desc: "Elegí un modo — Sorprendeme, Algo rápido, Quiero reírme — y Watchly elige entre lo que ya querías ver. Reglas deterministas, sin IA.", tag: "Diferencial", priority: "inmediata",
+    status: "en progreso", note: "Existe «Elegir por mí» en el Inicio (al azar entre tus pendientes). Faltan los modos: Algo rápido, Quiero reírme, etc." },
+  { n: 3, title: "Compatibilidad", value: "Conexión entre perfiles", desc: "Al visitar un perfil público: porcentaje de compatibilidad, géneros compartidos, títulos en común y una sugerencia para ver juntos.", tag: "Social", priority: "inmediata",
+    status: "pendiente", note: "Los perfiles públicos ya existen; falta calcular y mostrar la compatibilidad." },
+  { n: 4, title: "Modo pareja o grupo", value: "Decisión compartida", desc: "Creá una sala con 2 a 8 personas, votá portadas con Sí / No / Me da igual y dejá que Watchly encuentre coincidencias.", tag: "Social", priority: "media",
+    status: "en progreso", note: "Hay Salas con invitación para ver juntos en vivo (en prueba, oculto del menú). Falta la votación Sí / No / Me da igual." },
+  { n: 5, title: "Cápsula después de verla", value: "Recuerdo emocional", desc: "Al terminar un título: qué sensación te dejó, si la volverías a ver y a quién se la recomendarías. Notas con y sin spoilers.", tag: "Memoria", priority: "media",
+    status: "en progreso", note: "Diario de sesiones con reacciones y comentario personal. Falta «¿la volverías a ver?», «¿a quién se la recomendarías?» y notas con spoilers." },
+  { n: 6, title: "Línea de tiempo y rewatch", value: "Memoria longitudinal", desc: "Mirá cómo cambió tu relación con las historias: cada rewatch con su calificación, su cápsula y sus hitos personales.", tag: "Memoria", priority: "media",
+    status: "en progreso", note: "Se registran varias sesiones por título y el ADN muestra tu perfil de rewatch. Falta la línea de tiempo visual." },
+  { n: 7, title: "Pasaporte cinematográfico", value: "Exploración cultural", desc: "Mapa del mundo coloreado por lo que viste, países descubiertos y tarjeta compartible.", tag: "Exploración", priority: "media",
+    status: "pendiente", note: "El ADN ya calcula países; falta el mapa y la tarjeta." },
+  { n: 8, title: "Retos personales", value: "Hábitos y retención", desc: "Retos de exploración sin rankings ni rachas punitivas: películas por año, países, décadas y sagas completas.", tag: "Exploración", priority: "expansión",
+    status: "pendiente", note: "Sin empezar." },
+  { n: 9, title: "Estanterías por contexto", value: "Organización útil", desc: "Guardá cada historia para su momento: noche de lluvia, para ver en pareja, menos de 90 minutos, para llorar tranquilo.", tag: "Expansión", priority: "expansión",
+    status: "pendiente", note: "Hoy se organiza con listas manuales; faltan las estanterías por contexto." },
+  { n: 10, title: "Prestame tu perfil", value: "Recomendación social", desc: "Compartí una selección con URL propia — Mis 10 recomendaciones, Lo mejor del año — sin exponer toda la biblioteca.", tag: "Social", priority: "expansión",
+    status: "pendiente", note: "Ya se puede compartir un título suelto; falta compartir selecciones." },
+  { n: 11, title: "Mensaje al futuro", value: "Vínculo emocional", desc: "Dejá una nota privada que se desbloquea en 6 meses, un año o la próxima vez que vuelvas a ver ese título.", tag: "Memoria", priority: "expansión",
+    status: "pendiente", note: "Sin empezar." },
+  { n: 12, title: "Créditos personales del año", value: "Recapitulación compartible", desc: "Tus créditos finales: primera y última película del año, mejor calificada, países recorridos y evolución del ADN.", tag: "Expansión", priority: "expansión",
+    status: "pendiente", note: "Sin empezar." },
+];
+
+const statusMeta: Record<Status, { label: string; color: string; bg: string }> = {
+  hecho: { label: "Hecho", color: "#052e16", bg: "#4ade80" },
+  "en progreso": { label: "En progreso", color: "#422006", bg: "#facc15" },
+  pendiente: { label: "Pendiente", color: "rgba(255,255,255,.8)", bg: "rgba(255,255,255,.12)" },
+};
+
+const extras = [
+  { title: "Recomendaciones «Para vos»", desc: "Página con destacados según tu ADN, filas por género, K-dramas y cine coreano." },
+  { title: "Avatares de perfil", desc: "Galería de avatares para personalizar tu perfil." },
+  { title: "Guardado automático", desc: "Estados, notas y comentarios se guardan solos, con animación." },
+  { title: "Carruseles mobile", desc: "Desplazamiento nativo y fluido en celulares." },
 ];
 
 const priorityMeta: Record<Priority, { label: string; desc: string; flow: string; color?: string }> = {
@@ -79,7 +108,7 @@ export default function RoadmapPage() {
             Una función diferencial por etapa, medida y consolidada antes de avanzar.
           </p>
           <div className="liquid-glass self-start flex rounded-[2rem] py-4 px-1.5 mt-10">
-            {[["13", "etapas"], ["1", "función por etapa"], ["100%", "mobile-first"]].map(([n, l]) => (
+            {(["hecho", "en progreso", "pendiente"] as Status[]).map((st) => [String(stages.filter((s) => s.status === st).length), statusMeta[st].label.toLowerCase()]).map(([n, l]) => (
               <div key={l} className="px-7 text-center">
                 <div className="font-cinema text-4xl leading-none" style={accent}>{n}</div>
                 <div className="text-xs font-bold mt-2 text-white/75">{l}</div>
@@ -117,6 +146,13 @@ export default function RoadmapPage() {
                   <h3 className="relative font-cinema text-3xl leading-tight mt-3">{s.title}</h3>
                   <p className="relative text-sm font-bold" style={{ color: c }}>{s.value}</p>
                   <p className="relative text-sm leading-relaxed text-white/80 text-pretty">{s.desc}</p>
+                  <div className="relative mt-auto pt-4 border-t border-white/12">
+                    <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wide"
+                      style={{ background: statusMeta[s.status].bg, color: statusMeta[s.status].color }}>
+                      {statusMeta[s.status].label}
+                    </span>
+                    <p className="text-xs leading-relaxed text-white/70 mt-2.5 text-pretty">{s.note}</p>
+                  </div>
                 </article>
               );
             })}
@@ -143,6 +179,7 @@ export default function RoadmapPage() {
                     {stages.filter((s) => s.priority === key).map((s) => (
                       <li key={s.n} className="flex items-center gap-3 text-sm font-bold">
                         <span className="font-cinema text-lg w-7" style={{ color: c }}>{String(s.n).padStart(2, "0")}</span>{s.title}
+                        <span className="ml-auto w-2.5 h-2.5 rounded-full shrink-0" title={statusMeta[s.status].label} style={{ background: statusMeta[s.status].bg }} />
                       </li>
                     ))}
                   </ul>
@@ -154,6 +191,24 @@ export default function RoadmapPage() {
         </div>
       </section>
 
+      {/* ───────── EXTRAS ───────── */}
+      <section className="relative px-5 md:px-14 lg:px-24 pb-20">
+        <div className="max-w-[1300px] mx-auto">
+          <p className="text-xs font-extrabold tracking-[.25em] uppercase text-center" style={accent}>Además</p>
+          <h2 className="font-cinema text-5xl md:text-7xl text-center mt-4 mb-12">Ya disponible <span style={accent}>fuera del plan</span></h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {extras.map((e) => (
+              <div key={e.title} className="liquid-glass rounded-[2rem] p-7">
+                <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wide"
+                  style={{ background: statusMeta.hecho.bg, color: statusMeta.hecho.color }}>Nuevo</span>
+                <h3 className="font-cinema text-2xl leading-tight mt-4">{e.title}</h3>
+                <p className="text-sm leading-relaxed text-white/75 mt-2">{e.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ───────── PRÓXIMO PASO ───────── */}
       <section className="relative px-5 md:px-14 lg:px-24 pb-24">
         <div className="liquid-glass relative max-w-[1100px] mx-auto rounded-[3.5rem] px-8 py-16 text-center overflow-hidden">
@@ -161,9 +216,9 @@ export default function RoadmapPage() {
             style={{ background: hero.row, transition: "background 1.6s" }} />
           <div className="relative">
             <span className="liquid-glass-sm inline-flex px-[18px] py-2 rounded-full text-xs font-extrabold tracking-[.2em] uppercase mb-6">Próximo paso</span>
-            <h2 className="font-cinema text-6xl md:text-8xl leading-none">El <span style={accent}>ADN Audiovisual</span></h2>
+            <h2 className="font-cinema text-6xl md:text-8xl leading-none"><span style={accent}>¿Qué vemos hoy?</span></h2>
             <p className="text-lg text-white/80 mx-auto mt-6 mb-9 max-w-xl">
-              Confirmar la base estable, implementar y probar el ADN, y medir desbloqueo, visualización y compartidos antes de pasar a «¿Qué vemos hoy?».
+              El ADN ya está listo. Lo próximo: sumar los modos de «¿Qué vemos hoy?», terminar la consolidación (login con Google y analítica) y arrancar con la Compatibilidad entre perfiles.
             </p>
             <Link to="/registro" className="inline-flex h-16 px-10 items-center gap-2.5 rounded-full bg-white text-[#111] hover:text-[#111] font-extrabold text-lg shadow-[0_12px_40px_rgba(0,0,0,.35)] hover:scale-[1.03] transition-transform">
               Crear mi cuenta →
