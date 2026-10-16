@@ -250,6 +250,9 @@ export default function LandingPage() {
 
       <footer className="px-6 md:px-10 py-8 text-center text-sm text-white/60 border-t border-white/10">
         <span className="font-cinema text-lg" style={accent}>Watchly</span> — Tu identidad audiovisual.
+        <span className="block mt-2 text-xs">
+          <a href="/privacidad" className="hover:text-white">Privacidad</a> · <a href="/terminos" className="hover:text-white">Términos</a> · <a href="/roadmap" className="hover:text-white">Roadmap</a>
+        </span>
       </footer>
     </div>
   );

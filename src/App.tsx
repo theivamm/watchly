@@ -24,11 +24,20 @@ import RoomsPage from "@/pages/RoomsPage";
 import RoomPage from "@/pages/RoomPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import RecommendationsPage from "@/pages/RecommendationsPage";
+import LegalPage from "@/pages/LegalPage";
+import AdminPage from "@/pages/AdminPage";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { isAdmin, loading } = useAuth();
+  if (loading) return null;
+  if (!isAdmin) return <NotFoundPage />;
   return <>{children}</>;
 }
 
@@ -50,6 +59,8 @@ function AppRoutes() {
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/roadmap" element={<RoadmapPage />} />
+      <Route path="/privacidad" element={<LegalPage kind="privacidad" />} />
+      <Route path="/terminos" element={<LegalPage kind="terminos" />} />
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/registro" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/confirmar-email" element={<ConfirmEmailPage />} />
@@ -71,6 +82,7 @@ function AppRoutes() {
         <Route path="/adn" element={<DNAPage />} />
         <Route path="/buscar" element={<SearchPage />} />
         <Route path="/recomendaciones" element={<RecommendationsPage />} />
+        <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
         <Route path="/biblioteca" element={<LibraryPage />} />
         <Route path="/listas" element={<ListsPage />} />
         <Route path="/listas/:id" element={<ListDetailPage />} />

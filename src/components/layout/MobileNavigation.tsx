@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Film, BookOpen, List, Map, User, Dna, ChevronUp, Settings, MonitorPlay, Sparkles } from "lucide-react";
+import { Search, Film, BookOpen, List, Map, User, Dna, ChevronUp, Settings, MonitorPlay, Sparkles, Shield } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import "@/styles/cinema.css";
 
@@ -17,7 +17,7 @@ const navItems = [
 ];
 
 export default function MobileNavigation() {
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -46,7 +46,7 @@ export default function MobileNavigation() {
       ? location.pathname.startsWith("/perfil")
       : location.pathname.startsWith(to);
 
-  const visibleItems = navItems.filter((item) => !item.hidden);
+  const visibleItems = [...navItems.filter((item) => !item.hidden), ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Shield }] : [])];
 
   const activeItem =
     visibleItems.find(({ to }) => itemActive(to)) ??

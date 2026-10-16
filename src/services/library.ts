@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { track } from "@/lib/telemetry";
 import type { Entry, EntryStatus, MediaType } from "@/types";
 
 interface AddEntryParams {
@@ -33,7 +34,11 @@ export async function addToLibrary(userId: string, entry: AddEntryParams): Promi
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    track("library_write_failed", { op: "add", code: error.code });
+    throw error;
+  }
+  track("library_add", { media_type: entry.mediaType, status: entry.status });
   return data;
 }
 
@@ -81,7 +86,10 @@ export async function updateEntry(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    track("library_write_failed", { op: "update", code: error.code });
+    throw error;
+  }
   return data;
 }
 

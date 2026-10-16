@@ -4,6 +4,8 @@ import { useLocation } from "react-router-dom";
 import { Mail, Lock, CheckCircle } from "lucide-react";
 import AuthShell from "@/components/auth/AuthShell";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import GoogleButton from "@/components/auth/GoogleButton";
+import { track } from "@/lib/telemetry";
 
 export default function RegisterPage() {
   usePageTitle("Crear cuenta | Watchly");
@@ -52,6 +54,7 @@ export default function RegisterPage() {
       // signUp returned an already-confirmed existing user (fallback)
       setError("ESTE MAIL YA EXISTE. ¿Ya tenés cuenta? Iniciá sesión.");
     } else {
+      track("sign_up", { method: "email" });
       setSuccess(true);
     }
 
@@ -120,6 +123,11 @@ export default function RegisterPage() {
           {loading ? "Creando cuenta..." : "Crear cuenta"}
         </button>
       </form>
+      <div className="flex items-center gap-3 my-5 text-xs font-bold text-white/50"><span className="flex-1 h-px bg-white/15" />o<span className="flex-1 h-px bg-white/15" /></div>
+      <GoogleButton label="Registrarme con Google" />
+      <p className="text-[11px] text-center text-white/55 mt-5 leading-relaxed">
+        Al crear tu cuenta aceptás los <a href="/terminos" className="underline hover:text-white">Términos</a> y la <a href="/privacidad" className="underline hover:text-white">Política de privacidad</a>.
+      </p>
     </AuthShell>
   );
 }

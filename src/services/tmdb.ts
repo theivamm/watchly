@@ -1,4 +1,5 @@
 import type { MediaType, TMDBSearchResult, TMDBMediaDetails } from "@/types";
+import { track } from "@/lib/telemetry";
 
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const TMDB_TOKEN = import.meta.env.VITE_TMDB_READ_TOKEN || "";
@@ -44,7 +45,15 @@ export async function searchMedia(
   if (type === "movie") endpoint = "/search/movie";
   if (type === "tv") endpoint = "/search/tv";
 
-  const data = await tmdbFetch(endpoint, { query, page: String(page) });
+  const t0 = performance.now();
+  let data: Record<string, unknown>;
+  try {
+    data = await tmdbFetch(endpoint, { query, page: String(page) });
+  } catch (err) {
+    track("search_failed", { type });
+    throw err;
+  }
+  if (page === 1) track("search", { type, ms: Math.round(performance.now() - t0), results: (data.total_results as number) || 0 });
   const results = ((data.results as Record<string, unknown>[]) || [])
     .filter((r) => {
       if (type === "all") return r.media_type === "movie" || r.media_type === "tv";

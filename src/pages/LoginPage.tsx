@@ -4,6 +4,8 @@ import { useLocation } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
 import AuthShell from "@/components/auth/AuthShell";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import GoogleButton from "@/components/auth/GoogleButton";
+import { track } from "@/lib/telemetry";
 
 export default function LoginPage() {
   usePageTitle("Iniciar sesión | Watchly");
@@ -20,7 +22,17 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setError(error.message);
+    if (error) {
+      track("login_failed", { code: error.code ?? null });
+      setError(
+        error.code === "invalid_credentials" ? "Email o contraseña incorrectos."
+        : error.code === "email_not_confirmed" ? "Todavía no confirmaste tu email. Revisá tu bandeja de entrada."
+        : error.status === 0 || /fetch/i.test(error.message) ? "No pudimos conectar. Revisá tu conexión e intentá de nuevo."
+        : "No pudimos iniciar sesión. Intentá de nuevo."
+      );
+    } else {
+      track("login", { method: "email" });
+    }
     setLoading(false);
   };
 
@@ -65,6 +77,8 @@ export default function LoginPage() {
           ¿Olvidaste tu contraseña?
         </a>
       </form>
+      <div className="flex items-center gap-3 my-5 text-xs font-bold text-white/50"><span className="flex-1 h-px bg-white/15" />o<span className="flex-1 h-px bg-white/15" /></div>
+      <GoogleButton />
     </AuthShell>
   );
 }

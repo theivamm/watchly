@@ -1,6 +1,6 @@
 import "@/styles/cinema.css";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Film, BookOpen, List, Map, Dna, Settings, MonitorPlay, Sparkles } from "lucide-react";
+import { Search, Film, BookOpen, List, Map, Dna, Settings, MonitorPlay, Sparkles, Shield } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import Avatar from "@/components/ui/Avatar";
 
@@ -16,7 +16,7 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const location = useLocation();
 
   if (!user) return null;
@@ -63,6 +63,12 @@ export default function Sidebar() {
         <Link to={profileHref} title="Ver mi perfil" className="rounded-full p-[3px] bg-white/90 hover:scale-105 transition-transform">
           <Avatar profile={profile ?? null} size={40} />
         </Link>
+        {isAdmin && (
+          <Link to="/admin" title="Panel admin" aria-label="Panel admin" className={iconBtn}
+            style={location.pathname.startsWith("/admin") ? { background: "#fff", color: "#111" } : undefined}>
+            <Shield className="w-5 h-5" />
+          </Link>
+        )}
         <Link to="/configuracion/perfil" title="Configuración" aria-label="Configuración" className={iconBtn}>
           <Settings className="w-5 h-5" />
         </Link>
