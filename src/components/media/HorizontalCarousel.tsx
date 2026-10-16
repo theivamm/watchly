@@ -41,10 +41,12 @@ export default function HorizontalCarousel({
   }, [update]);
 
   const startDrag = (e: React.PointerEvent) => {
-    if (e.button !== 0) return;
+    // En táctil se usa el scroll nativo; arrastrar a mano lo traba.
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
     const el = railRef.current;
     if (!el) return;
     drag.current = { x: e.clientX, left: el.scrollLeft, moved: false, id: e.pointerId };
+    el.style.scrollSnapType = "none";
 
     const onMove = (ev: PointerEvent) => {
       const d = drag.current;
@@ -63,6 +65,7 @@ export default function HorizontalCarousel({
         }, 60);
       }
       drag.current = null;
+      el.style.scrollSnapType = "";
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
@@ -115,8 +118,8 @@ export default function HorizontalCarousel({
         ref={railRef}
         onPointerDown={startDrag}
         onClickCapture={onClickCapture}
-        className={`flex overflow-x-auto no-scrollbar snap-x scroll-smooth cursor-grab active:cursor-grabbing select-none ${className}`}
-        style={{ overscrollBehaviorX: "contain" }}
+        className={`flex overflow-x-auto no-scrollbar snap-x snap-mandatory md:snap-proximity md:cursor-grab md:active:cursor-grabbing select-none ${className}`}
+        style={{ overscrollBehaviorX: "contain", WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y" }}
       >
         {children}
         {onLoadMore && (
@@ -131,7 +134,7 @@ export default function HorizontalCarousel({
           type="button"
           aria-label="Ver anteriores"
           onClick={() => scrollByCards(-1)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full hidden md:flex items-center justify-center hover:scale-110 transition-transform"
           style={{
             backgroundColor: "rgba(15,15,26,0.85)",
             border: "1px solid var(--border)",
@@ -150,7 +153,7 @@ export default function HorizontalCarousel({
           type="button"
           aria-label="Ver más"
           onClick={() => scrollByCards(1)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full hidden md:flex items-center justify-center hover:scale-110 transition-transform"
           style={{
             backgroundColor: "rgba(15,15,26,0.85)",
             border: "1px solid var(--border)",

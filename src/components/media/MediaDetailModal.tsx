@@ -157,6 +157,12 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saveError, setSaveError] = useState("");
+  const [savedTick, setSavedTick] = useState(0);
+  const [tapped, setTapped] = useState<{ key: string; n: number } | null>(null);
+  const entryRef = useRef<Entry | null>(null);
+  const dirtyRef = useRef(false);
+  const notesTouched = useRef(false);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
   const [lists, setLists] = useState<List[]>([]);
   const [listsContaining, setListsContaining] = useState<Set<string>>(new Set());
   const [showListDropdown, setShowListDropdown] = useState(false);
@@ -360,39 +366,69 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
     }
   };
 
-  const handleSave = async () => {
-    if (!user) return;
+  useEffect(() => { entryRef.current = existingEntry; }, [existingEntry]);
+
+  // Encola los guardados para que clics rápidos no creen la entrada dos veces.
+  const persist = (values: { status: EntryStatus; rating: number; notes: string }) => {
+    if (!user || readOnlyEntry) return;
     setSaving(true);
     setSaveError("");
-    try {
-      let entry: Entry;
-      if (existingEntry) {
-        entry = await updateEntry(existingEntry.id, {
-          status,
-          rating: rating || null,
-          notes: notes || undefined,
-          description: description || undefined,
-        });
-      } else {
-        entry = await addToLibrary(user.id, {
-          tmdbId: result.tmdbId,
-          mediaType: result.mediaType as MediaType,
-          title: result.title,
-          posterPath: result.posterPath,
-          status,
-          rating: rating || null,
-          notes: notes || undefined,
-          description: description || undefined,
-        });
+    saveQueue.current = saveQueue.current.then(async () => {
+      try {
+        const cur = entryRef.current;
+        const entry = cur
+          ? await updateEntry(cur.id, {
+              status: values.status,
+              rating: values.rating || null,
+              notes: values.notes || undefined,
+              description: description || undefined,
+            })
+          : await addToLibrary(user.id, {
+              tmdbId: result.tmdbId,
+              mediaType: result.mediaType as MediaType,
+              title: result.title,
+              posterPath: result.posterPath,
+              status: values.status,
+              rating: values.rating || null,
+              notes: values.notes || undefined,
+              description: description || undefined,
+            });
+        entryRef.current = entry;
+        setExistingEntry(entry);
+        dirtyRef.current = true;
+        setSavedTick((t) => t + 1);
+      } catch (err) {
+        console.error("Failed to save entry:", err);
+        setSaveError("No se pudo guardar. Revisá tu conexión e intentá de nuevo.");
+      } finally {
+        setSaving(false);
       }
-      onSaved?.(entry);
-      onClose();
-    } catch (err) {
-      console.error("Failed to save entry:", err);
-      setSaveError("No se pudo guardar. ¿Iniciaste sesión? Revisá tu conexión e intentá de nuevo.");
-    } finally {
-      setSaving(false);
-    }
+    });
+  };
+
+  const pickStatus = (s: EntryStatus) => {
+    setStatus(s);
+    setTapped({ key: s, n: Date.now() });
+    persist({ status: s, rating, notes });
+  };
+
+  const pickRating = (star: number) => {
+    const next = rating === star ? 0 : star;
+    setRating(next);
+    setTapped({ key: `star-${star}`, n: Date.now() });
+    persist({ status, rating: next, notes });
+  };
+
+  useEffect(() => {
+    if (!notesTouched.current) return;
+    const t = setTimeout(() => persist({ status, rating, notes }), 900);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notes]);
+
+  const close = () => {
+    if (dirtyRef.current && entryRef.current) onSaved?.(entryRef.current);
+    onClose();
   };
 
   const handleRemove = async () => {
@@ -621,7 +657,7 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
   const showDiary = !isReadOnly && tab === "diary";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-5 text-white" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-5 text-white" onClick={close}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-2xl" />
 
       <div
@@ -639,7 +675,7 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
           )}
         </div>
 
-        <button onClick={onClose} aria-label="Cerrar" className={`${roundBtn} absolute top-4 right-4 z-30`}><X className="w-5 h-5" /></button>
+        <button onClick={close} aria-label="Cerrar" className={`${roundBtn} absolute top-4 right-4 z-30`}><X className="w-5 h-5" /></button>
 
         <div className="relative z-10 h-full overflow-y-auto no-scrollbar lg:overflow-hidden lg:grid lg:grid-cols-[350px_minmax(0,1fr)]">
           {/* ───────── PANEL IZQUIERDO: póster + acciones rápidas ───────── */}
@@ -666,12 +702,16 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                   const I = STATUS_ICONS[s.value];
                   const active = status === s.value;
                   return (
-                    <button key={s.value} onClick={() => setStatus(s.value)}
-                      className="w-full flex items-center gap-3 px-4 h-11 rounded-full text-sm font-extrabold transition-all"
+                    <button key={tapped?.key === s.value ? `${s.value}-${tapped.n}` : s.value} onClick={() => pickStatus(s.value)} disabled={loading}
+                      className={`w-full flex items-center gap-3 px-4 h-11 rounded-full text-sm font-extrabold transition-colors duration-300 active:scale-95 ${tapped?.key === s.value ? "animate-status-tap" : ""}`}
                       style={{ background: active ? "#fff" : "transparent", color: active ? "#111" : "rgba(255,255,255,.88)" }}>
                       <I className="w-4 h-4" style={{ color: active ? "#111" : STATUS_COLORS[s.value] }} />
                       {s.label}
-                      {active && <Check className="w-4 h-4 ml-auto" strokeWidth={3} />}
+                      {active && (
+                        saving && tapped?.key === s.value
+                          ? <RotateCw className="w-4 h-4 ml-auto animate-spin" />
+                          : <Check className="w-4 h-4 ml-auto animate-check-in" strokeWidth={3} />
+                      )}
                     </button>
                   );
                 })}
@@ -686,7 +726,9 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                   const icon = <Star className="w-7 h-7" fill={on ? tone.accent : "none"} stroke={on ? tone.accent : "rgba(255,255,255,.5)"} strokeWidth={1.6} />;
                   return isReadOnly ? <span key={star}>{icon}</span> : (
                     <button key={star} onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)}
-                      onClick={() => setRating(rating === star ? 0 : star)} className="transition-transform hover:scale-125">{icon}</button>
+                      onClick={() => pickRating(star)} disabled={loading}
+                      className={`transition-transform hover:scale-125 ${tapped?.key.startsWith("star-") && rating >= star ? "animate-star-pop" : ""}`}
+                      style={{ animationDelay: `${star * 40}ms` }}>{icon}</button>
                   );
                 })}
               </div>
@@ -694,11 +736,17 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
 
             {!isReadOnly && (
               <div className="space-y-2.5">
-                <button onClick={handleSave} disabled={saving || loading} className={`${whiteBtn} w-full`}>
-                  {saving ? <RotateCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" strokeWidth={3} />}
-                  {saving ? "Guardando..." : existingEntry ? "Actualizar" : "Guardar en mi biblioteca"}
-                </button>
-                {saveError && <p className="text-xs font-bold text-red-300">{saveError}</p>}
+                <div className="h-6 flex items-center justify-center text-xs font-extrabold">
+                  {saveError ? (
+                    <span className="text-red-300">{saveError}</span>
+                  ) : saving ? (
+                    <span className="inline-flex items-center gap-1.5 text-white/70"><RotateCw className="w-3.5 h-3.5 animate-spin" /> Guardando…</span>
+                  ) : savedTick > 0 ? (
+                    <span key={savedTick} className="inline-flex items-center gap-1.5 text-emerald-300 animate-pop"><Check className="w-3.5 h-3.5" strokeWidth={3} /> Guardado automáticamente</span>
+                  ) : (
+                    <span className="text-white/55">{existingEntry ? "Los cambios se guardan solos" : "Elegí un estado para guardarla"}</span>
+                  )}
+                </div>
 
                 <div ref={dropdownRef} className="relative">
                   <button onClick={() => setShowListDropdown((v) => !v)} className={`${glassBtn} w-full`} style={addedToListId ? { color: "#86efac" } : undefined}>
@@ -846,8 +894,8 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
               <div className="space-y-5">
                 <div className={card}>
                   <div className="flex items-center gap-2 mb-4"><Quote className="w-4 h-4" style={{ color: "#fff" }} /><p className={label}>Mi comentario</p></div>
-                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="¿Qué te pareció? Escribí tu opinión personal..." rows={4} className="glass-input" />
-                  <p className="text-[11px] mt-2 text-white/55">Se guarda con el botón “{existingEntry ? "Actualizar" : "Guardar en mi biblioteca"}”.</p>
+                  <textarea value={notes} onChange={(e) => { notesTouched.current = true; setNotes(e.target.value); }} placeholder="¿Qué te pareció? Escribí tu opinión personal..." rows={4} className="glass-input" />
+                  <p className="text-[11px] mt-2 text-white/55">Se guarda solo mientras escribís.</p>
                 </div>
 
                 <div className="liquid-glass rounded-[2rem] p-6 md:p-7 space-y-5">

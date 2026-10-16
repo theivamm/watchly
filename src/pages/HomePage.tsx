@@ -346,7 +346,7 @@ export default function HomePage() {
             <HorizontalCarousel className="gap-6 pt-2 pb-6" onLoadMore={trendingInf.hasMore ? trendingInf.loadMore : undefined} loadingMore={trendingInf.loading}>
               {trending.map((it) => (
                 <WideCard key={`${it.mediaType}-${it.tmdbId}`} item={it} onClick={() => setSelected(it)} onAdd={() => quickAdd(it)}
-                  busy={adding === `${it.mediaType}-${it.tmdbId}`} done={justAdded === `${it.mediaType}-${it.tmdbId}`} className="w-[400px] md:w-[520px]" />
+                  busy={adding === `${it.mediaType}-${it.tmdbId}`} done={justAdded === `${it.mediaType}-${it.tmdbId}`} className="w-[82vw] max-w-[400px] md:w-[520px] md:max-w-none" />
               ))}
             </HorizontalCarousel>
           </section>
