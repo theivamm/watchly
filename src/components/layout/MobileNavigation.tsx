@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Film, BookOpen, List, Map, User, Dna, ChevronUp, Settings, MonitorPlay } from "lucide-react";
+import { Search, Film, BookOpen, List, Map, User, Dna, ChevronUp, Settings, MonitorPlay, Sparkles } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import "@/styles/cinema.css";
 
 const navItems = [
   { to: "/inicio", label: "Inicio", icon: Film },
   { to: "/buscar", label: "Buscar", icon: Search },
+  { to: "/recomendaciones", label: "Para vos", icon: Sparkles },
   { to: "/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/listas", label: "Listas", icon: List },
   { to: "/salas", label: "Salas", icon: MonitorPlay, hidden: true },

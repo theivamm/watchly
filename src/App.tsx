@@ -23,6 +23,7 @@ import RoadmapPage from "@/pages/RoadmapPage";
 import RoomsPage from "@/pages/RoomsPage";
 import RoomPage from "@/pages/RoomPage";
 import NotFoundPage from "@/pages/NotFoundPage";
+import RecommendationsPage from "@/pages/RecommendationsPage";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -69,6 +70,7 @@ function AppRoutes() {
         <Route path="/inicio" element={<HomePage />} />
         <Route path="/adn" element={<DNAPage />} />
         <Route path="/buscar" element={<SearchPage />} />
+        <Route path="/recomendaciones" element={<RecommendationsPage />} />
         <Route path="/biblioteca" element={<LibraryPage />} />
         <Route path="/listas" element={<ListsPage />} />
         <Route path="/listas/:id" element={<ListDetailPage />} />

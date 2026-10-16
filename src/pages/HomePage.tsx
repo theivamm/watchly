@@ -13,7 +13,8 @@ import MediaDetailModal from "@/components/media/MediaDetailModal";
 import HelpGuideModal from "@/components/home/HelpGuideModal";
 import { addToLibrary, getUserLibrary } from "@/services/library";
 import { getUserLists, getList } from "@/services/lists";
-import { getBackdropUrl, getPosterUrl } from "@/services/tmdb";
+import { getBackdropUrl, getPosterUrl, getDnaRecommendations } from "@/services/tmdb";
+import { getMyDna } from "@/services/dna";
 import { genreLabel } from "@/lib/genres";
 import type { TMDBSearchResult, Entry, List, MediaType } from "@/types";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -34,6 +35,24 @@ export default function HomePage() {
   const [showHelp, setShowHelp] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
   const [justAdded, setJustAdded] = useState<string | null>(null);
+
+  const [recs, setRecs] = useState<TMDBSearchResult[]>([]);
+  const [recGenres, setRecGenres] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    getMyDna(user.id)
+      .then(async (dna) => {
+        if (!dna || dna.topGenres.length === 0) return;
+        const items = await getDnaRecommendations(dna.topGenres.map((g) => g.key), dna.formatDistribution);
+        if (cancelled) return;
+        setRecGenres(dna.topGenres.slice(0, 3).map((g) => g.label));
+        setRecs(items);
+      })
+      .catch(console.error);
+    return () => { cancelled = true; };
+  }, [user]);
 
   const refresh = () => { if (user) getUserLibrary(user.id).then(setEntries).catch(console.error); };
 
@@ -63,6 +82,7 @@ export default function HomePage() {
   const isInLibrary = (item: TMDBSearchResult) => entries.some((e) => e.tmdb_id === item.tmdbId && e.media_type === item.mediaType);
   const trending = trendingInf.items.filter((i) => !isInLibrary(i));
   const movies = moviesInf.items.filter((i) => !isInLibrary(i));
+  const forYou = recs.filter((i) => !isInLibrary(i));
 
   const heroItems = useMemo(
     () => trending.filter((i) => i.posterPath && i.backdropPath && i.overview).slice(0, 6),
@@ -280,6 +300,41 @@ export default function HomePage() {
                   <p className="absolute left-2.5 right-2.5 bottom-2.5 text-[11px] font-extrabold leading-tight line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity text-left">{e.title}</p>
                 </button>
               ))}
+            </HorizontalCarousel>
+          </section>
+        )}
+
+        {/* ───────── PARA VOS (ADN) ───────── */}
+        {forYou.length > 0 && (
+          <section>
+            <div className="flex items-end justify-between gap-4 mb-5">
+              <div>
+                <h2 className="font-cinema text-4xl md:text-5xl leading-none">Para vos, según tu ADN</h2>
+                <p className="text-sm mt-2 text-white/65">Películas y series de {recGenres.join(", ")}</p>
+              </div>
+              <Link to="/adn" className="text-sm font-extrabold hover:opacity-80" style={accent}>Mi ADN →</Link>
+            </div>
+            <HorizontalCarousel className="gap-5 pt-2 pb-6">
+              {forYou.map((it) => {
+                const key = `${it.mediaType}-${it.tmdbId}`;
+                return (
+                  <div key={key} className="group relative w-[170px] md:w-[200px] shrink-0 snap-start">
+                    <button type="button" onClick={() => setSelected(it)} className="w-full text-left">
+                      <div className="relative aspect-[2/3] rounded-[1.6rem] overflow-hidden border border-white/15 shadow-[0_24px_50px_-14px_rgba(0,0,0,.7)] transition-transform duration-500 group-hover:-translate-y-2">
+                        <img src={getPosterUrl(it.posterPath, "w342")} alt={it.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        <span className="liquid-glass-sm absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold">{it.mediaType === "movie" ? "Película" : "Serie"}</span>
+                        {it.tmdbRating ? <span className="liquid-glass-sm absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold">★ {it.tmdbRating.toFixed(1)}</span> : null}
+                      </div>
+                      <p className="mt-3 px-1 text-sm font-extrabold truncate">{it.title}</p>
+                      <p className="px-1 text-xs text-white/60">{genreLabel(it.genreIds) || (it.year ?? "")}</p>
+                    </button>
+                    <button type="button" onClick={() => quickAdd(it)} disabled={adding === key} title="Agregar a Por ver"
+                      className="liquid-glass-sm absolute top-2.5 right-2.5 w-9 h-9 rounded-full flex items-center justify-center text-white hover:scale-110 transition-transform">
+                      {adding === key ? <RotateCw className="w-4 h-4 animate-spin" /> : justAdded === key ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                    </button>
+                  </div>
+                );
+              })}
             </HorizontalCarousel>
           </section>
         )}
