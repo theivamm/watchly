@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/app/auth-context";
 import { Link } from "react-router-dom";
 import {
-  Search, HelpCircle, Plus, Info, Check, Shuffle, Dna, Layers, Compass, Bookmark, Play, CheckCheck, Star, RotateCw,
+  HelpCircle, Plus, Info, Check, Shuffle, Dna, Layers, Compass, Bookmark, Play, CheckCheck, Star, RotateCw,
 } from "lucide-react";
 import { useInfiniteTrending } from "@/hooks/useMedia";
 import { useHeroCycle } from "@/hooks/useHeroCycle";
@@ -15,6 +15,8 @@ import { addToLibrary, getUserLibrary } from "@/services/library";
 import { getUserLists, getList } from "@/services/lists";
 import { getBackdropUrl, getPosterUrl, getDnaRecommendations } from "@/services/tmdb";
 import { getMyDna } from "@/services/dna";
+import { getTasteProfile } from "@/services/taste";
+import { explainTaste, tasteScore } from "@/lib/tasteProfile";
 import { genreLabel } from "@/lib/genres";
 import type { TMDBSearchResult, Entry, List, MediaType } from "@/types";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -36,6 +38,7 @@ export default function HomePage() {
   const [adding, setAdding] = useState<string | null>(null);
   const [justAdded, setJustAdded] = useState<string | null>(null);
 
+  const [recReasons, setRecReasons] = useState<Record<string, string>>({});
   const [recs, setRecs] = useState<TMDBSearchResult[]>([]);
   const [recGenres, setRecGenres] = useState<string[]>([]);
 
@@ -45,9 +48,13 @@ export default function HomePage() {
     getMyDna(user.id)
       .then(async (dna) => {
         if (!dna || dna.topGenres.length === 0) return;
-        const items = await getDnaRecommendations(dna.topGenres.map((g) => g.key), dna.formatDistribution);
+        const library = await getUserLibrary(user.id);
+        const taste = await getTasteProfile(library, dna.topGenres);
+        if (!taste.genres.length) return;
+        const items = (await getDnaRecommendations(taste.genres.map((g) => g.key), dna.formatDistribution)).sort((a, b) => tasteScore(b, taste) - tasteScore(a, taste));
         if (cancelled) return;
         setRecGenres(dna.topGenres.slice(0, 3).map((g) => g.label));
+        setRecReasons(Object.fromEntries(items.map((item) => [`${item.mediaType}-${item.tmdbId}`, explainTaste(item, taste)])));
         setRecs(items);
       })
       .catch(console.error);
@@ -121,11 +128,6 @@ export default function HomePage() {
     }
   };
 
-  const pickRandom = () => {
-    if (pending.length === 0) return;
-    setSelected(toResult(pending[Math.floor(Math.random() * pending.length)]));
-  };
-
   const stats = [
     { icon: Bookmark, label: "Por ver", value: pending.length },
     { icon: Play, label: "Viendo", value: watching.length },
@@ -143,8 +145,9 @@ export default function HomePage() {
         <HeroBackdrop soft items={heroItems} index={hero.index} glow={hero.glow} glow2={hero.glow2} />
 
         <div className="relative z-10 flex items-center gap-3 px-5 md:px-10 pt-6">
-          <Link to="/buscar" className="liquid-glass flex-1 max-w-md h-12 rounded-full flex items-center gap-3 px-5 text-sm text-white/75 hover:text-white transition-colors">
-            <Search className="w-4 h-4" /> Buscar película o serie…
+          <Link to="/que-vemos-hoy" className="liquid-glass flex-1 rounded-[1.5rem] px-5 py-5 flex flex-wrap items-center justify-between gap-4 border border-violet-300/30">
+            <span><span className="block text-xs font-bold uppercase tracking-widest text-violet-200">Tu plan empieza acá</span><span className="block font-cinema text-3xl mt-1">¿Qué vemos hoy?</span><span className="block text-sm text-white/70 mt-1">Elegí por tiempo, ganas o dejate sorprender.</span></span>
+            <span className="rounded-full bg-white text-[#111] px-5 py-3 text-sm font-extrabold inline-flex gap-2 items-center"><Shuffle size={17} />Armar mi plan →</span>
           </Link>
           <button type="button" onClick={() => setShowHelp(true)} aria-label="Guía de uso" className="liquid-glass w-12 h-12 rounded-full flex items-center justify-center hover:scale-105 transition-transform">
             <HelpCircle className="w-5 h-5" />
@@ -246,6 +249,7 @@ export default function HomePage() {
 
           <div className="liquid-glass rounded-[2.25rem] p-4 flex flex-col gap-2">
             {[
+              { to: "/que-vemos-hoy", icon: Shuffle, title: "¿Qué vemos hoy?", sub: "Un plan desde tu biblioteca" },
               { to: "/buscar", icon: Compass, title: "Descubrir", sub: "Buscá títulos nuevos" },
               { to: "/listas", icon: Layers, title: "Mis listas", sub: `${lists.length} creadas` },
               { to: "/adn", icon: Dna, title: "Mi ADN", sub: "Tus gustos, resumidos" },
@@ -266,9 +270,9 @@ export default function HomePage() {
                 <h2 className="font-cinema text-4xl md:text-5xl leading-none">Tu lista para ver</h2>
                 <p className="text-sm mt-2 text-white/65">{pending.length} pendientes · ¿no sabés cuál elegir?</p>
               </div>
-              <button type="button" onClick={pickRandom} className="liquid-glass-sm inline-flex items-center gap-2 h-12 px-6 rounded-full text-sm font-extrabold text-white hover:scale-[1.03] transition-transform">
+              <Link to="/que-vemos-hoy" className="liquid-glass-sm inline-flex items-center gap-2 h-12 px-6 rounded-full text-sm font-extrabold text-white hover:scale-[1.03] transition-transform">
                 <Shuffle className="w-4 h-4" style={accent} /> Elegir por mí
-              </button>
+              </Link>
             </div>
             <HorizontalCarousel className="gap-5 pt-2 pb-6">
               {pending.map((e) => (
@@ -326,6 +330,7 @@ export default function HomePage() {
                         {it.tmdbRating ? <span className="liquid-glass-sm absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold">★ {it.tmdbRating.toFixed(1)}</span> : null}
                       </div>
                       <p className="mt-3 px-1 text-sm font-extrabold truncate">{it.title}</p>
+                      <p className="px-1 mt-2 text-xs text-violet-200 leading-relaxed">Por qué: {recReasons[`${it.mediaType}-${it.tmdbId}`]}</p>
                       <p className="px-1 text-xs text-white/60">{genreLabel(it.genreIds) || (it.year ?? "")}</p>
                     </button>
                     <button type="button" onClick={() => quickAdd(it)} disabled={adding === key} title="Agregar a Por ver"

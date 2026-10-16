@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Film, BookOpen, List, Map, User, Dna, ChevronUp, Settings, MonitorPlay, Sparkles, Shield } from "lucide-react";
+import { Search, Shuffle, Film, BookOpen, List, Map, User, Dna, ChevronUp, Settings, MonitorPlay, Sparkles, Shield } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import "@/styles/cinema.css";
 
 const navItems = [
   { to: "/inicio", label: "Inicio", icon: Film },
-  { to: "/buscar", label: "Buscar", icon: Search },
   { to: "/recomendaciones", label: "Para vos", icon: Sparkles },
   { to: "/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/listas", label: "Listas", icon: List },
@@ -50,7 +49,8 @@ export default function MobileNavigation() {
 
   const activeItem =
     visibleItems.find(({ to }) => itemActive(to)) ??
-    visibleItems.find(({ to }) => to === "/perfil") ??
+    (location.pathname === "/buscar" ? { label: "Explorar", icon: Search } : undefined) ??
+    (location.pathname === "/que-vemos-hoy" ? { label: "Qué vemos hoy", icon: Shuffle } : undefined) ??
     visibleItems[0];
   const ActiveIcon = activeItem.icon;
 

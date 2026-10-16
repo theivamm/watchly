@@ -6,10 +6,9 @@ import type { TMDBSearchResult } from "@/types";
 export function useMediaSearch(query: string, type: "all" | "movie" | "tv" = "all") {
   return useQuery({
     queryKey: ["media-search", query, type],
-    queryFn: () => searchMedia(query, type),
-    enabled: query.length >= 3,
+    queryFn: ({ signal }) => searchMedia(query, type, 1, signal),
+    enabled: query.trim().length >= 2,
     staleTime: 1000 * 60 * 5,
-    placeholderData: (prev) => prev,
   });
 }
 

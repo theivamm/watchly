@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLocation } from "react-router-dom";
-import { Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import AuthShell from "@/components/auth/AuthShell";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import GoogleButton from "@/components/auth/GoogleButton";
@@ -11,6 +11,7 @@ export default function LoginPage() {
   usePageTitle("Iniciar sesión | Watchly");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -21,11 +22,11 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) {
       track("login_failed", { code: error.code ?? null });
       setError(
-        error.code === "invalid_credentials" ? "Email o contraseña incorrectos."
+        error.code === "invalid_credentials" ? "Email o contraseña incorrectos. Si creaste tu cuenta con Google, usá Continuar con Google."
         : error.code === "email_not_confirmed" ? "Todavía no confirmaste tu email. Revisá tu bandeja de entrada."
         : error.status === 0 || /fetch/i.test(error.message) ? "No pudimos conectar. Revisá tu conexión e intentá de nuevo."
         : "No pudimos iniciar sesión. Intentá de nuevo."
@@ -57,8 +58,14 @@ export default function LoginPage() {
           <span className="text-xs font-extrabold uppercase tracking-widest text-white/70">Contraseña</span>
           <span className="relative block">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/60" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
-              className="auth-input" placeholder="••••••••" autoComplete="current-password" />
+            <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required
+              className="auth-input !pr-14" placeholder="••••••••" autoComplete="current-password" />
+              <button type="button" onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                aria-pressed={showPassword}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full text-white/70 hover:text-white focus-visible:outline-2 focus-visible:outline-white">
+                {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
+              </button>
           </span>
         </label>
 

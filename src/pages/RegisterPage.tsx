@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLocation } from "react-router-dom";
-import { Mail, Lock, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, CheckCircle } from "lucide-react";
 import AuthShell from "@/components/auth/AuthShell";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import GoogleButton from "@/components/auth/GoogleButton";
@@ -11,6 +11,7 @@ export default function RegisterPage() {
   usePageTitle("Crear cuenta | Watchly");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -104,8 +105,14 @@ export default function RegisterPage() {
           <span className="text-xs font-extrabold uppercase tracking-widest text-white/70">Contraseña</span>
           <span className="relative block">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/60" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
-              className="auth-input" placeholder="Mínimo 6 caracteres" autoComplete="new-password" />
+            <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
+              className="auth-input !pr-14" placeholder="Mínimo 6 caracteres" autoComplete="new-password" />
+              <button type="button" onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                aria-pressed={showPassword}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full text-white/70 hover:text-white focus-visible:outline-2 focus-visible:outline-white">
+                {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
+              </button>
           </span>
         </label>
 

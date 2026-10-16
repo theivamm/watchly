@@ -1,6 +1,22 @@
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/telemetry";
-import type { Entry, EntryStatus, MediaType } from "@/types";
+import type { Entry, EntryStatus, MediaType, TMDBSearchResult } from "@/types";
+
+/** Insert a discovery without overwriting a title saved in another tab. */
+export async function saveDiscovery(userId: string, item: TMDBSearchResult, status: "want_to_watch" | "watching"): Promise<Entry> {
+  const { data, error } = await supabase.from("entries").upsert({
+    user_id: userId, tmdb_id: item.tmdbId, media_type: item.mediaType,
+    title: item.title, poster_path: item.posterPath, description: item.overview, status,
+  }, { onConflict: "user_id,tmdb_id,media_type", ignoreDuplicates: true }).select().maybeSingle();
+  if (error) throw error;
+  if (data) {
+    track("library_add", { media_type: item.mediaType, status, source: "tonight_dna" });
+    return data;
+  }
+  const existing = await getEntry(userId, item.tmdbId, item.mediaType);
+  if (!existing) throw new Error("No pudimos confirmar el guardado. Intentá de nuevo.");
+  return existing;
+}
 
 interface AddEntryParams {
   tmdbId: number;

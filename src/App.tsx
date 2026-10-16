@@ -8,6 +8,7 @@ import ConfirmEmailPage from "@/pages/ConfirmEmailPage";
 import RecoverPasswordPage from "@/pages/RecoverPasswordPage";
 import UpdatePasswordPage from "@/pages/UpdatePasswordPage";
 import OnboardingPage from "@/pages/OnboardingPage";
+import WatchTonightPage from "@/pages/WatchTonightPage";
 import HomePage from "@/pages/HomePage";
 import SearchPage from "@/pages/SearchPage";
 import LibraryPage from "@/pages/LibraryPage";
@@ -79,6 +80,7 @@ function AppRoutes() {
       <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/inicio" element={<HomePage />} />
+        <Route path="/que-vemos-hoy" element={<WatchTonightPage />} />
         <Route path="/adn" element={<DNAPage />} />
         <Route path="/buscar" element={<SearchPage />} />
         <Route path="/recomendaciones" element={<RecommendationsPage />} />

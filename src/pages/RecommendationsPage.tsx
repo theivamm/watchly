@@ -10,6 +10,8 @@ import MediaDetailModal from "@/components/media/MediaDetailModal";
 import { addToLibrary, getUserLibrary } from "@/services/library";
 import { getMyDna } from "@/services/dna";
 import { getDnaRecommendations, getKoreanRecommendations, getPosterUrl } from "@/services/tmdb";
+import { getTasteProfile } from "@/services/taste";
+import { explainTaste, tasteScore, type TasteProfile } from "@/lib/tasteProfile";
 import { genreLabel } from "@/lib/genres";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import type { Entry, MediaType, TMDBSearchResult } from "@/types";
@@ -32,6 +34,8 @@ const FALLBACK_GENRES = [
 export default function RecommendationsPage() {
   usePageTitle("Para vos | Watchly");
   const { user } = useAuth();
+  const [taste, setTaste] = useState<TasteProfile | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasDna, setHasDna] = useState(false);
@@ -44,11 +48,14 @@ export default function RecommendationsPage() {
 
   useEffect(() => {
     if (!user) return;
-    refresh();
+    setLoading(true);
+    setLoadError(false);
     let cancelled = false;
     (async () => {
-      const dna = await getMyDna(user.id).catch(() => null);
-      const genres = dna && dna.topGenres.length > 0 ? dna.topGenres.slice(0, 5) : FALLBACK_GENRES;
+      const [dna, library] = await Promise.all([getMyDna(user.id), getUserLibrary(user.id)]);
+      const profile = await getTasteProfile(library, dna?.topGenres ?? []);
+      if (!cancelled) { setEntries(library); setTaste(profile); }
+      const genres = profile.genres.length ? profile.genres.slice(0, 5) : profile.ratedCount ? [] : FALLBACK_GENRES;
       const format = dna?.formatDistribution ?? { movie: 1, tv: 1 };
       if (!cancelled) setHasDna(!!dna && dna.topGenres.length > 0);
 
@@ -56,8 +63,8 @@ export default function RecommendationsPage() {
         Promise.all(genres.map(async (g) => ({
           id: `g-${g.key}`,
           title: g.label,
-          subtitle: "Películas y series",
-          items: await getDnaRecommendations([g.key], format).catch(() => []),
+          subtitle: profile.ratedCount ? "Afinidad según tus valoraciones" : "Exploración por género",
+          items: (await getDnaRecommendations([g.key], format).catch(() => [])).sort((a, b) => tasteScore(b, profile) - tasteScore(a, profile)),
         }))),
         getKoreanRecommendations(),
       ]);
@@ -68,7 +75,7 @@ export default function RecommendationsPage() {
         { id: "kmovies", title: "Cine coreano", subtitle: "Películas de Corea del Sur", items: korea.movies },
       ]);
       setLoading(false);
-    })();
+    })().catch(() => { if (!cancelled) { setLoadError(true); setLoading(false); } });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -78,7 +85,7 @@ export default function RecommendationsPage() {
   // Destacados: alterna entre filas (1° de cada género, luego 2°…) para variar.
   const heroItems = useMemo(() => {
     if (!hasDna) return [];
-    const pools = rows.map((r) => r.items.filter((i) => i.backdropPath && i.posterPath && i.overview && !inLibrary(i)));
+    const pools = rows.filter((row) => row.id.startsWith("g-")).map((r) => r.items.filter((i) => i.backdropPath && i.posterPath && i.overview && !inLibrary(i)));
     const seen = new Set<string>();
     const out: TMDBSearchResult[] = [];
     for (let depth = 0; out.length < 7 && pools.some((p) => p.length > depth); depth++) {
@@ -96,7 +103,7 @@ export default function RecommendationsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, hasDna, entries]);
   const hero = useHeroCycle(heroItems.map((i) => i.posterPath));
-  const heroGenre = (it: TMDBSearchResult) => rows.find((r) => r.id.startsWith("g-") && r.items.includes(it))?.title;
+  const reasonFor = (it: TMDBSearchResult) => taste ? explainTaste(it, taste) : "Selección para explorar el catálogo.";
 
   const quickAdd = async (item: TMDBSearchResult) => {
     if (!user || adding) return;
@@ -128,12 +135,11 @@ export default function RecommendationsPage() {
               {heroItems.map((it, i) => {
                 const key = `${it.mediaType}-${it.tmdbId}`;
                 const on = i === hero.index;
-                const g = heroGenre(it);
                 return (
                   <div key={key} className="[grid-area:1/1] transition-all duration-1000"
                     style={{ opacity: on ? 1 : 0, transform: `translateY(${on ? 0 : 18}px)`, pointerEvents: on ? "auto" : "none" }}>
                     <p className="inline-flex items-center gap-2 text-sm font-extrabold text-white/85 mb-4">
-                      <Sparkles className="w-4 h-4" /> Destacado para vos{g ? ` · porque te gusta ${g.toLowerCase()}` : ""}
+                      <Sparkles className="w-4 h-4" /> Por qué te la recomendamos: {reasonFor(it)}
                     </p>
                     <div className="flex flex-wrap items-center gap-2.5">
                       {it.year && <span className="liquid-glass-sm px-4 py-2 rounded-full text-xs font-extrabold">{it.year}</span>}
@@ -210,10 +216,11 @@ export default function RecommendationsPage() {
           <Sparkles className="w-4 h-4" /> Recomendaciones por género
         </p>
         <p className="text-sm md:text-base mt-3 text-white/70 max-w-xl">
-          {hasDna ? "Elegidas según los géneros de tu ADN audiovisual." : "Géneros populares mientras armamos tu ADN."}
+          {hasDna ? "Tus estrellas orientan la afinidad; cada título explica el motivo. Las selecciones coreanas son editoriales." : "Géneros populares mientras armamos tu ADN."}
         </p>
       </header>
 
+      {loadError && <p role="alert" className="mb-6 text-red-300">No pudimos consultar tus preferencias. Recargá para reintentar.</p>}
       {loading ? (
         <div className="flex justify-center py-24"><RotateCw className="w-6 h-6 animate-spin text-white/60" /></div>
       ) : (
@@ -239,6 +246,7 @@ export default function RecommendationsPage() {
                           <p className="mt-3 px-1 text-sm font-extrabold truncate">{it.title}</p>
                           <p className="px-1 text-xs text-white/60">{genreLabel(it.genreIds) || (it.year ?? "")}</p>
                         </button>
+                        <p className="text-xs leading-relaxed text-violet-200 mt-3">Por qué: {row.id.startsWith("g-") ? reasonFor(it) : "Selección editorial de títulos coreanos; no se basa en tus estrellas."}</p>
                         <button type="button" onClick={() => quickAdd(it)} disabled={adding === key} title="Agregar a Por ver"
                           className="liquid-glass-sm absolute top-2.5 right-2.5 w-9 h-9 rounded-full flex items-center justify-center text-white hover:scale-110 transition-transform">
                           {adding === key ? <RotateCw className="w-4 h-4 animate-spin" /> : justAdded === key ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}

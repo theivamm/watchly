@@ -23,11 +23,11 @@ interface Stage {
 
 const stages: Stage[] = [
   { n: 0, title: "Consolidación del núcleo", value: "Confianza y estabilidad", desc: "Auditoría completa de autenticación, emails, OAuth, RLS, rendimiento y analítica. Sin funciones nuevas hasta que la base sea sólida.", tag: "Base", priority: "inmediata",
-    status: "en progreso", note: "Listo: registro, login, confirmación de email, recuperar contraseña y RLS en todas las tablas. Falta: login con Google (OAuth) y analítica." },
+    status: "hecho", note: "Registro e inicio de sesión con email y Google, confirmación de email, recuperación de contraseña, RLS, analítica base y registro de errores implementados. Seguimos monitoreando la estabilidad." },
   { n: 1, title: "ADN Audiovisual", value: "Identidad y viralidad", desc: "Transformá tu biblioteca en un perfil de gustos: géneros, décadas, países, directores y una frase resumen. Preliminar desde 5 títulos, completo desde 10. Tarjeta compartible.", tag: "Diferencial", priority: "inmediata",
     status: "hecho", note: "ADN calculado en el servidor con géneros, décadas, países, directores, contexto y rewatch. Perfil de ADN público y compartible. Ya alimenta las recomendaciones." },
   { n: 2, title: "¿Qué vemos hoy?", value: "Ayuda para decidir", desc: "Elegí un modo — Sorprendeme, Algo rápido, Quiero reírme — y Watchly elige entre lo que ya querías ver. Reglas deterministas, sin IA.", tag: "Diferencial", priority: "inmediata",
-    status: "en progreso", note: "Existe «Elegir por mí» en el Inicio (al azar entre tus pendientes). Faltan los modos: Algo rápido, Quiero reírme, etc." },
+    status: "hecho", note: "Seis modos para elegir desde tu biblioteca, filtros de formato y tiempo, opción sin terror, motivos claros, alternativas sin repetir y confirmación para pasar a Viendo. Medición de uso incorporada." },
   { n: 3, title: "Compatibilidad", value: "Conexión entre perfiles", desc: "Al visitar un perfil público: porcentaje de compatibilidad, géneros compartidos, títulos en común y una sugerencia para ver juntos.", tag: "Social", priority: "inmediata",
     status: "pendiente", note: "Los perfiles públicos ya existen; falta calcular y mostrar la compatibilidad." },
   { n: 4, title: "Modo pareja o grupo", value: "Decisión compartida", desc: "Creá una sala con 2 a 8 personas, votá portadas con Sí / No / Me da igual y dejá que Watchly encuentre coincidencias.", tag: "Social", priority: "media",
@@ -221,9 +221,9 @@ export default function RoadmapPage() {
             style={{ background: hero.row, transition: "background 1.6s" }} />
           <div className="relative">
             <span className="liquid-glass-sm inline-flex px-[18px] py-2 rounded-full text-xs font-extrabold tracking-[.2em] uppercase mb-6">Próximo paso</span>
-            <h2 className="font-cinema text-6xl md:text-8xl leading-none"><span style={accent}>¿Qué vemos hoy?</span></h2>
+            <h2 className="font-cinema text-6xl md:text-8xl leading-none"><span style={accent}>Compatibilidad</span></h2>
             <p className="text-lg text-white/80 mx-auto mt-6 mb-9 max-w-xl">
-              El ADN ya está listo. Lo próximo: sumar los modos de «¿Qué vemos hoy?», terminar la consolidación (login con Google y analítica) y arrancar con la Compatibilidad entre perfiles.
+              Ya podés elegir qué ver desde tu biblioteca. Mientras medimos cómo te ayuda, el próximo paso es descubrir qué gustos compartís con otras personas y encontrar historias para ver juntos.
             </p>
             <Link to="/registro" className="inline-flex h-16 px-10 items-center gap-2.5 rounded-full bg-white text-[#111] hover:text-[#111] font-extrabold text-lg shadow-[0_12px_40px_rgba(0,0,0,.35)] hover:scale-[1.03] transition-transform">
               Crear mi cuenta →

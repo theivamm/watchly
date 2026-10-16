@@ -132,6 +132,8 @@ La base se considera estable cuando:
 
 # Etapa 0 — Consolidación del núcleo
 
+**Estado: hecha — actualización del 16 de octubre de 2026.** Se cierra por indicación del responsable del producto tras la configuración de Google OAuth. La analítica base y el registro de errores ya están implementados en `src/lib/telemetry.ts`, con las migraciones 033 y 034 y el panel de administración. Este cambio de estado no constituye una nueva auditoría de producción: el ingreso completo con Google y la recepción de eventos no se verificaron desde esta sesión. La estabilidad continúa como trabajo transversal.
+
 ## Objetivo
 
 Asegurar que la aplicación actual sea confiable antes de incorporar funciones diferenciales.
@@ -253,6 +255,8 @@ Consultar `WATCHLY_ADN_AUDIOVISUAL.md` para reglas, datos y criterios completos.
 ---
 
 # Etapa 2 — ¿Qué vemos hoy?
+
+**Estado: implementación terminada — 16 de octubre de 2026.** Disponible en el código en `/que-vemos-hoy`, con acceso desde Inicio y navegación. Incluye seis modos, filtros estrictos, alternativas, descartes por visita, aceptación y cambio confirmado a Viendo. Ver `WATCHLY_QUE_VEMOS_HOY.md`. Quedan la publicación, la validación con cuentas reales y la medición de adopción; el objetivo de aceptación no se da por alcanzado por terminar el desarrollo.
 
 ## Objetivo
 
@@ -1232,7 +1236,7 @@ La documentación debe mantenerse modular:
 WATCHLY_PRODUCT_SPEC.md
 WATCHLY_ROADMAP.md
 WATCHLY_ADN_AUDIOVISUAL.md
-WATCHLY_QUE_VEMOS_HOY.md             futuro
+WATCHLY_QUE_VEMOS_HOY.md             implementado
 WATCHLY_COMPATIBILIDAD.md            futuro
 WATCHLY_MODO_GRUPO.md                futuro
 WATCHLY_CAPSULAS.md                  futuro
@@ -1272,12 +1276,11 @@ Si existe una contradicción:
 
 ## 18. Próximo paso inmediato
 
-El próximo trabajo recomendado es:
+Actualización del 16 de octubre de 2026: núcleo y ADN cerrados; implementación de `¿Qué vemos hoy?` terminada. El detalle de alcance, reglas y validación está en `WATCHLY_QUE_VEMOS_HOY.md`.
 
-1. Confirmar que la Etapa 0 está estable.
-2. Implementar y probar el ADN Audiovisual.
-3. Medir desbloqueo, visualización y compartidos.
-4. Escribir la especificación detallada de `¿Qué vemos hoy?` únicamente cuando el ADN esté consolidado o próximo a publicarse.
+1. Publicar y validar la elección con cuentas reales, incluyendo filtros sin coincidencias, errores de catálogo y persistencia en la biblioteca.
+2. Medir aceptación, tiempo hasta elegir y regreso a siete días con los eventos `tonight_*`. El objetivo de 30% es una meta pendiente de datos, no un resultado obtenido.
+3. Diseñar Compatibilidad sobre el ADN existente: consentimiento, datos públicos autorizados, explicación del resultado y sugerencia compartida. No revelar títulos privados.
+4. Implementar Compatibilidad cuando la elección individual esté validada; luego reutilizar el motor para Modo pareja o grupo.
 
-La hoja de ruta debe revisarse al cierre de cada etapa y actualizarse con aprendizajes reales.
-
+Las salas actuales para ver juntos no equivalen al flujo de votación previsto. Evitar abrir varias etapas a la vez y ajustar el orden según el uso real.

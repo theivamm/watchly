@@ -4,13 +4,14 @@ import { track } from "@/lib/telemetry";
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const TMDB_TOKEN = import.meta.env.VITE_TMDB_READ_TOKEN || "";
 
-async function tmdbFetch(path: string, params: Record<string, string> = {}): Promise<Record<string, unknown>> {
+async function tmdbFetch(path: string, params: Record<string, string> = {}, signal?: AbortSignal): Promise<Record<string, unknown>> {
   const query = new URLSearchParams({
     ...params,
     language: "es-AR",
     include_adult: "false",
   });
   const res = await fetch(`${TMDB_BASE}${path}?${query}`, {
+    signal,
     headers: {
       Authorization: `Bearer ${TMDB_TOKEN}`,
       accept: "application/json",
@@ -39,8 +40,9 @@ function mapResult(r: Record<string, unknown>, mediaType: string): TMDBSearchRes
 export async function searchMedia(
   query: string,
   type: "all" | "movie" | "tv" = "all",
-  page: number = 1
-): Promise<{ results: TMDBSearchResult[]; totalResults: number }> {
+  page: number = 1,
+  signal?: AbortSignal,
+): Promise<{ results: TMDBSearchResult[]; totalResults: number; totalPages: number }> {
   let endpoint = "/search/multi";
   if (type === "movie") endpoint = "/search/movie";
   if (type === "tv") endpoint = "/search/tv";
@@ -48,8 +50,9 @@ export async function searchMedia(
   const t0 = performance.now();
   let data: Record<string, unknown>;
   try {
-    data = await tmdbFetch(endpoint, { query, page: String(page) });
+    data = await tmdbFetch(endpoint, { query, page: String(page) }, signal);
   } catch (err) {
+    if (signal?.aborted) throw err;
     track("search_failed", { type });
     throw err;
   }
@@ -62,7 +65,7 @@ export async function searchMedia(
     .slice(0, 20)
     .map((r) => mapResult(r, type === "all" ? "movie" : type));
 
-  return { results, totalResults: (data.total_results as number) || 0 };
+  return { results, totalResults: (data.total_results as number) || 0, totalPages: (data.total_pages as number) || 0 };
 }
 
 export async function getTrending(
@@ -115,6 +118,13 @@ export async function getKoreanRecommendations(): Promise<{ dramas: TMDBSearchRe
   return { dramas, movies };
 }
 
+export async function getDnaMovieDiscoveries(genreKeys: string[]): Promise<TMDBSearchResult[]> {
+  const genres = [...new Set(genreKeys.slice(0, 3).map((key) => TV_TO_MOVIE[key] ?? key).filter((key) => !TV_ONLY.has(key)))];
+  if (!genres.length) return [];
+  const pages = await Promise.all([1, 2, 3].map((page) => discover("movie", genres, { page: String(page) })));
+  return pages.flat();
+}
+
 export async function getDnaRecommendations(
   genreKeys: string[],
   format: { movie: number; tv: number },
@@ -142,14 +152,16 @@ export async function getDnaRecommendations(
 
 export async function getMediaDetails(
   type: "movie" | "tv",
-  tmdbId: number
+  tmdbId: number,
+  signal?: AbortSignal,
 ): Promise<TMDBMediaDetails> {
   const data = await tmdbFetch(`/${type}/${tmdbId}`, {
     append_to_response: "videos,credits",
-  });
+  }, signal);
 
   return {
     ...mapResult(data, type),
+    genreIds: ((data.genres as { id: number }[]) || []).map((g) => g.id),
     genres: ((data.genres as { name: string }[]) || []).map((g) => g.name),
     runtime: (data.runtime as number) || null,
     voteCount: (data.vote_count as number) || 0,

@@ -1,5 +1,23 @@
 # React + TypeScript + Vite
 
+## Acceso en desarrollo local
+
+`npm run dev` usa `http://localhost:5174` con puerto estricto para mantener estables los retornos OAuth. Si está ocupado, cerrar el servidor anterior o usarlo; Vite no cambia de puerto automáticamente.
+
+En Supabase → Authentication → URL Configuration, mantener Site URL en `https://watchly-sigma.vercel.app` y agregar a Redirect URLs:
+
+```text
+http://localhost:5174/inicio
+http://localhost:5174/confirmar-email
+http://localhost:5174/actualizar-password
+```
+
+Conservar también los retornos de producción. Google Cloud mantiene como URI de redireccionamiento el callback del proyecto Supabase, no localhost. Los flujos de la app usan `window.location.origin` para volver al entorno donde se iniciaron.
+
+El proyecto de `VITE_SUPABASE_URL` debe coincidir con el configurado en Vercel para usar las mismas cuentas. Una cuenta creada con Google no implica una contraseña de Watchly: usar el botón Google o configurar una contraseña mediante recuperación. La contraseña de Gmail no se usa en el formulario de Watchly.
+
+Estos ajustes del panel de Supabase no se aplican al editar el repositorio. Validar el acceso desde localhost después de guardarlos.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

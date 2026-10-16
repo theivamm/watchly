@@ -1,4 +1,5 @@
-export const ALGORITHM_VERSION = 1.1;
+import { ratingWeight } from "./ratingWeight.ts";
+export const ALGORITHM_VERSION = 1.2;
 
 export type DNAStatus = "locked" | "early" | "developing" | "solid" | "rich";
 export type MediaType = "movie" | "tv";
@@ -136,14 +137,6 @@ export interface ReactionRow {
 const STATUS_WEIGHTS: Record<string, number> = {
   completed: 1.0,
   watching: 0.5,
-};
-
-const RATING_WEIGHTS: Record<string, number> = {
-  "1": 0.7,
-  "2": 0.7,
-  "3": 0.9,
-  "4": 1.15,
-  "5": 1.5,
 };
 
 const GENRE_NAMES: Record<number, string> = {
@@ -344,7 +337,7 @@ function withPercentages(items: { key: string; label: string; weight: number }[]
 function titleWeight(entry: ValidEntry): number {
   const sw = STATUS_WEIGHTS[entry.status] ?? 0;
   if (sw <= 0) return 0;
-  const rw = entry.rating == null ? 1 : (RATING_WEIGHTS[String(entry.rating)] ?? 1);
+  const rw = ratingWeight(entry.rating);
   return sw * rw;
 }
 
