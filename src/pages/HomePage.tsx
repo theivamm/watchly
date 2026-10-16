@@ -103,6 +103,11 @@ export default function HomePage() {
   const completed = entries.filter((e) => e.status === "completed");
   const favorites = entries.filter((e) => (e.rating ?? 0) >= 4);
   const recent = entries.slice(0, 12);
+  const bannerPosters = useMemo(() => {
+    const own = [...entries].filter((e) => e.poster_path).sort(() => 0.5 - Math.random()).slice(0, 5).map((e) => e.poster_path as string);
+    return own.length >= 3 ? own : [...own, ...heroItems.map((i) => i.posterPath as string)].slice(0, 5);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries.length, heroItems]);
 
   const toResult = (e: Entry): TMDBSearchResult => ({
     tmdbId: e.tmdb_id, mediaType: e.media_type, title: e.title, originalTitle: e.title,
@@ -144,12 +149,28 @@ export default function HomePage() {
       <section className="relative min-h-[88svh] flex flex-col overflow-hidden">
         <HeroBackdrop soft items={heroItems} index={hero.index} glow={hero.glow} glow2={hero.glow2} />
 
-        <div className="relative z-10 flex items-center gap-3 px-5 md:px-10 pt-6">
-          <Link to="/que-vemos-hoy" className="liquid-glass flex-1 rounded-[1.5rem] px-5 py-5 flex flex-wrap items-center justify-between gap-4 border border-violet-300/30">
-            <span><span className="block text-xs font-bold uppercase tracking-widest text-violet-200">Tu plan empieza acá</span><span className="block font-cinema text-3xl mt-1">¿Qué vemos hoy?</span><span className="block text-sm text-white/70 mt-1">Elegí por tiempo, ganas o dejate sorprender.</span></span>
-            <span className="rounded-full bg-white text-[#111] px-5 py-3 text-sm font-extrabold inline-flex gap-2 items-center"><Shuffle size={17} />Armar mi plan →</span>
+        <div className="relative z-10 flex items-stretch gap-3 px-5 md:px-10 pt-4">
+          <Link to="/que-vemos-hoy" className="group relative flex-1 min-h-[168px] overflow-hidden rounded-[2rem] border border-white/20 flex items-center transition-transform hover:scale-[1.005]"
+            style={{ background: `radial-gradient(120% 160% at 100% 50%, color-mix(in srgb, ${hero.accent} 55%, transparent), transparent 62%), linear-gradient(105deg, color-mix(in srgb, ${hero.accent} 28%, #0d0b16) 0%, #0d0b16 70%)`, transition: "background 1.2s", boxShadow: `0 24px 70px -20px color-mix(in srgb, ${hero.accent} 60%, transparent)` }}>
+            <div className="relative z-10 flex-1 min-w-0 p-6 md:p-8">
+              <span className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/80"><span className="w-1.5 h-1.5 rounded-full" style={{ background: hero.accent }} />Tu plan empieza acá</span>
+              <span className="block font-cinema text-4xl md:text-6xl leading-none mt-2">¿Qué vemos hoy?</span>
+              <span className="block text-sm md:text-base text-white/80 mt-2 max-w-md">Elegimos entre lo que ya guardaste en tu biblioteca.</span>
+              <span className="flex flex-wrap items-center gap-2 mt-4">
+                {["Algo rápido", "Quiero reírme", "Sorprendeme"].map((m) => <span key={m} className="liquid-glass-sm px-3.5 py-1.5 rounded-full text-xs font-bold">{m}</span>)}
+                <span className="inline-flex items-center gap-2 h-10 px-5 rounded-full bg-white text-[#111] text-sm font-extrabold ml-1 group-hover:gap-3 transition-all"><Shuffle size={16} />Armar mi plan →</span>
+              </span>
+            </div>
+            <div className="hidden md:block relative self-stretch w-[46%] max-w-[560px]" aria-hidden="true">
+              {bannerPosters.map((p, i) => {
+                const n = bannerPosters.length, mid = (n - 1) / 2, d = i - mid;
+                return <img key={p + i} src={getPosterUrl(p, "w342")} alt="" loading="lazy" className="absolute top-1/2 h-[128%] aspect-[2/3] object-cover rounded-xl border border-white/30 shadow-[0_20px_40px_rgba(0,0,0,.55)] transition-transform duration-500 group-hover:-translate-y-[54%]"
+                  style={{ left: `calc(50% + ${d * 20}% - 62px)`, transform: `translateY(-46%) rotate(${d * 7}deg)`, zIndex: 10 - Math.abs(Math.round(d)) }} />;
+              })}
+            </div>
+            <div className="absolute inset-y-0 left-0 w-1/2 pointer-events-none bg-gradient-to-r from-[#0d0b16]/40 to-transparent" />
           </Link>
-          <button type="button" onClick={() => setShowHelp(true)} aria-label="Guía de uso" className="liquid-glass w-12 h-12 rounded-full flex items-center justify-center hover:scale-105 transition-transform">
+          <button type="button" onClick={() => setShowHelp(true)} aria-label="Guía de uso" className="liquid-glass w-11 h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform shrink-0">
             <HelpCircle className="w-5 h-5" />
           </button>
         </div>
