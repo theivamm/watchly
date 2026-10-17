@@ -57,7 +57,7 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false, 
             }}
           >
             {chroma && live && hasBackdrop && [-1, 1].map((d) => (
-              <div key={d} className="absolute inset-0" style={{ transform: `translateX(${d * 9}px)`, mixBlendMode: "screen", opacity: 0.45, filter: d < 0 ? "sepia(1) saturate(6) hue-rotate(-50deg)" : "sepia(1) saturate(6) hue-rotate(150deg)" }}>
+              <div key={d} className="hidden md:block absolute inset-0" style={{ transform: `translateX(${d * 9}px)`, mixBlendMode: "screen", opacity: 0.45, filter: d < 0 ? "sepia(1) saturate(6) hue-rotate(-50deg)" : "sepia(1) saturate(6) hue-rotate(150deg)" }}>
                 <img src={getBackdropUrl(it.backdropPath, "w780")} alt="" decoding="async" className="w-full h-full object-cover" />
               </div>
             ))}

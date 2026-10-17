@@ -14,6 +14,22 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+// En mobile el fondo queda fijo: el fundido de una imagen a pantalla completa con blur(90px),
+// detrás de paneles con backdrop-filter, más el cambio de --accent-* en toda la app,
+// obligaba a repintar la página entera y la hacía parpadear.
+const STATIC_QUERY = "(max-width: 767px), (prefers-reduced-motion: reduce)";
+
+function useStaticAmbient() {
+  const [on, setOn] = useState(() => typeof window !== "undefined" && window.matchMedia(STATIC_QUERY).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(STATIC_QUERY);
+    const sync = () => setOn(mq.matches);
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return on;
+}
+
 /** Fondo global: portadas de películas al azar, muy desenfocadas, que además definen el color de énfasis de toda la app. */
 export function useAmbient(intervalMs = 14000) {
   const { data } = useTrending("all");
@@ -24,12 +40,13 @@ export function useAmbient(intervalMs = 14000) {
   const [index, setIndex] = useState(0);
   const [hue, setHue] = useState(265);
   const cache = useRef<Record<string, number>>({});
+  const isStatic = useStaticAmbient();
 
   useEffect(() => {
-    if (items.length <= 1) return;
+    if (isStatic || items.length <= 1) return;
     const t = setInterval(() => setIndex((i) => (i + 1) % items.length), intervalMs);
     return () => clearInterval(t);
-  }, [items.length, intervalMs]);
+  }, [items.length, intervalMs, isStatic]);
 
   const poster = items[index]?.posterPath ?? null;
   useEffect(() => {
@@ -48,19 +65,30 @@ export function useAmbient(intervalMs = 14000) {
 }
 
 export function AmbientLayer({ items, index }: { items: ReturnType<typeof useAmbient>["items"]; index: number }) {
+  // Solo la imagen activa y la saliente existen en el DOM; las demás no consumen GPU.
+  const prevRef = useRef(index);
+  const [prev, setPrev] = useState(index);
+  useEffect(() => {
+    if (prevRef.current === index) return;
+    setPrev(prevRef.current);
+    prevRef.current = index;
+  }, [index]);
+
   return (
-    <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-[#07070d] pointer-events-none">
-      {items.map((it, i) => (
+    <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-[#07070d] pointer-events-none" style={{ contain: "strict" }}>
+      {items.map((it, i) => (i === index || i === prev || (items.length > 1 && i === (index + 1) % items.length)) && (
         <img
           key={`${it.mediaType}-${it.tmdbId}`}
           src={it.backdropPath ? getBackdropUrl(it.backdropPath, "w780") : getPosterUrl(it.posterPath, "w500")}
           alt=""
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover cinema-kenburns"
           style={{
             opacity: i === index ? 0.85 : 0,
             transition: "opacity 2.6s ease-in-out",
             filter: "blur(90px) saturate(1.5)",
-            transform: "scale(1.4)",
+            transform: "scale(1.4) translateZ(0)",
+            willChange: "opacity",
           }}
         />
       ))}
