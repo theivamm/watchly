@@ -229,3 +229,10 @@ html { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.4) transpar
   .glass-input,
   .frost-tab:not([data-active="true"]) { background: linear-gradient(145deg, hsl(var(--accent-h, 265) 70% 60% / 0.18), rgba(255, 255, 255, 0.03)), rgba(14, 12, 26, 0.82); border-color: rgba(255, 255, 255, 0.28); }
 }
+
+/* Sin scroll horizontal: recorta lo que se desborda (manchas de color, muros de portadas, grillas) sin romper el sticky */
+html, body, #root { max-width: 100%; overflow-x: clip; }
+@media (max-width: 767px) {
+  main, section, header, footer { min-width: 0; }
+  img, video, canvas { max-width: 100%; }
+}
