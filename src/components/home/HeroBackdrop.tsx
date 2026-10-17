@@ -1,6 +1,13 @@
 import "@/styles/cinema.css";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { getBackdropUrl, getPosterUrl } from "@/services/tmdb";
+
+/** Índice anterior, actualizado en el mismo render en que cambia `index`. */
+export function usePrevIndex(index: number): number {
+  const ref = useRef({ index, prev: index });
+  if (ref.current.index !== index) ref.current = { index, prev: ref.current.index };
+  return ref.current.prev;
+}
 
 interface Props {
   items: { backdropPath: string | null; posterPath: string | null }[];
@@ -15,14 +22,9 @@ interface Props {
 
 /** Fondo cinematográfico: imagen grande con crossfade + manchas de color en movimiento. */
 export default function HeroBackdrop({ items, index, glow, glow2, soft = false, chroma = false }: Props) {
-  // Solo la capa activa y la saliente se animan; animar todas a la vez hace parpadear en mobile.
-  const prevRef = useRef(index);
-  const [prev, setPrev] = useState(index);
-  useEffect(() => {
-    if (prevRef.current === index) return;
-    setPrev(prevRef.current);
-    prevRef.current = index;
-  }, [index]);
+  // Solo la capa activa, la saliente y la siguiente se dibujan. La saliente se calcula en el
+  // mismo render (no en un efecto): si llega un render tarde, se oculta un cuadro y la página parpadea.
+  const prev = usePrevIndex(index);
 
   const mask = soft
     ? "linear-gradient(90deg, transparent 0, #000 34%), linear-gradient(180deg, transparent 0, #000 14%, #000 58%, transparent 100%)"
@@ -47,7 +49,7 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false, 
             style={{
               opacity: i === index ? 1 : 0,
               visibility: live || upcoming ? "visible" : "hidden",
-              willChange: live ? "opacity" : undefined,
+              willChange: live || upcoming ? "opacity" : undefined,
               transform: "translateZ(0)",
               backfaceVisibility: "hidden",
               WebkitMaskImage: mask,

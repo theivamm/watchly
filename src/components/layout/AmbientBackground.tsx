@@ -4,6 +4,7 @@ import { useTrending } from "@/hooks/useMedia";
 import { DEFAULT_TINT, getDominantColor } from "@/lib/posterColor";
 import { getBackdropUrl, getPosterUrl } from "@/services/tmdb";
 import { accentVars, hueFromRgb } from "@/lib/tone";
+import { usePrevIndex } from "@/components/home/HeroBackdrop";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -65,14 +66,8 @@ export function useAmbient(intervalMs = 14000) {
 }
 
 export function AmbientLayer({ items, index }: { items: ReturnType<typeof useAmbient>["items"]; index: number }) {
-  // Solo la imagen activa y la saliente existen en el DOM; las demás no consumen GPU.
-  const prevRef = useRef(index);
-  const [prev, setPrev] = useState(index);
-  useEffect(() => {
-    if (prevRef.current === index) return;
-    setPrev(prevRef.current);
-    prevRef.current = index;
-  }, [index]);
+  // Solo la activa, la saliente y la siguiente existen en el DOM; las demás no consumen GPU.
+  const prev = usePrevIndex(index);
 
   return (
     <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-[#07070d] pointer-events-none" style={{ contain: "strict" }}>
