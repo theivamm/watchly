@@ -1,5 +1,6 @@
 import { useAuth } from "@/app/auth-context";
 import UserMenu from "@/components/layout/UserMenu";
+import MobileMenu from "@/components/layout/MobileMenu";
 
 /** Barra superior compartida por landing, login, registro y roadmap. Sin contenedor: flota sobre la imagen. */
 export default function PublicNav({ back }: { back?: string | null }) {
@@ -12,8 +13,9 @@ export default function PublicNav({ back }: { back?: string | null }) {
       <a href="/roadmap" className="hidden sm:block px-4 py-2.5 text-sm font-extrabold text-white/80 hover:text-white">Roadmap</a>
       {user ? <UserMenu /> : (
         <>
-          <a href="/login" className="px-4 py-2.5 text-sm font-extrabold text-white/80 hover:text-white whitespace-nowrap">Iniciar sesión</a>
-          <a href="/registro" className="ml-2 h-11 px-6 rounded-full bg-white text-[#111] hover:text-[#111] flex items-center text-sm font-extrabold whitespace-nowrap transition-transform hover:scale-[1.04]">Crear cuenta</a>
+          <MobileMenu buttonClass="sm:hidden" items={[{ to: "/", label: "Inicio" }, { to: "/roadmap", label: "Roadmap" }, { to: "/login", label: "Iniciar sesión" }, { to: "/registro", label: "Crear cuenta", primary: true }]} />
+          <a href="/login" className="hidden sm:block px-4 py-2.5 text-sm font-extrabold text-white/80 hover:text-white whitespace-nowrap">Iniciar sesión</a>
+          <a href="/registro" className="hidden sm:flex ml-2 h-11 px-6 rounded-full bg-white text-[#111] hover:text-[#111] flex items-center text-sm font-extrabold whitespace-nowrap transition-transform hover:scale-[1.04]">Crear cuenta</a>
         </>
       )}
     </header>

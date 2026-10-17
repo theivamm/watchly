@@ -74,6 +74,7 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false, 
         );
       })}
 
+      <div className="absolute inset-0 lg:hidden" style={{ background: "linear-gradient(180deg, rgba(7,7,13,.5), rgba(7,7,13,.82))" }} />
       <div className="absolute inset-0"
         style={{ ...(soft ? { WebkitMaskImage: "linear-gradient(180deg, transparent 0, #000 22%, #000 70%, transparent 100%)", maskImage: "linear-gradient(180deg, transparent 0, #000 22%, #000 70%, transparent 100%)" } : {}), background: soft
           ? "linear-gradient(90deg, rgba(7,7,13,.7) 0%, rgba(7,7,13,.2) 45%, transparent 70%)"

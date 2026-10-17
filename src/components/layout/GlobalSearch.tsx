@@ -32,7 +32,7 @@ export default function GlobalSearch() {
   };
   if (location.pathname === "/roadmap") return null;
   return <header className="sticky top-0 z-40 h-0 text-white pointer-events-none">
-    <div className="absolute inset-x-0 top-3 px-4 md:px-8"><div className="flex items-center max-w-2xl mx-auto pointer-events-auto">
+    <div className="absolute inset-x-0 top-3 pl-4 pr-[4.5rem] md:px-8"><div className="flex items-center max-w-2xl mx-auto pointer-events-auto">
       <div ref={root} className="relative flex-1 basis-full sm:basis-auto min-w-0" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false); }}>
         <form role="search" onSubmit={(e) => { e.preventDefault(); search(query); }} className="flex items-center gap-3 rounded-full bg-white/10 backdrop-blur-xl border border-white/15 px-5 shadow-[0_8px_30px_rgba(0,0,0,.3)] transition-all focus-within:bg-white/15 focus-within:border-white/40 focus-within:shadow-[0_8px_40px_rgba(255,255,255,.12)]">
           <Search size={18} className="shrink-0 text-white/60" />

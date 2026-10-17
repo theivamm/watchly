@@ -65,6 +65,7 @@ export function AmbientLayer({ items, index }: { items: ReturnType<typeof useAmb
         />
       ))}
       <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(7,7,13,.5), rgba(7,7,13,.62))" }} />
+      <div className="absolute inset-0 md:hidden" style={{ background: "rgba(7,7,13,.3)" }} />
     </div>
   );
 }
