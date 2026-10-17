@@ -123,11 +123,13 @@ export default function ListsPage() {
   };
 
   return (
-    <div className="w-full px-5 md:px-10 py-8 md:py-12 text-white">
+    <div className="w-full px-4 md:px-6 pt-20 pb-12 text-white">
       <PageHeader
         title="Listas"
         eyebrow="Tus colecciones"
-        subtitle={!loading ? `${lists.length} ${lists.length === 1 ? "lista" : "listas"}` : undefined}
+        subtitle="Organizá tus títulos por momento, ánimo o compañía."
+        posters={Object.values(previews).flatMap((p) => p.posters).slice(0, 14)}
+        stats={!loading ? [{ v: lists.length, l: lists.length === 1 ? "lista" : "listas" }, { v: lists.filter((l) => l.is_public).length, l: "públicas" }, { v: lists.filter((l) => !l.is_public).length, l: "privadas" }, { v: Object.values(previews).reduce((a, p) => a + p.movies + p.series, 0), l: "títulos en listas" }] : undefined}
         actions={
           <button onClick={() => setShowForm((v) => !v)} className={whiteBtn}>
             <Plus className="w-4 h-4" /> Nueva lista
@@ -165,18 +167,16 @@ export default function ListsPage() {
           <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin" />
         </div>
       ) : lists.length === 0 && !showForm ? (
-        <div className="frost-card flex flex-col items-center justify-center py-24 rounded-[2.5rem]">
-          <div className="liquid-glass-sm w-16 h-16 rounded-full flex items-center justify-center mb-5">
-            <List className="w-7 h-7" />
-          </div>
-          <p className="font-cinema text-3xl mb-1">Sin listas</p>
+        <div className="flex flex-col items-center justify-center py-24 border-t border-white/20 text-center">
+          <List className="w-10 h-10 mb-5 text-white/60" />
+          <p className="font-cinema text-5xl mb-2">Sin listas</p>
           <p className="text-sm mb-6 text-white/70">Creá listas para organizar tus títulos</p>
           <button onClick={() => setShowForm(true)} className={whiteBtn}>
             <Plus className="w-4 h-4" /> Crear primera lista
           </button>
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {lists.map((list) => {
             const preview = previews[list.id];
             const posters = preview?.posters ?? [];
@@ -185,16 +185,21 @@ export default function ListsPage() {
               <Link
                 key={list.id}
                 to={`/listas/${list.id}`}
-                className="group relative overflow-hidden rounded-[2.25rem] h-80 border border-white/18 shadow-[0_30px_60px_-20px_rgba(0,0,0,.7)] transition-transform duration-500 hover:-translate-y-2 text-white hover:text-white"
-                style={{ background: "linear-gradient(160deg, rgba(139,92,246,.35), rgba(20,20,32,.9))" }}
+                className="group relative overflow-hidden rounded-[2.25rem] h-[26rem] border border-white/20 transition-shadow duration-500 text-white hover:text-white"
+                style={{ background: "rgba(255,255,255,.06)", boxShadow: "inset 3px 0 0 rgba(255,80,140,.4), inset -3px 0 0 rgba(70,170,255,.4), 0 30px 60px -20px rgba(0,0,0,.7)" }}
               >
                 {posters.length > 0 && (
-                  <div className="absolute inset-0 grid h-full w-full" style={{ gridTemplateColumns: `repeat(${posters.length}, 1fr)` }}>
-                    {posters.map((p, i) => (
-                      <img key={i} src={getPosterUrl(p, "w342")} alt="" aria-hidden="true" loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                    ))}
-                  </div>
+                  <>
+                    <img src={getPosterUrl(posters[0], "w342")} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-70" />
+                    <div className="absolute inset-x-0 top-16 bottom-32 flex items-center justify-center">
+                      {posters.map((p, i) => {
+                        const d = i - (posters.length - 1) / 2;
+                        return <img key={i} src={getPosterUrl(p, "w342")} alt="" aria-hidden="true" loading="lazy"
+                          className="h-full aspect-[2/3] object-cover rounded-2xl border border-white/30 shadow-[0_20px_40px_rgba(0,0,0,.6)] transition-transform duration-500 group-hover:scale-105"
+                          style={{ marginLeft: i ? -44 : 0, transform: `rotate(${d * 7}deg) translateY(${Math.abs(d) * 8}px)`, zIndex: 10 - Math.round(Math.abs(d)) }} />;
+                      })}
+                    </div>
+                  </>
                 )}
                 <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(7,7,13,.35) 0%, transparent 35%, rgba(7,7,13,.55) 100%)" }} />
 

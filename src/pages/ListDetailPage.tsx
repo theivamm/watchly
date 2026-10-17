@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Lock, List, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, List, Pencil, Trash2 } from "lucide-react";
 import { getList, deleteList, updateList, removeItemFromList } from "@/services/lists";
-import { getPosterUrl } from "@/services/tmdb";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import ListFormModal from "@/components/lists/ListFormModal";
+import PageHeader from "@/components/ui/PageHeader";
 import type { ListWithItems, TMDBSearchResult, MediaType } from "@/types";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
@@ -77,7 +77,7 @@ export default function ListDetailPage() {
 
   if (loading) {
     return (
-      <div className="w-full px-5 md:px-10 py-8 md:py-12 flex justify-center">
+      <div className="w-full px-4 md:px-6 pt-20 pb-12 flex justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin" />
       </div>
     );
@@ -85,74 +85,44 @@ export default function ListDetailPage() {
 
   if (!list) {
     return (
-      <div className="w-full px-5 md:px-10 py-8 md:py-12 text-white">
+      <div className="w-full px-4 md:px-6 pt-20 pb-12 text-white">
         <p className="text-white/70">Lista no encontrada</p>
       </div>
     );
   }
 
-  const posters = list.items.filter((i) => i.poster_path).slice(0, 5).map((i) => i.poster_path as string);
+  const posters = list.items.filter((i) => i.poster_path).slice(0, 14).map((i) => i.poster_path as string);
   const count = list.items.length;
 
   return (
-    <div className="w-full px-5 md:px-10 py-8 md:py-12 text-white">
-      {/* Banner */}
-      <section className="relative overflow-hidden rounded-[2.5rem] border border-white/18 mb-10 shadow-[0_30px_60px_-20px_rgba(0,0,0,.7)]"
-        style={{ background: "linear-gradient(160deg, rgba(139,92,246,.35), rgba(20,20,32,.9))" }}>
-        {posters.length > 0 && (
-          <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${posters.length}, 1fr)` }}>
-            {posters.map((p, i) => (
-              <img key={i} src={getPosterUrl(p, "w342")} alt="" aria-hidden="true" className="w-full h-full object-cover blur-md scale-110" />
-            ))}
-          </div>
-        )}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(7,7,13,.88) 0%, rgba(7,7,13,.55) 60%, rgba(7,7,13,.75) 100%)" }} />
-
-        <div className="relative p-7 md:p-12">
-          <button onClick={() => navigate("/listas")}
-            className="liquid-glass-sm inline-flex items-center gap-2 h-11 px-5 rounded-full text-sm font-bold text-white mb-8 transition-transform hover:scale-[1.03]">
-            <ArrowLeft className="w-4 h-4" /> Volver a listas
-          </button>
-
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div className="min-w-0 max-w-3xl">
-              <h1 className="font-cinema text-6xl md:text-8xl leading-[1.02] drop-shadow-[0_10px_50px_rgba(0,0,0,.5)]">{list.name}</h1>
-              {list.description && <p className="text-base md:text-lg mt-4 text-white/80 text-pretty">{list.description}</p>}
-              <div className="flex items-center gap-2.5 mt-5">
-                <span className="liquid-glass-sm inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-extrabold">
-                  {list.is_public ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                  {list.is_public ? "Pública" : "Privada"}
-                </span>
-                <span className="liquid-glass-sm px-4 py-2 rounded-full text-xs font-extrabold">
-                  {count} {count === 1 ? "título" : "títulos"}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <button onClick={() => setEditing(true)}
-                className="liquid-glass-sm inline-flex items-center gap-2 h-12 px-6 rounded-full text-sm font-bold text-white transition-transform hover:scale-[1.03]">
-                <Pencil className="w-4 h-4" /> Editar lista
-              </button>
-              <button onClick={handleDeleteList} disabled={deleting}
-                className="liquid-glass-sm h-12 px-6 rounded-full text-sm font-bold transition-transform hover:scale-[1.03] disabled:opacity-50"
-                style={{ color: "#fca5a5" }}>
-                Eliminar lista
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className="w-full px-4 md:px-6 pt-20 pb-12 text-white">
+      <PageHeader
+        title={list.name}
+        eyebrow={list.is_public ? "Lista pública" : "Lista privada"}
+        subtitle={list.description || undefined}
+        posters={posters}
+        stats={[
+          { v: count, l: count === 1 ? "título" : "títulos" },
+          { v: list.items.filter((i) => i.media_type === "movie").length, l: "películas" },
+          { v: list.items.filter((i) => i.media_type === "tv").length, l: "series" },
+        ]}
+        actions={
+          <>
+            <button onClick={() => navigate("/listas")} className="liquid-glass-sm inline-flex items-center gap-2 h-12 px-6 rounded-full text-sm font-bold text-white transition-transform hover:scale-[1.03]"><ArrowLeft className="w-4 h-4" /> Listas</button>
+            <button onClick={() => setEditing(true)} className="liquid-glass-sm inline-flex items-center gap-2 h-12 px-6 rounded-full text-sm font-bold text-white transition-transform hover:scale-[1.03]"><Pencil className="w-4 h-4" /> Editar</button>
+            <button onClick={handleDeleteList} disabled={deleting} className="liquid-glass-sm inline-flex items-center gap-2 h-12 px-6 rounded-full text-sm font-bold transition-transform hover:scale-[1.03] disabled:opacity-50" style={{ color: "#fca5a5" }}><Trash2 className="w-4 h-4" /> Eliminar</button>
+          </>
+        }
+      />
 
       {list.items.length === 0 ? (
-        <div className="frost-card flex flex-col items-center justify-center py-24 rounded-[2.5rem]">
-          <div className="liquid-glass-sm w-16 h-16 rounded-full flex items-center justify-center mb-5">
-            <List className="w-7 h-7" />
-          </div>
-          <p className="font-cinema text-3xl mb-1">Lista vacía</p>
+        <div className="flex flex-col items-center justify-center py-24 border-t border-white/20 text-center">
+          <List className="w-10 h-10 mb-5 text-white/60" />
+          <p className="font-cinema text-5xl mb-2">Lista vacía</p>
           <p className="text-sm text-white/70">Agregá títulos desde la búsqueda o el detalle de una película</p>
         </div>
       ) : (
-        <div className="grid gap-5 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7">
           {list.items.map((item) => (
             <div key={item.id} className="relative group">
               <MediaCard

@@ -1,5 +1,5 @@
 import "@/styles/cinema.css";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { X, Star, ListPlus, ListIcon, ChevronDown, Check, Sparkles, Quote, Share2, CalendarDays, MapPin, Users, Languages, MonitorPlay, Repeat, Trash2, Pencil, Plus, HelpCircle, RotateCw, Play, Clock, Bookmark, CheckCheck, Pause, XCircle, Info } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
@@ -76,21 +76,23 @@ function PillGroup({
   pills,
   selected,
   onSelect,
+  accent,
 }: {
   groupKey: keyof typeof HABIT_GROUPS;
   pills: ViewingPill[];
   selected: string;
   onSelect: (value: string) => void;
+  accent: string;
 }) {
   const meta = HABIT_GROUPS[groupKey];
   const GroupIcon = meta.icon;
   return (
     <div>
-      <p className="text-[11px] font-extrabold mb-2 inline-flex items-center gap-1.5 text-white/70">
-        <GroupIcon className="w-3.5 h-3.5" style={{ color: meta.color }} />
+      <p className="text-sm font-extrabold mb-3 inline-flex items-center gap-2">
+        <GroupIcon className="w-4 h-4" style={{ color: meta.color }} />
         {meta.label}
       </p>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-4 gap-2.5">
         {pills.map((pill) => {
           const PillIcon = pill.icon;
           const isSelected = selected === pill.value;
@@ -99,10 +101,10 @@ function PillGroup({
               key={pill.value}
               type="button"
               onClick={() => onSelect(pill.value)}
-              data-active={isSelected}
-              className="frost-tab !py-1.5 !px-3.5 !text-[11px]"
+              className="flex items-center gap-3 px-4 min-h-[56px] rounded-2xl text-sm font-bold text-left border transition-all hover:scale-[1.02] active:scale-95"
+              style={isSelected ? { background: accent, color: "#111", borderColor: "transparent" } : { background: "rgba(255,255,255,.06)", borderColor: "rgba(255,255,255,.2)" }}
             >
-              <PillIcon className="w-3 h-3" style={{ color: isSelected ? "#111" : pill.color }} />
+              <PillIcon className="w-5 h-5 shrink-0" style={{ color: isSelected ? "#111" : pill.color }} />
               {pill.label}
             </button>
           );
@@ -192,6 +194,7 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
   const [sessionSaved, setSessionSaved] = useState(false);
   const [coverColor, setCoverColor] = useState<[number, number, number] | null>(null);
   const [tab, setTab] = useState<"info" | "diary">("info");
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const justSavedTimer = useRef<number | null>(null);
 
@@ -648,119 +651,132 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
   const trailerKey = details?.videos?.find((v) => v.site === "YouTube" && v.key)?.key;
   const yearLabel = details?.year ?? result.year ?? "Sin año";
   const STATUS_ICONS: Record<EntryStatus, typeof Bookmark> = { want_to_watch: Bookmark, watching: Play, completed: CheckCheck, paused: Pause, dropped: XCircle };
+  const hueA = (tone.hue + 330) % 360;
+  const hueB = (tone.hue + 40) % 360;
+  const fringeEdges = `inset 3px 0 0 hsl(${hueA} 90% 62% / .55), inset -3px 0 0 hsl(${hueB} 90% 62% / .55)`;
+  const accentGrad = `linear-gradient(135deg, ${tone.accent}, hsl(${hueB} 85% 70%))`;
   const chip = "liquid-glass-sm px-4 py-2 rounded-full text-xs font-extrabold text-white";
-  const card = "frost-card rounded-[2rem] p-6";
-  const label = "text-xs font-extrabold uppercase tracking-widest text-white/60";
+  const label = "text-xs font-extrabold uppercase tracking-widest text-white/65";
   const roundBtn = "liquid-glass-sm w-11 h-11 rounded-full flex items-center justify-center text-white transition-transform hover:scale-110 active:scale-90";
   const whiteBtn = "inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-white text-[#111] text-sm font-extrabold shadow-[0_12px_40px_rgba(0,0,0,.35)] transition-transform hover:scale-[1.03] active:scale-95 disabled:opacity-50";
   const glassBtn = "liquid-glass-sm inline-flex items-center justify-center gap-2 h-12 px-5 rounded-full text-sm font-bold text-white transition-transform hover:scale-[1.03]";
   const showDiary = !isReadOnly && tab === "diary";
+  const dates = sessions.map((s) => s.watched_date).filter(Boolean).sort() as string[];
+  const rewatchCount = sessions.filter((s) => s.is_rewatch).length;
+  const rated = sessions.filter((s) => s.rating);
+  const avgSession = rated.length ? rated.reduce((a, s) => a + (s.rating ?? 0), 0) / rated.length : null;
+  const Head = ({ title, hint, right }: { title: string; hint?: string; right?: ReactNode }) => (
+    <div className="flex items-end justify-between gap-3 mb-5">
+      <div className="min-w-0">
+        <h3 className="font-cinema text-3xl md:text-4xl leading-none">{title}</h3>
+        {hint && <p className="text-xs font-bold text-white/65 mt-2">{hint}</p>}
+      </div>
+      {right}
+    </div>
+  );
+  const Stars = ({ value, hover, size, onPick, onHover, readOnly }: { value: number; hover: number; size: number; onPick?: (n: number) => void; onHover?: (n: number) => void; readOnly?: boolean }) => (
+    <div className="flex gap-1.5">
+      {[1, 2, 3, 4, 5].map((star) => {
+        const on = (hover || value) >= star;
+        const icon = <Star style={{ width: size, height: size }} fill={on ? tone.accent : "none"} stroke={on ? tone.accent : "rgba(255,255,255,.5)"} strokeWidth={1.6} />;
+        return readOnly ? <span key={star}>{icon}</span> : (
+          <button key={star} type="button" onMouseEnter={() => onHover?.(star)} onMouseLeave={() => onHover?.(0)} onClick={() => onPick?.(star)} disabled={loading}
+            className={`transition-transform hover:scale-125 ${tapped?.key.startsWith("star-") && value >= star ? "animate-star-pop" : ""}`} style={{ animationDelay: `${star * 40}ms` }}>{icon}</button>
+        );
+      })}
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-5 text-white" onClick={close}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-1.5 sm:p-3 text-white" onClick={close}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-2xl" />
 
       <div
-        className="relative w-[min(98vw,1320px)] h-full max-h-[95vh] overflow-hidden rounded-[2.25rem] sm:rounded-[2.75rem] animate-pop border border-white/20"
+        className="relative w-[min(99vw,1600px)] h-full max-h-[97vh] overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] animate-pop border border-white/20"
         onClick={(e) => e.stopPropagation()}
-        style={{ backgroundColor: "#0b0b14", boxShadow: "0 40px 120px -24px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.2)" }}
+        style={{ backgroundColor: "#0b0b14", boxShadow: `0 40px 120px -24px rgba(0,0,0,.9), 0 0 100px -20px ${tone.glow}, ${fringeEdges}, inset 0 1px 0 rgba(255,255,255,.25)` }}
       >
-        {/* Fondo: póster ultra desenfocado + backdrop arriba */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <img src={posterUrl} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" style={{ filter: "blur(80px) saturate(1.6)", transform: "scale(1.5)", opacity: 0.7 }} />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(8,8,16,.55), rgba(8,8,16,.86))" }} />
-          {heroImg && (
-            <img src={heroImg} alt="" aria-hidden="true" className="hidden lg:block absolute top-0 right-0 w-[calc(100%-360px)] h-[360px] object-cover"
-              style={{ WebkitMaskImage: "linear-gradient(180deg,#000 0,transparent 100%)", maskImage: "linear-gradient(180deg,#000 0,transparent 100%)", opacity: 0.55 }} />
-          )}
+          <img src={posterUrl} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" style={{ filter: "blur(80px) saturate(1.7)", transform: "scale(1.5)", opacity: 0.75 }} />
+          <div className="absolute -top-40 -left-32 w-[640px] h-[640px] rounded-full blur-[120px] cinema-drift-a" style={{ background: tone.glow }} />
+          <div className="absolute -bottom-48 right-0 w-[720px] h-[720px] rounded-full blur-[130px] cinema-drift-b" style={{ background: tone.glow2 }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(8,8,16,.3), rgba(8,8,16,.72))" }} />
         </div>
 
         <button onClick={close} aria-label="Cerrar" className={`${roundBtn} absolute top-4 right-4 z-30`}><X className="w-5 h-5" /></button>
 
-        <div className="relative z-10 h-full overflow-y-auto no-scrollbar lg:overflow-hidden lg:grid lg:grid-cols-[350px_minmax(0,1fr)]">
-          {/* ───────── PANEL IZQUIERDO: póster + acciones rápidas ───────── */}
-          <aside className="p-5 sm:p-7 lg:overflow-y-auto no-scrollbar lg:border-r lg:border-white/10 space-y-5">
-            <div className="relative mx-auto max-w-[260px] lg:max-w-none">
-              <img src={posterUrl} alt={result.title} className="w-full aspect-[2/3] object-cover rounded-[2rem] border border-white/25"
-                style={{ boxShadow: `0 30px 70px -15px rgba(0,0,0,.85), 0 10px 40px ${tone.glow}` }} />
-              {score ? (
-                <span className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-extrabold text-[#111]" style={{ background: tone.accent }}>★ {score.toFixed(1)}</span>
-              ) : null}
+        <div className="relative z-10 h-full overflow-y-auto no-scrollbar">
+          {/* ───────── BANNER con aberración cromática ───────── */}
+          <div className="relative h-[300px] md:h-[400px]" style={{ WebkitMaskImage: "linear-gradient(180deg,#000 55%,transparent 100%)", maskImage: "linear-gradient(180deg,#000 55%,transparent 100%)" }} aria-hidden="true">
+            <div className="absolute inset-0 overflow-hidden cinema-kenburns">
+              <img src={heroImg ?? posterUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-70" style={{ transform: "translateX(-8px)", filter: "sepia(1) saturate(6) hue-rotate(-50deg)", mixBlendMode: "screen" }} />
+              <img src={heroImg ?? posterUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-70" style={{ transform: "translateX(8px)", filter: "sepia(1) saturate(6) hue-rotate(150deg)", mixBlendMode: "screen" }} />
+              <img src={heroImg ?? posterUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={heroImg ? undefined : { filter: "blur(24px)", transform: "scale(1.3)" }} />
             </div>
+            <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, rgba(8,8,16,.85) 0%, rgba(8,8,16,.25) 55%, transparent 100%), linear-gradient(135deg, ${tone.glow}, transparent 55%)` }} />
+          </div>
 
-            {isReadOnly && readOnlyEntry ? (
-              <div className="frost-card rounded-[1.75rem] p-4 flex items-center gap-3">
-                {(() => { const I = STATUS_ICONS[readOnlyEntry.status]; return <I className="w-5 h-5" style={{ color: STATUS_COLORS[readOnlyEntry.status] }} />; })()}
-                <div>
-                  <p className={label}>Estado</p>
-                  <p className="text-sm font-extrabold mt-0.5">{STATUS_LABELS[readOnlyEntry.status]}</p>
+          <div className="relative px-4 sm:px-8 pb-8 -mt-[210px] md:-mt-[300px] grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[330px_minmax(0,1fr)]">
+            {/* ───────── RIEL IZQUIERDO: póster + controles ───────── */}
+            <aside className="space-y-5 lg:pt-14">
+              <div className="relative mx-auto max-w-[240px] lg:max-w-none" style={{ perspective: 900 }}
+                onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setTilt({ x: ((e.clientY - r.top) / r.height - 0.5) * -12, y: ((e.clientX - r.left) / r.width - 0.5) * 14 }); }}
+                onMouseLeave={() => setTilt({ x: 0, y: 0 })}>
+                <div className="relative transition-transform duration-200 ease-out" style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` }}>
+                  <img src={posterUrl} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover rounded-[2rem] opacity-70" style={{ transform: "translateX(-9px)", filter: "sepia(1) saturate(6) hue-rotate(-50deg)", mixBlendMode: "screen" }} />
+                  <img src={posterUrl} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover rounded-[2rem] opacity-70" style={{ transform: "translateX(9px)", filter: "sepia(1) saturate(6) hue-rotate(150deg)", mixBlendMode: "screen" }} />
+                  <img src={posterUrl} alt={result.title} className="relative w-full aspect-[2/3] object-cover rounded-[2rem] border border-white/30" style={{ boxShadow: `0 30px 70px -15px rgba(0,0,0,.85), 0 10px 50px ${tone.glow}` }} />
+                  <div className="absolute inset-0 rounded-[2rem] pointer-events-none" style={{ background: `linear-gradient(${115 + tilt.y * 4}deg, rgba(255,255,255,.22), transparent 40%)` }} />
                 </div>
               </div>
-            ) : (
-              <div className="frost-card rounded-[1.75rem] p-2 space-y-1">
-                {STATUSES.map((s) => {
-                  const I = STATUS_ICONS[s.value];
-                  const active = status === s.value;
-                  return (
-                    <button key={tapped?.key === s.value ? `${s.value}-${tapped.n}` : s.value} onClick={() => pickStatus(s.value)} disabled={loading}
-                      className={`w-full flex items-center gap-3 px-4 h-11 rounded-full text-sm font-extrabold transition-colors duration-300 active:scale-95 ${tapped?.key === s.value ? "animate-status-tap" : ""}`}
-                      style={{ background: active ? "#fff" : "transparent", color: active ? "#111" : "rgba(255,255,255,.88)" }}>
-                      <I className="w-4 h-4" style={{ color: active ? "#111" : STATUS_COLORS[s.value] }} />
-                      {s.label}
-                      {active && (
-                        saving && tapped?.key === s.value
-                          ? <RotateCw className="w-4 h-4 ml-auto animate-spin" />
-                          : <Check className="w-4 h-4 ml-auto animate-check-in" strokeWidth={3} />
-                      )}
+
+              {isReadOnly && readOnlyEntry ? (
+                <div className="liquid-glass rounded-[1.75rem] p-4 flex items-center gap-3">
+                  {(() => { const I = STATUS_ICONS[readOnlyEntry.status]; return <I className="w-5 h-5" style={{ color: STATUS_COLORS[readOnlyEntry.status] }} />; })()}
+                  <div><p className={label}>Estado</p><p className="text-sm font-extrabold mt-0.5">{STATUS_LABELS[readOnlyEntry.status]}</p></div>
+                </div>
+              ) : (
+                <div className="liquid-glass rounded-[1.75rem] p-2 space-y-1">
+                  {STATUSES.map((s) => {
+                    const I = STATUS_ICONS[s.value];
+                    const active = status === s.value;
+                    return (
+                      <button key={tapped?.key === s.value ? `${s.value}-${tapped.n}` : s.value} onClick={() => pickStatus(s.value)} disabled={loading}
+                        className={`w-full flex items-center gap-3 px-4 h-12 rounded-full text-sm font-extrabold transition-colors duration-300 active:scale-95 ${tapped?.key === s.value ? "animate-status-tap" : ""}`}
+                        style={{ background: active ? accentGrad : "transparent", color: active ? "#111" : "rgba(255,255,255,.9)" }}>
+                        <I className="w-4 h-4" style={{ color: active ? "#111" : STATUS_COLORS[s.value] }} />
+                        {s.label}
+                        {active && (saving && tapped?.key === s.value ? <RotateCw className="w-4 h-4 ml-auto animate-spin" /> : <Check className="w-4 h-4 ml-auto animate-check-in" strokeWidth={3} />)}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="liquid-glass rounded-[1.75rem] px-5 py-4">
+                <p className={`${label} mb-3`}>{isReadOnly ? "Su nota" : "Tu nota"}</p>
+                <Stars value={isReadOnly ? displayRating : rating} hover={isReadOnly ? 0 : hoverRating} size={30} onPick={pickRating} onHover={setHoverRating} readOnly={isReadOnly} />
+              </div>
+
+              {!isReadOnly && (
+                <div className="space-y-3">
+                  <div className="min-h-6 flex items-center justify-center text-xs font-extrabold text-center">
+                    {saveError ? <span className="text-red-300">{saveError}</span>
+                      : saving ? <span className="inline-flex items-center gap-1.5 text-white/70"><RotateCw className="w-3.5 h-3.5 animate-spin" /> Guardando…</span>
+                      : savedTick > 0 ? <span key={savedTick} className="inline-flex items-center gap-1.5 text-emerald-300 animate-pop"><Check className="w-3.5 h-3.5" strokeWidth={3} /> Guardado automáticamente</span>
+                      : <span className="text-white/60">{existingEntry ? "Los cambios se guardan solos" : "Elegí un estado para guardarla"}</span>}
+                  </div>
+
+                  <div ref={dropdownRef} className="relative">
+                    <button onClick={() => setShowListDropdown((v) => !v)} className={`${glassBtn} w-full`} style={addedToListId ? { color: "#86efac" } : undefined}>
+                      <ListPlus className="w-4 h-4" />
+                      {addedToListId ? "¡Agregado!" : "Agregar a lista"}
+                      <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${showListDropdown ? "rotate-180" : ""}`} />
                     </button>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className="frost-card rounded-[1.75rem] px-5 py-4">
-              <p className={`${label} mb-2.5`}>{isReadOnly ? "Su nota" : "Tu nota"}</p>
-              <div className="flex gap-1.5">
-                {[1, 2, 3, 4, 5].map((star) => {
-                  const on = (isReadOnly ? displayRating : hoverRating || rating) >= star;
-                  const icon = <Star className="w-7 h-7" fill={on ? tone.accent : "none"} stroke={on ? tone.accent : "rgba(255,255,255,.5)"} strokeWidth={1.6} />;
-                  return isReadOnly ? <span key={star}>{icon}</span> : (
-                    <button key={star} onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)}
-                      onClick={() => pickRating(star)} disabled={loading}
-                      className={`transition-transform hover:scale-125 ${tapped?.key.startsWith("star-") && rating >= star ? "animate-star-pop" : ""}`}
-                      style={{ animationDelay: `${star * 40}ms` }}>{icon}</button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {!isReadOnly && (
-              <div className="space-y-2.5">
-                <div className="h-6 flex items-center justify-center text-xs font-extrabold">
-                  {saveError ? (
-                    <span className="text-red-300">{saveError}</span>
-                  ) : saving ? (
-                    <span className="inline-flex items-center gap-1.5 text-white/70"><RotateCw className="w-3.5 h-3.5 animate-spin" /> Guardando…</span>
-                  ) : savedTick > 0 ? (
-                    <span key={savedTick} className="inline-flex items-center gap-1.5 text-emerald-300 animate-pop"><Check className="w-3.5 h-3.5" strokeWidth={3} /> Guardado automáticamente</span>
-                  ) : (
-                    <span className="text-white/55">{existingEntry ? "Los cambios se guardan solos" : "Elegí un estado para guardarla"}</span>
-                  )}
-                </div>
-
-                <div ref={dropdownRef} className="relative">
-                  <button onClick={() => setShowListDropdown((v) => !v)} className={`${glassBtn} w-full`} style={addedToListId ? { color: "#86efac" } : undefined}>
-                    <ListPlus className="w-4 h-4" />
-                    {addedToListId ? "¡Agregado!" : "Agregar a lista"}
-                    <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${showListDropdown ? "rotate-180" : ""}`} />
-                  </button>
-                  {showListDropdown && (
-                    <div className="liquid-menu absolute z-40 mt-2 left-0 right-0 rounded-[1.75rem] overflow-hidden animate-slide-up">
-                      <div className="max-h-52 overflow-y-auto p-2">
-                        {lists.length === 0 ? (
-                          <div className="px-3 py-3 text-xs text-white/70">No tenés listas aún. Creá una abajo.</div>
-                        ) : (
-                          lists.map((list) => {
+                    {showListDropdown && (
+                      <div className="liquid-menu absolute z-40 mt-2 left-0 right-0 rounded-[1.75rem] overflow-hidden animate-slide-up">
+                        <div className="max-h-52 overflow-y-auto p-2">
+                          {lists.length === 0 ? <div className="px-3 py-3 text-xs text-white/70">No tenés listas aún. Creá una abajo.</div> : lists.map((list) => {
                             const justAdded = addedToListId === list.id;
                             const isInList = justAdded || listsContaining.has(list.id);
                             return (
@@ -770,250 +786,231 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                                   : addingToList === list.id ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" /> : null}
                               </button>
                             );
-                          })
-                        )}
+                          })}
+                        </div>
+                        <div className="p-3 border-t border-white/10 space-y-2">
+                          <input value={newListName} onChange={(e) => setNewListName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleCreateList(); }} placeholder="Nombre de la lista nueva..." className="glass-input !h-11 !text-xs" />
+                          <button onClick={handleCreateList} disabled={creatingList || !newListName.trim()} className="w-full inline-flex items-center justify-center gap-1.5 h-10 rounded-full bg-white text-[#111] text-xs font-extrabold disabled:opacity-50">
+                            <Plus className="w-3.5 h-3.5" /> {creatingList ? "Creando..." : "Crear lista y agregar"}
+                          </button>
+                        </div>
                       </div>
-                      <div className="p-3 border-t border-white/10 space-y-2">
-                        <input value={newListName} onChange={(e) => setNewListName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleCreateList(); }}
-                          placeholder="Nombre de la lista nueva..." className="glass-input !h-11 !text-xs" />
-                        <button onClick={handleCreateList} disabled={creatingList || !newListName.trim()}
-                          className="w-full inline-flex items-center justify-center gap-1.5 h-10 rounded-full bg-white text-[#111] text-xs font-extrabold disabled:opacity-50">
-                          <Plus className="w-3.5 h-3.5" /> {creatingList ? "Creando..." : "Crear lista y agregar"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
 
+                  <div className="flex gap-2.5">
+                    {trailerKey && <a href={`https://www.youtube.com/watch?v=${trailerKey}`} target="_blank" rel="noreferrer" className={`${glassBtn} flex-1 hover:text-white`}><Play className="w-4 h-4" fill="currentColor" /> Tráiler</a>}
+                    {shareUrl && <button onClick={handleShare} className={`${glassBtn} flex-1`} style={{ color: copied ? "#86efac" : undefined }}>{copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />} {copied ? "Copiado" : "Compartir"}</button>}
+                    {existingEntry && <button onClick={handleRemove} disabled={saving} title="Eliminar de mi biblioteca" className={roundBtn} style={{ color: "#fca5a5" }}><Trash2 className="w-4 h-4" /></button>}
+                  </div>
+                </div>
+              )}
+
+              {isReadOnly && (
                 <div className="flex gap-2.5">
-                  {trailerKey && (
-                    <a href={`https://www.youtube.com/watch?v=${trailerKey}`} target="_blank" rel="noreferrer" className={`${glassBtn} flex-1 hover:text-white`}>
-                      <Play className="w-4 h-4" fill="currentColor" /> Tráiler
-                    </a>
-                  )}
-                  {shareUrl && (
-                    <button onClick={handleShare} className={`${glassBtn} flex-1`} style={{ color: copied ? "#86efac" : undefined }}>
-                      {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />} {copied ? "Copiado" : "Compartir"}
-                    </button>
-                  )}
-                  {existingEntry && (
-                    <button onClick={handleRemove} disabled={saving} title="Eliminar de mi biblioteca" className={roundBtn} style={{ color: "#fca5a5" }}>
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+                  {trailerKey && <a href={`https://www.youtube.com/watch?v=${trailerKey}`} target="_blank" rel="noreferrer" className={`${glassBtn} flex-1 hover:text-white`}><Play className="w-4 h-4" fill="currentColor" /> Tráiler</a>}
+                  {shareUrl && <button onClick={handleShare} className={`${glassBtn} flex-1`} style={{ color: copied ? "#86efac" : undefined }}>{copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />} {copied ? "Copiado" : "Compartir"}</button>}
+                </div>
+              )}
+            </aside>
+
+            {/* ───────── COLUMNA PRINCIPAL ───────── */}
+            <main className="min-w-0">
+              <div className="min-h-[200px] md:min-h-[290px] flex flex-col justify-end pr-14 mb-8">
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <span className={chip}>{yearLabel}</span>
+                  <span className={chip}>{result.mediaType === "movie" ? "Película" : "Serie"}</span>
+                  {runtimeLabel && <span className={`${chip} inline-flex items-center gap-1.5`}><Clock className="w-3.5 h-3.5" /> {runtimeLabel}</span>}
+                  {genres.map((g) => <span key={g} className="liquid-glass-sm px-3.5 py-2 rounded-full text-xs font-bold text-white">{g}</span>)}
+                </div>
+                <div className="flex items-end justify-between gap-6">
+                  <h2 className="font-cinema text-5xl md:text-7xl xl:text-8xl leading-[0.98] drop-shadow-[0_10px_50px_rgba(0,0,0,.6)] min-w-0 break-words">{result.title}</h2>
+                  {score ? (
+                    <div className="relative shrink-0 w-[96px] h-[96px] hidden sm:block">
+                      <svg width="96" height="96" className="-rotate-90" aria-hidden="true">
+                        <circle cx="48" cy="48" r="42" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="8" />
+                        <circle cx="48" cy="48" r="42" fill="none" stroke={tone.accent} strokeWidth="8" strokeLinecap="round" strokeDasharray={263.9} strokeDashoffset={263.9 * (1 - Math.min(score, 10) / 10)}
+                          style={{ filter: "drop-shadow(-2px 0 0 rgba(255,60,120,.8)) drop-shadow(2px 0 0 rgba(60,200,255,.8))" }} />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="font-cinema text-3xl leading-none">{score.toFixed(1)}</span><span className="text-[9px] font-extrabold tracking-widest text-white/70">TMDB</span></div>
+                    </div>
+                  ) : null}
                 </div>
               </div>
-            )}
 
-            {isReadOnly && (
-              <div className="flex gap-2.5">
-                {trailerKey && (
-                  <a href={`https://www.youtube.com/watch?v=${trailerKey}`} target="_blank" rel="noreferrer" className={`${glassBtn} flex-1 hover:text-white`}><Play className="w-4 h-4" fill="currentColor" /> Tráiler</a>
-                )}
-                {shareUrl && (
-                  <button onClick={handleShare} className={`${glassBtn} flex-1`} style={{ color: copied ? "#86efac" : undefined }}>
-                    {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />} {copied ? "Copiado" : "Compartir"}
-                  </button>
-                )}
-              </div>
-            )}
-          </aside>
+              {!isReadOnly && (
+                <div className="liquid-glass rounded-full p-1.5 flex gap-1.5 w-full sm:w-fit mb-8">
+                  {([{ k: "info", t: "Sobre el título", I: Info }, { k: "diary", t: "Mi diario", I: Pencil }] as const).map(({ k, t, I }) => (
+                    <button key={k} onClick={() => setTab(k)} className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full text-sm font-extrabold transition-all"
+                      style={{ background: tab === k ? accentGrad : "transparent", color: tab === k ? "#111" : "rgba(255,255,255,.85)" }}>
+                      <I className="w-4 h-4" /> {t}
+                      {k === "diary" && sessions.length > 0 && <span className="px-2 py-0.5 rounded-full text-[11px] bg-black/25" style={{ color: tab === k ? "#111" : "#fff" }}>{sessions.length}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
 
-          {/* ───────── PANEL DERECHO: información + diario ───────── */}
-          <main className="min-w-0 p-5 sm:p-8 lg:pr-20 lg:overflow-y-auto no-scrollbar">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={chip}>{yearLabel}</span>
-              <span className={chip}>{result.mediaType === "movie" ? "Película" : "Serie"}</span>
-              {runtimeLabel && <span className={`${chip} inline-flex items-center gap-1.5`}><Clock className="w-3.5 h-3.5" /> {runtimeLabel}</span>}
-              {genres.map((g) => <span key={g} className="px-3.5 py-2 rounded-full text-xs font-bold border border-white/25 text-white/90">{g}</span>)}
-            </div>
-            <h2 className="font-cinema mt-5 mb-6 text-5xl md:text-7xl leading-[1.02] drop-shadow-[0_10px_50px_rgba(0,0,0,.5)]">{result.title}</h2>
-
-            {!isReadOnly && (
-              <div className="flex gap-2 mb-6">
-                <button onClick={() => setTab("info")} data-active={tab === "info"} className="frost-tab"><Info className="w-4 h-4" /> Sobre el título</button>
-                <button onClick={() => setTab("diary")} data-active={tab === "diary"} className="frost-tab">
-                  <Pencil className="w-4 h-4" /> Mi diario
-                  {sessions.length > 0 && <span className="px-2 py-0.5 rounded-full text-[11px]" style={{ background: "rgba(128,128,128,.25)" }}>{sessions.length}</span>}
-                </button>
-              </div>
-            )}
-
-            {!showDiary && (
-              <div className="space-y-5">
-                <div className={card}>
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <p className={label}>Sinopsis</p>
-                    {!isReadOnly && (
+              {!showDiary && (
+                <div className="space-y-10">
+                  <section>
+                    <Head title="Sinopsis" right={!isReadOnly ? (
                       <button onClick={fillDescription} disabled={fetchingDesc} className="liquid-glass-sm inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[11px] font-extrabold text-white disabled:opacity-60">
                         <Sparkles className="w-3.5 h-3.5" /> {fetchingDesc ? "Buscando..." : "Actualizar desde TMDB"}
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-base leading-relaxed text-white/90 text-pretty">
-                    {description || result.overview || "Sin sinopsis disponible."}
-                  </p>
-                </div>
+                      </button>) : undefined} />
+                    <p className="text-lg md:text-xl leading-relaxed text-white/90 text-pretty max-w-4xl">{description || result.overview || "Sin sinopsis disponible."}</p>
+                  </section>
 
-                {cast.length > 0 && (
-                  <div className={card}>
-                    <p className={`${label} mb-4`}>Reparto</p>
-                    <div className="flex flex-wrap gap-2">
-                      {cast.map((c) => <span key={c.name} className="liquid-glass-sm inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold text-white"><Users className="w-3 h-3 text-white/60" /> {c.name}</span>)}
-                    </div>
-                  </div>
-                )}
-
-                {memberLists.length > 0 && (
-                  <div className={card}>
-                    <p className={`${label} mb-4`}>Está en tus listas</p>
-                    <div className="flex flex-wrap gap-2">
-                      {memberLists.map((list) => <span key={list.id} className="liquid-glass-sm inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-extrabold text-white"><ListIcon className="w-3 h-3" /> {list.name}</span>)}
-                    </div>
-                  </div>
-                )}
-
-                {isReadOnly && readOnlyEntry && (
-                  <>
-                    {readOnlyEntry.notes && (
-                      <div className={card}>
-                        <div className="flex items-center gap-2 mb-3"><Quote className="w-4 h-4" style={{ color: "#fff" }} /><p className={label}>Comentario</p></div>
-                        <p className="text-sm leading-relaxed text-white/90">{readOnlyEntry.notes}</p>
+                  {cast.length > 0 && (
+                    <section className="border-t border-white/20 pt-6">
+                      <Head title="Reparto" />
+                      <div className="flex flex-wrap gap-x-6 gap-y-3 items-baseline">
+                        {cast.map((c, i) => <span key={c.name} className="font-cinema leading-none text-white" style={{ fontSize: `${i < 3 ? 2.1 : 1.45}rem`, opacity: 1 - i * 0.05 }}>{c.name}</span>)}
                       </div>
-                    )}
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <Link to="/login" className={`${glassBtn} flex-1 hover:text-white`}>Iniciar sesión</Link>
-                      <Link to="/registro" className={`${whiteBtn} flex-1 hover:text-[#111]`}>Crear cuenta</Link>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {showDiary && (
-              <div className="space-y-5">
-                <div className={card}>
-                  <div className="flex items-center gap-2 mb-4"><Quote className="w-4 h-4" style={{ color: "#fff" }} /><p className={label}>Mi comentario</p></div>
-                  <textarea value={notes} onChange={(e) => { notesTouched.current = true; setNotes(e.target.value); }} placeholder="¿Qué te pareció? Escribí tu opinión personal..." rows={4} className="glass-input" />
-                  <p className="text-[11px] mt-2 text-white/55">Se guarda solo mientras escribís.</p>
-                </div>
-
-                <div className="liquid-glass rounded-[2rem] p-6 md:p-7 space-y-5">
-                  <div className="flex items-center gap-2.5 text-base font-extrabold">
-                    <CalendarDays className="w-5 h-5" style={{ color: "#fff" }} />
-                    ¿Cómo lo viste?
-                    <HelpTooltip text={HOW_YOU_WATCHED_HELP} />
-                  </div>
-                  <p className="text-xs leading-relaxed text-white/70">Contanos dónde y cómo lo viste: ayuda a tu ADN Audiovisual a entender tu forma de consumir.</p>
-
-                  {sessions.length > 0 && (
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                      {sessions.map((session) => {
-                        const isJustSaved = session.id === justSavedId;
-                        const coverUrl = heroImg ?? getBackdropUrl(result.backdropPath, "w780");
-                        return (
-                          <div key={session.id} id={`session-${session.id}`} className={`frost-card relative rounded-[1.5rem] overflow-hidden ${isJustSaved ? "animate-saved-flash" : ""}`}>
-                            <div className="relative h-24 overflow-hidden">
-                              <div className="absolute -inset-3 bg-cover bg-center opacity-60" style={{ backgroundImage: `url(${coverUrl})`, filter: "blur(10px) saturate(150%)" }} />
-                              <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${tone.glow}, rgba(8,8,14,.85))` }} />
-                              <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap max-w-[80%]">
-                                <span className="liquid-glass-sm inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold text-white"><CalendarDays className="w-3 h-3" /> {session.watched_date ?? "Fecha sin registrar"}</span>
-                                {session.is_rewatch && <span className="liquid-glass-sm inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold text-white"><Repeat className="w-3 h-3" /> Re-ver</span>}
-                              </div>
-                              <span className="liquid-glass-sm absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold text-white">
-                                <Star className="w-3.5 h-3.5" fill={session.rating ? tone.accent : "none"} stroke={session.rating ? tone.accent : "currentColor"} /> {session.rating ? `${session.rating}/5` : "Sin nota"}
-                              </span>
-                            </div>
-                            <div className="p-4">
-                              <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap text-[11px] font-bold text-white/80">
-                                <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" style={{ color: HABIT_GROUPS.venue.color }} /> {VENUE_LABELS[session.venue]}</span>
-                                <span className="inline-flex items-center gap-1"><Users className="w-3 h-3" style={{ color: HABIT_GROUPS.companionship.color }} /> {COMPANIONSHIP_LABELS[session.companionship]}</span>
-                                {session.platform !== "unknown" && <span className="inline-flex items-center gap-1"><MonitorPlay className="w-3 h-3" style={{ color: HABIT_GROUPS.platform.color }} /> {PLATFORM_LABELS[session.platform]}</span>}
-                                {session.language_mode !== "unknown" && <span className="inline-flex items-center gap-1"><Languages className="w-3 h-3" style={{ color: HABIT_GROUPS.language.color }} /> {LANGUAGE_MODE_LABELS[session.language_mode]}</span>}
-                              </div>
-                              <div className="flex items-center justify-between gap-2 mt-3 border-t border-white/10 pt-2.5">
-                                <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">{isJustSaved ? "Recién guardada" : "Vista registrada"}</span>
-                                <div className="flex items-center gap-1">
-                                  <button onClick={() => startEditSession(session)} disabled={savingSession} title="Editar" className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 disabled:opacity-50"><Pencil className="w-3.5 h-3.5" /></button>
-                                  <button onClick={() => handleDeleteSession(session.id)} disabled={savingSession} title="Eliminar" className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 disabled:opacity-50" style={{ color: "#fca5a5" }}><Trash2 className="w-3.5 h-3.5" /></button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    </section>
                   )}
 
-                  <div className="h-px bg-white/10" />
-
-                  <div className="flex items-center justify-between gap-2">
-                    <p className={label}>{editingSessionId ? "Editar sesión" : "Agregar sesión"}</p>
-                    {editingSessionId && <button onClick={resetSessionDraft} className="text-[11px] font-extrabold hover:opacity-70" style={{ color: "#fff" }}>Cancelar edición</button>}
-                  </div>
-
-                  <div>
-                    <p className="text-[11px] font-bold mb-2 text-white/70">¿Cuándo lo viste?</p>
-                    <div className="flex flex-col sm:flex-row gap-2.5">
-                      <input type="date" value={draft.watchedDate} onChange={(e) => setDraft((d) => ({ ...d, watchedDate: e.target.value }))} className="glass-input flex-1 !h-12 !text-sm" />
-                      <input type="time" value={timeValue} onChange={(e) => setTimeValue(e.target.value)} className="glass-input sm:!w-36 !h-12 !text-sm" placeholder="Hora" />
-                    </div>
-                    <p className="mt-2 text-[10px] leading-relaxed text-white/55">La hora es opcional. Si la completás, se guarda la zona horaria ({tzValue || "del navegador"}) para calcular la franja del día correctamente.</p>
-                  </div>
-
-                  <div>
-                    <p className="text-[11px] font-extrabold mb-2.5 uppercase tracking-wider text-white/70">Nota de esta vista (opcional)</p>
-                    <div className="flex gap-1.5">
-                      {[1, 2, 3, 4, 5].map((star) => {
-                        const on = (sessionHover || sessionRating) >= star;
-                        return (
-                          <button key={star} onMouseEnter={() => setSessionHover(star)} onMouseLeave={() => setSessionHover(0)} onClick={() => setSessionRating(sessionRating === star ? 0 : star)} className="transition-transform hover:scale-125">
-                            <Star className="w-6 h-6" fill={on ? tone.accent : "none"} stroke={on ? tone.accent : "rgba(255,255,255,.45)"} strokeWidth={1.6} />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <PillGroup groupKey="venue" pills={VENUE_PILLS} selected={draft.venue} onSelect={(value) => setDraft((d) => ({ ...d, venue: value as ViewingVenue }))} />
-                  <PillGroup groupKey="companionship" pills={COMPANIONSHIP_PILLS} selected={draft.companionship} onSelect={(value) => setDraft((d) => ({ ...d, companionship: value as ViewingCompanionship }))} />
-                  <PillGroup groupKey="language" pills={LANGUAGE_MODE_PILLS} selected={draft.languageMode} onSelect={(value) => setDraft((d) => ({ ...d, languageMode: value as ViewingLanguageMode }))} />
-                  <PillGroup groupKey="platform" pills={PLATFORM_PILLS} selected={draft.platform} onSelect={(value) => setDraft((d) => ({ ...d, platform: value as ViewingPlatform }))} />
-                  <PillGroup groupKey="rewatch" pills={REWATCH_PILLS} selected={draft.isRewatch ? "rewatch" : "first"} onSelect={(value) => setDraft((d) => ({ ...d, isRewatch: value === "rewatch" }))} />
-
-                  {reactionTags.length > 0 && (
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <p className="text-[11px] font-extrabold uppercase tracking-wider text-white/70">¿Qué te dejó?</p>
-                        <span className="text-[10px] text-white/55">{selectedReactions.length}/3 elegidas</span>
+                  {memberLists.length > 0 && (
+                    <section className="border-t border-white/20 pt-6">
+                      <Head title="Está en tus listas" />
+                      <div className="flex flex-wrap gap-2.5">
+                        {memberLists.map((list) => <span key={list.id} className="liquid-glass-sm inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-extrabold text-white"><ListIcon className="w-4 h-4" /> {list.name}</span>)}
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {reactionTags.map((tag) => {
-                          const selected = selectedReactions.includes(tag.slug);
-                          const locked = !selected && selectedReactions.length >= 3;
+                    </section>
+                  )}
+
+                  {isReadOnly && readOnlyEntry && (
+                    <>
+                      {readOnlyEntry.notes && (
+                        <section className="border-t border-white/20 pt-6">
+                          <Head title="Comentario" right={<Quote className="w-6 h-6 text-white/55" />} />
+                          <p className="text-lg leading-relaxed text-white/90 max-w-3xl">{readOnlyEntry.notes}</p>
+                        </section>
+                      )}
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Link to="/login" className={`${glassBtn} flex-1 hover:text-white`}>Iniciar sesión</Link>
+                        <Link to="/registro" className={`${whiteBtn} flex-1 hover:text-[#111]`}>Crear cuenta</Link>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {showDiary && (
+                <div className="space-y-12">
+                  <div className="liquid-glass rounded-[2rem] grid grid-cols-2 md:grid-cols-4 [&>div]:px-6 [&>div]:py-5 [&>div+div]:md:border-l [&>div+div]:border-white/15">
+                    {[
+                      { v: String(sessions.length), l: sessions.length === 1 ? "vista" : "vistas" },
+                      { v: String(rewatchCount), l: "re-vistas" },
+                      { v: avgSession != null ? avgSession.toFixed(1) : "—", l: "nota media" },
+                      { v: dates.length ? dates[dates.length - 1] : "—", l: "última vez" },
+                    ].map(({ v, l }) => (
+                      <div key={l} className="min-w-0"><p className="font-cinema text-4xl md:text-5xl leading-none truncate">{v}</p><p className="text-xs font-extrabold uppercase tracking-widest mt-2 text-white/65">{l}</p></div>
+                    ))}
+                  </div>
+
+                  <section>
+                    <Head title="Mi comentario" hint="Se guarda solo mientras escribís" right={<Quote className="w-6 h-6 text-white/55" />} />
+                    <textarea value={notes} onChange={(e) => { notesTouched.current = true; setNotes(e.target.value); }} placeholder="¿Qué te pareció? Escribí tu opinión personal..." rows={6} className="glass-input !text-lg !leading-relaxed !p-5 !rounded-[1.75rem]" />
+                  </section>
+
+                  {sessions.length > 0 && (
+                    <section className="border-t border-white/20 pt-6">
+                      <Head title="Tus vistas" hint="Cada vez que la viste" />
+                      <div className="space-y-4">
+                        {sessions.map((session) => {
+                          const isJustSaved = session.id === justSavedId;
+                          const d = session.watched_date ? new Date(`${session.watched_date}T00:00:00`) : null;
                           return (
-                            <button key={tag.slug} type="button" role="switch" aria-checked={selected} tabIndex={locked ? -1 : 0} onClick={() => toggleReaction(tag)}
-                              onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); if (!locked) toggleReaction(tag); } }}
-                              disabled={savingSession || locked} data-active={selected} className="frost-tab !py-1.5 !px-3.5 !text-[11px] disabled:opacity-40">{tag.name}</button>
+                            <div key={session.id} id={`session-${session.id}`} className={`liquid-glass relative rounded-[2rem] overflow-hidden grid md:grid-cols-[150px_minmax(0,1fr)_auto] items-center ${isJustSaved ? "animate-saved-flash" : ""}`}>
+                              <div className="relative self-stretch flex flex-col items-center justify-center py-5 md:py-0" style={{ background: `linear-gradient(160deg, ${tone.accent}, hsl(${hueB} 80% 55%))`, color: "#111" }}>
+                                <span className="font-cinema text-6xl leading-none">{d ? d.getDate() : "—"}</span>
+                                <span className="text-xs font-extrabold uppercase tracking-widest mt-1">{d ? d.toLocaleDateString("es-AR", { month: "short", year: "numeric" }) : "sin fecha"}</span>
+                              </div>
+                              <div className="p-5 md:p-6 min-w-0">
+                                <div className="flex flex-wrap gap-2.5 text-sm font-bold">
+                                  <span className="liquid-glass-sm inline-flex items-center gap-2 px-4 py-2 rounded-full"><MapPin className="w-4 h-4" style={{ color: HABIT_GROUPS.venue.color }} /> {VENUE_LABELS[session.venue]}</span>
+                                  <span className="liquid-glass-sm inline-flex items-center gap-2 px-4 py-2 rounded-full"><Users className="w-4 h-4" style={{ color: HABIT_GROUPS.companionship.color }} /> {COMPANIONSHIP_LABELS[session.companionship]}</span>
+                                  {session.platform !== "unknown" && <span className="liquid-glass-sm inline-flex items-center gap-2 px-4 py-2 rounded-full"><MonitorPlay className="w-4 h-4" style={{ color: HABIT_GROUPS.platform.color }} /> {PLATFORM_LABELS[session.platform]}</span>}
+                                  {session.language_mode !== "unknown" && <span className="liquid-glass-sm inline-flex items-center gap-2 px-4 py-2 rounded-full"><Languages className="w-4 h-4" style={{ color: HABIT_GROUPS.language.color }} /> {LANGUAGE_MODE_LABELS[session.language_mode]}</span>}
+                                  {session.is_rewatch && <span className="liquid-glass-sm inline-flex items-center gap-2 px-4 py-2 rounded-full"><Repeat className="w-4 h-4" /> Re-ver</span>}
+                                </div>
+                                <div className="mt-4"><Stars value={session.rating ?? 0} hover={0} size={22} readOnly /></div>
+                              </div>
+                              <div className="flex md:flex-col gap-2 p-5 md:p-6 md:pl-0">
+                                <button onClick={() => startEditSession(session)} disabled={savingSession} className={`${glassBtn} !h-11`}><Pencil className="w-4 h-4" /> Editar</button>
+                                <button onClick={() => handleDeleteSession(session.id)} disabled={savingSession} className={`${glassBtn} !h-11`} style={{ color: "#fca5a5" }}><Trash2 className="w-4 h-4" /> Borrar</button>
+                              </div>
+                            </div>
                           );
                         })}
                       </div>
-                    </div>
+                    </section>
                   )}
 
-                  {sessionError && <p className="text-xs font-bold text-red-300">{sessionError}</p>}
+                  <section className="border-t border-white/20 pt-6">
+                    <Head title={editingSessionId ? "Editar sesión" : "Agregar sesión"} hint="Contanos dónde y cómo la viste: ayuda a tu ADN Audiovisual"
+                      right={<span className="flex items-center gap-3">{editingSessionId && <button onClick={resetSessionDraft} className="text-sm font-extrabold underline underline-offset-4 hover:opacity-70">Cancelar edición</button>}<HelpTooltip text={HOW_YOU_WATCHED_HELP} /></span>} />
 
-                  <button onClick={handleSaveSession} disabled={savingSession}
-                    className={`w-full inline-flex items-center justify-center gap-2 h-12 rounded-full text-sm font-extrabold transition-transform hover:scale-[1.01] disabled:opacity-50 ${sessionSaved ? "animate-pop" : ""}`}
-                    style={sessionSaved ? { backgroundColor: "#4ade80", color: "#052e16", boxShadow: "0 8px 28px rgba(74,222,128,.45)" } : { background: "#fff", color: "#111" }}>
-                    {sessionSaved ? (<><Check className="w-4 h-4" strokeWidth={3} />{editingSessionId ? "Cambios guardados" : "Sesión guardada"}</>)
-                      : savingSession ? (<><RotateCw className="w-4 h-4 animate-spin" />Guardando...</>)
-                      : (<><Plus className="w-4 h-4" />{editingSessionId ? "Guardar cambios" : "Guardar sesión"}</>)}
-                  </button>
+                    <div className="grid gap-8 xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+                      <div className="space-y-8">
+                        <div>
+                          <p className="text-sm font-extrabold mb-3 inline-flex items-center gap-2"><CalendarDays className="w-4 h-4" /> ¿Cuándo la viste?</p>
+                          <div className="flex gap-3">
+                            <input type="date" value={draft.watchedDate} onChange={(e) => setDraft((d) => ({ ...d, watchedDate: e.target.value }))} className="glass-input flex-1 !h-14 !text-base" />
+                            <input type="time" value={timeValue} onChange={(e) => setTimeValue(e.target.value)} className="glass-input !w-32 !h-14 !text-base" placeholder="Hora" />
+                          </div>
+                          <p className="mt-2 text-xs leading-relaxed text-white/60">La hora es opcional. Si la completás, se guarda la zona horaria ({tzValue || "del navegador"}).</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-extrabold mb-3 inline-flex items-center gap-2"><Star className="w-4 h-4" /> Nota de esta vista</p>
+                          <Stars value={sessionRating} hover={sessionHover} size={38} onPick={(n) => setSessionRating(sessionRating === n ? 0 : n)} onHover={setSessionHover} />
+                        </div>
+                        {reactionTags.length > 0 && (
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                              <p className="text-sm font-extrabold">¿Qué te dejó?</p>
+                              <span className="text-xs text-white/60">{selectedReactions.length}/3 elegidas</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {reactionTags.map((tag) => {
+                                const selected = selectedReactions.includes(tag.slug);
+                                const locked = !selected && selectedReactions.length >= 3;
+                                return (
+                                  <button key={tag.slug} type="button" role="switch" aria-checked={selected} tabIndex={locked ? -1 : 0} onClick={() => toggleReaction(tag)}
+                                    onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); if (!locked) toggleReaction(tag); } }}
+                                    disabled={savingSession || locked}
+                                    className="px-5 h-11 rounded-full text-sm font-extrabold border transition-all disabled:opacity-40"
+                                    style={selected ? { background: accentGrad, color: "#111", borderColor: "transparent" } : { background: "rgba(255,255,255,.06)", borderColor: "rgba(255,255,255,.2)" }}>{tag.name}</button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-8 min-w-0">
+                        <PillGroup accent={accentGrad} groupKey="venue" pills={VENUE_PILLS} selected={draft.venue} onSelect={(value) => setDraft((d) => ({ ...d, venue: value as ViewingVenue }))} />
+                        <PillGroup accent={accentGrad} groupKey="companionship" pills={COMPANIONSHIP_PILLS} selected={draft.companionship} onSelect={(value) => setDraft((d) => ({ ...d, companionship: value as ViewingCompanionship }))} />
+                        <PillGroup accent={accentGrad} groupKey="language" pills={LANGUAGE_MODE_PILLS} selected={draft.languageMode} onSelect={(value) => setDraft((d) => ({ ...d, languageMode: value as ViewingLanguageMode }))} />
+                        <PillGroup accent={accentGrad} groupKey="platform" pills={PLATFORM_PILLS} selected={draft.platform} onSelect={(value) => setDraft((d) => ({ ...d, platform: value as ViewingPlatform }))} />
+                        <PillGroup accent={accentGrad} groupKey="rewatch" pills={REWATCH_PILLS} selected={draft.isRewatch ? "rewatch" : "first"} onSelect={(value) => setDraft((d) => ({ ...d, isRewatch: value === "rewatch" }))} />
+                      </div>
+                    </div>
+
+                    {sessionError && <p className="text-sm font-bold text-red-300 mt-6">{sessionError}</p>}
+
+                    <button onClick={handleSaveSession} disabled={savingSession}
+                      className={`mt-8 w-full inline-flex items-center justify-center gap-2.5 h-16 rounded-full text-base font-extrabold transition-transform hover:scale-[1.01] disabled:opacity-50 ${sessionSaved ? "animate-pop" : ""}`}
+                      style={sessionSaved ? { backgroundColor: "#4ade80", color: "#052e16", boxShadow: "0 8px 28px rgba(74,222,128,.45)" } : { background: accentGrad, color: "#111", boxShadow: `0 14px 40px -10px ${tone.glow}` }}>
+                      {sessionSaved ? (<><Check className="w-5 h-5" strokeWidth={3} />{editingSessionId ? "Cambios guardados" : "Sesión guardada"}</>)
+                        : savingSession ? (<><RotateCw className="w-5 h-5 animate-spin" />Guardando...</>)
+                        : (<><Plus className="w-5 h-5" />{editingSessionId ? "Guardar cambios" : "Guardar sesión"}</>)}
+                    </button>
+                  </section>
                 </div>
-              </div>
-            )}
-          </main>
+              )}
+            </main>
+          </div>
         </div>
       </div>
     </div>

@@ -9,10 +9,12 @@ interface Props {
   glow2: string;
   /** Sin fondo propio: la imagen se funde con el fondo global en todos sus bordes. */
   soft?: boolean;
+  /** Aberración cromática: dos copias desplazadas en rojo y cian. */
+  chroma?: boolean;
 }
 
 /** Fondo cinematográfico: imagen grande con crossfade + manchas de color en movimiento. */
-export default function HeroBackdrop({ items, index, glow, glow2, soft = false }: Props) {
+export default function HeroBackdrop({ items, index, glow, glow2, soft = false, chroma = false }: Props) {
   // Solo la capa activa y la saliente se animan; animar todas a la vez hace parpadear en mobile.
   const prevRef = useRef(index);
   const [prev, setPrev] = useState(index);
@@ -54,6 +56,11 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false }
               maskComposite: soft ? "intersect" : undefined,
             }}
           >
+            {chroma && live && hasBackdrop && [-1, 1].map((d) => (
+              <div key={d} className="absolute inset-0" style={{ transform: `translateX(${d * 9}px)`, mixBlendMode: "screen", opacity: 0.45, filter: d < 0 ? "sepia(1) saturate(6) hue-rotate(-50deg)" : "sepia(1) saturate(6) hue-rotate(150deg)" }}>
+                <img src={getBackdropUrl(it.backdropPath, "w780")} alt="" decoding="async" className="w-full h-full object-cover" />
+              </div>
+            ))}
             <img
               src={hasBackdrop ? getBackdropUrl(it.backdropPath) : getPosterUrl(it.posterPath, "w500")}
               srcSet={hasBackdrop ? `${getBackdropUrl(it.backdropPath, "w780")} 780w, ${getBackdropUrl(it.backdropPath)} 1280w` : undefined}
@@ -68,7 +75,7 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false }
       })}
 
       <div className="absolute inset-0"
-        style={{ background: soft
+        style={{ ...(soft ? { WebkitMaskImage: "linear-gradient(180deg, transparent 0, #000 22%, #000 70%, transparent 100%)", maskImage: "linear-gradient(180deg, transparent 0, #000 22%, #000 70%, transparent 100%)" } : {}), background: soft
           ? "linear-gradient(90deg, rgba(7,7,13,.7) 0%, rgba(7,7,13,.2) 45%, transparent 70%)"
           : "linear-gradient(90deg, rgba(7,7,13,.82) 0%, rgba(7,7,13,.3) 48%, transparent 72%), linear-gradient(180deg, rgba(7,7,13,.45) 0, transparent 22%, transparent 60%, #07070d 100%)" }} />
     </div>

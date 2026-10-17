@@ -59,7 +59,6 @@ function AppRoutes() {
     <Routes>
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
-      <Route path="/roadmap" element={<RoadmapPage />} />
       <Route path="/privacidad" element={<LegalPage kind="privacidad" />} />
       <Route path="/terminos" element={<LegalPage kind="terminos" />} />
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
@@ -71,6 +70,7 @@ function AppRoutes() {
       {/* Public profiles with app navigation */}
       <Route element={<AppShell />}>
         <Route path="/perfil/:username" element={<PublicProfilePage />} />
+        <Route path="/roadmap" element={<RoadmapPage />} />
       </Route>
       <Route path="/perfil/:username/adn" element={<PublicDNAPage />} />
       <Route path="/ver/:username/:mediaType/:tmdbId" element={<SharedMediaPage />} />

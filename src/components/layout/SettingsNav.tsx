@@ -8,14 +8,17 @@ const settingsItems = [
 
 export default function SettingsNav() {
   const location = useLocation();
-
   return (
-    <nav className="flex gap-2.5 mb-8">
-      {settingsItems.map(({ to, label }) => (
-        <Link key={to} to={to} data-active={location.pathname === to} className="frost-tab hover:text-white data-[active=true]:hover:text-[#111]">
-          {label}
-        </Link>
-      ))}
+    <nav className="flex gap-8 border-b border-white/20 mb-10">
+      {settingsItems.map(({ to, label }) => {
+        const active = location.pathname === to;
+        return (
+          <Link key={to} to={to} className="px-2 pb-3 -mb-px text-base font-extrabold border-b-[3px] transition-colors hover:text-white"
+            style={{ borderColor: active ? "#fff" : "transparent", color: active ? "#fff" : "rgba(255,255,255,.65)" }}>
+            {label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }

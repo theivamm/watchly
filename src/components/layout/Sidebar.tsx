@@ -26,8 +26,8 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="liquid-glass hidden md:flex flex-col items-center sticky top-4 h-[calc(100vh-2rem)] shrink-0 z-40 m-4 mr-0 rounded-[2rem] py-5"
-      style={{ width: 84 }}
+      className="hidden md:flex flex-col items-center sticky top-4 h-[calc(100vh-2rem)] shrink-0 z-40 m-4 mr-0 rounded-[2rem] py-5"
+      style={{ width: 84, background: "linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.03) 45%, rgba(255,255,255,.08))", backdropFilter: "blur(28px) saturate(1.9) brightness(1.08)", WebkitBackdropFilter: "blur(28px) saturate(1.9) brightness(1.08)", border: "1px solid rgba(255,255,255,.22)", boxShadow: "inset 1.5px 0 0 rgba(255,90,140,.35), inset -1.5px 0 0 rgba(90,170,255,.35), inset 0 1px 0 rgba(255,255,255,.35), 0 20px 50px -18px rgba(0,0,0,.6)" }}
     >
       <Link to="/inicio" className="font-cinema text-4xl leading-none h-12 flex items-center text-white hover:text-white select-none" title="Watchly">
         W

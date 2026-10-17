@@ -40,57 +40,50 @@ export default function AccountSettingsPage() {
     }
   };
 
-  const danger = "liquid-glass-sm inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full text-sm font-extrabold transition-transform hover:scale-[1.02]";
+  const danger = "liquid-glass-sm inline-flex items-center justify-center gap-2 h-14 px-7 rounded-full text-base font-extrabold transition-transform hover:scale-[1.02]";
+  const h = "font-cinema text-3xl md:text-4xl leading-none";
 
   return (
-    <div className="w-full px-5 md:px-10 py-8 md:py-12 max-w-4xl text-white">
-      <PageHeader title="Cuenta" eyebrow="Configuración" />
+    <div className="w-full px-4 md:px-6 pt-20 pb-12 text-white">
+      <PageHeader title="Cuenta" eyebrow="Configuración" subtitle={user?.email} />
       <SettingsNav />
 
-      <div className="space-y-5">
-        <div className="liquid-glass rounded-[2rem] p-6 md:p-8">
-          <h3 className="text-xs font-extrabold uppercase tracking-widest text-white/60 mb-3">Email</h3>
-          <p className="text-base font-bold">{user?.email}</p>
-        </div>
+      <div className="grid gap-12 lg:grid-cols-3">
+        <section className="border-t border-white/20 pt-6">
+          <h2 className={h}>Email</h2>
+          <p className="text-xl font-bold mt-6 break-all">{user?.email}</p>
+        </section>
 
-        <div className="liquid-glass rounded-[2rem] p-6 md:p-8">
-          <h3 className="text-xs font-extrabold uppercase tracking-widest text-white/60 mb-3">Cerrar sesión</h3>
-          <p className="text-sm mb-5 text-white/75">Cerrá la sesión en este dispositivo.</p>
-          <button onClick={handleLogout} className={`${danger} w-full`} style={{ color: "#fca5a5" }}>
-            Cerrar sesión
-          </button>
-        </div>
+        <section className="border-t border-white/20 pt-6">
+          <h2 className={h}>Sesión</h2>
+          <p className="text-base mt-6 mb-6 text-white/75">Cerrá la sesión en este dispositivo.</p>
+          <button onClick={handleLogout} className={`${danger} w-full`} style={{ color: "#fca5a5" }}>Cerrar sesión</button>
+        </section>
 
-        <div className="liquid-glass rounded-[2rem] p-6 md:p-8" style={{ borderColor: "rgba(248,113,113,.4)" }}>
-          <h3 className="text-xs font-extrabold uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "#fca5a5" }}>
-            <AlertTriangle className="w-4 h-4" /> Eliminar cuenta
-          </h3>
-          <p className="text-sm mb-5 text-white/75">Esta acción es irreversible. Se eliminarán todos tus datos, listas y progresos.</p>
+        <section className="pt-6 border-t" style={{ borderColor: "rgba(248,113,113,.6)" }}>
+          <h2 className={`${h} flex items-center gap-3`} style={{ color: "#fca5a5" }}><AlertTriangle className="w-7 h-7" /> Eliminar cuenta</h2>
+          <p className="text-base mt-6 mb-6 text-white/75">Esta acción es irreversible. Se eliminarán todos tus datos, listas y progresos.</p>
 
           {!showConfirm && (
-            <button onClick={() => setShowConfirm(true)} className={danger} style={{ color: "#fca5a5" }}>
-              <Trash2 className="w-4 h-4" /> Eliminar cuenta
-            </button>
+            <button onClick={() => setShowConfirm(true)} className={danger} style={{ color: "#fca5a5" }}><Trash2 className="w-4 h-4" /> Eliminar cuenta</button>
           )}
 
           {showConfirm && (
             <div className="space-y-4">
-              <p className="text-sm text-white/80">Escribí <strong>DELETE</strong> o <strong>BORRAR</strong> para confirmar:</p>
-              <input type="text" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} className="glass-input" placeholder="DELETE" />
+              <p className="text-base text-white/85">Escribí <strong>DELETE</strong> o <strong>BORRAR</strong> para confirmar:</p>
+              <input type="text" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} className="glass-input !h-14 !text-base" placeholder="DELETE" />
               {deleteError && <p className="text-sm font-bold text-red-300">{deleteError}</p>}
               <div className="flex gap-3">
                 <button onClick={handleDeleteAccount} disabled={deleting || (confirmText !== "DELETE" && confirmText !== "BORRAR")}
-                  className="flex-1 inline-flex items-center justify-center gap-2 h-12 rounded-full text-sm font-extrabold transition-transform hover:scale-[1.02] disabled:opacity-50"
+                  className="flex-1 inline-flex items-center justify-center gap-2 h-14 rounded-full text-base font-extrabold transition-transform hover:scale-[1.02] disabled:opacity-50"
                   style={{ backgroundColor: "#f87171", color: "#2a0a0a", boxShadow: "0 8px 28px rgba(248,113,113,.4)" }}>
-                  {deleting ? "Eliminando..." : <><Check className="w-4 h-4" /> Confirmar borrado</>}
+                  {deleting ? "Eliminando..." : <><Check className="w-4 h-4" /> Confirmar</>}
                 </button>
-                <button onClick={() => { setShowConfirm(false); setConfirmText(""); setDeleteError(""); }} className="frost-tab flex-1 justify-center !h-12">
-                  Cancelar
-                </button>
+                <button onClick={() => { setShowConfirm(false); setConfirmText(""); setDeleteError(""); }} className="liquid-glass-sm flex-1 h-14 rounded-full text-base font-extrabold">Cancelar</button>
               </div>
             </div>
           )}
-        </div>
+        </section>
       </div>
     </div>
   );

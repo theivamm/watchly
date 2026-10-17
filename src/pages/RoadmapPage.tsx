@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
-import { LogIn, UserPlus } from "lucide-react";
-import { useAuth } from "@/app/auth-context";
-import UserMenu from "@/components/layout/UserMenu";
 import HeroBackdrop from "@/components/home/HeroBackdrop";
-import { useTrending } from "@/hooks/useMedia";
+import { useRandomCovers } from "@/hooks/useRandomCovers";
+import PublicNav from "@/components/layout/PublicNav";
+import { useAuth } from "@/app/auth-context";
 import { useHeroCycle } from "@/hooks/useHeroCycle";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
@@ -72,8 +71,7 @@ const priorityMeta: Record<Priority, { label: string; desc: string; flow: string
 export default function RoadmapPage() {
   usePageTitle("Roadmap | Watchly");
   const { user } = useAuth();
-  const { data } = useTrending("all");
-  const items = (data?.results || []).filter((i) => i.posterPath && i.backdropPath).slice(0, 5);
+  const items = useRandomCovers(8);
   const hero = useHeroCycle(items.map((i) => i.posterPath));
   const accent = { color: "#fff" } as const;
   const colorOf = (p: Priority) => priorityMeta[p].color ?? "#fff";
@@ -81,27 +79,11 @@ export default function RoadmapPage() {
   return (
     <div className="min-h-screen flex flex-col text-white">
       {/* ───────── HERO ───────── */}
-      <section className="relative overflow-hidden min-h-[80svh] flex flex-col">
-        <HeroBackdrop items={items} index={hero.index} glow={hero.glow} glow2={hero.glow2} />
+      <section className="relative overflow-hidden min-h-[78svh] flex flex-col">
+        {!user && <PublicNav />}
+        <HeroBackdrop soft chroma items={items} index={hero.index} glow={hero.glow} glow2={hero.glow2} />
 
-        <header className="relative z-20 px-4 md:px-10 pt-6">
-          <div className="liquid-glass mx-auto max-w-[1288px] h-16 rounded-full flex items-center gap-2 pl-7 pr-2.5">
-            <Link to="/" className="font-cinema text-3xl hover:opacity-90" style={accent}>Watchly</Link>
-            <div className="flex-1" />
-            {user ? <UserMenu /> : (
-              <>
-                <Link to="/login" aria-label="Iniciar sesión" title="Iniciar sesión" className="liquid-glass-sm h-11 w-11 sm:w-auto sm:px-5 shrink-0 rounded-full flex items-center justify-center gap-2 text-sm font-bold text-white hover:text-white whitespace-nowrap">
-                  <LogIn className="w-[18px] h-[18px] sm:hidden" /><span className="hidden sm:inline">Iniciar sesión</span>
-                </Link>
-                <Link to="/registro" aria-label="Crear cuenta" title="Crear cuenta" className="h-11 w-11 sm:w-auto sm:px-6 shrink-0 rounded-full bg-white text-[#111] hover:text-[#111] flex items-center justify-center gap-2 text-sm font-extrabold whitespace-nowrap">
-                  <UserPlus className="w-[18px] h-[18px] sm:hidden" /><span className="hidden sm:inline">Crear cuenta</span>
-                </Link>
-              </>
-            )}
-          </div>
-        </header>
-
-        <div className="relative z-10 flex-1 flex flex-col justify-center px-5 md:px-14 lg:px-24 py-14">
+        <div className="relative z-10 flex-1 flex flex-col justify-center px-5 md:px-14 lg:px-16 pt-24 pb-14">
           <span className="liquid-glass-sm inline-flex self-start px-[18px] py-2 rounded-full text-xs font-extrabold tracking-[.2em] uppercase">
             Roadmap de producto
           </span>
@@ -124,26 +106,25 @@ export default function RoadmapPage() {
       </section>
 
       {/* ───────── ETAPAS ───────── */}
-      <section className="relative px-5 md:px-14 lg:px-24 py-20 overflow-hidden">
+      <section className="relative px-4 md:px-8 lg:px-10 py-20 overflow-hidden">
         <div className="hidden md:block absolute top-0 left-1/4 w-[900px] h-[500px] rounded-full blur-[150px] opacity-50 cinema-drift-a pointer-events-none"
           style={{ background: hero.row, transition: "background 1.6s" }} />
-        <div className="relative max-w-[1300px] mx-auto">
-          <p className="text-xs font-extrabold tracking-[.25em] uppercase text-center" style={accent}>Las etapas</p>
-          <h2 className="font-cinema text-5xl md:text-7xl text-center mt-4 mb-5">
+        <div className="relative w-full">
+          <p className="text-xs font-extrabold tracking-[.25em] uppercase" style={accent}>Las etapas</p>
+          <h2 className="font-cinema text-5xl md:text-7xl mt-4 mb-5">
             De la base a <span style={accent}>tu identidad audiovisual</span>
           </h2>
-          <p className="text-base md:text-lg text-center max-w-2xl mx-auto mb-14 text-white/75">
+          <p className="text-base md:text-lg max-w-2xl mb-14 text-white/75">
             Cada etapa resuelve un problema concreto y mide su uso antes de consolidarse. Las fechas se asignarán
             según el estado real de la app y los aprendizajes de cada fase.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-12 gap-y-6">
             {stages.map((s) => {
               const c = colorOf(s.priority);
               return (
                 <article key={s.n}
-                  className="liquid-glass relative overflow-hidden rounded-[2rem] p-7 flex flex-col gap-3 transition-transform duration-300 hover:-translate-y-1.5">
-                  <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-[80px] opacity-30 pointer-events-none" style={{ background: c }} />
+                  className="relative border-t border-white/25 pt-6 pb-4 flex flex-col gap-3">
                   <div className="relative flex items-start justify-between">
                     <span className="font-cinema text-6xl leading-none" style={{ color: c }}>{String(s.n).padStart(2, "0")}</span>
                     <span className="liquid-glass-sm px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide" style={{ color: c }}>{s.tag}</span>
@@ -166,16 +147,16 @@ export default function RoadmapPage() {
       </section>
 
       {/* ───────── PRIORIDADES ───────── */}
-      <section className="relative px-5 md:px-14 lg:px-24 pb-20">
-        <div className="max-w-[1300px] mx-auto">
-          <p className="text-xs font-extrabold tracking-[.25em] uppercase text-center" style={accent}>Prioridades</p>
-          <h2 className="font-cinema text-5xl md:text-7xl text-center mt-4 mb-12">El orden <span style={accent}>importa</span></h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <section className="relative px-4 md:px-8 lg:px-10 pb-20">
+        <div className="w-full">
+          <p className="text-xs font-extrabold tracking-[.25em] uppercase" style={accent}>Prioridades</p>
+          <h2 className="font-cinema text-5xl md:text-7xl mt-4 mb-12">El orden <span style={accent}>importa</span></h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-8">
             {(Object.keys(priorityMeta) as Priority[]).map((key) => {
               const meta = priorityMeta[key];
               const c = colorOf(key);
               return (
-                <div key={key} className="liquid-glass rounded-[2rem] p-8">
+                <div key={key} className="border-t border-white/25 pt-6">
                   <span className="liquid-glass-sm inline-flex px-4 py-2 rounded-full text-xs font-extrabold uppercase tracking-wide mb-4" style={{ color: c }}>
                     {meta.label}
                   </span>
@@ -197,13 +178,13 @@ export default function RoadmapPage() {
       </section>
 
       {/* ───────── EXTRAS ───────── */}
-      <section className="relative px-5 md:px-14 lg:px-24 pb-20">
-        <div className="max-w-[1300px] mx-auto">
-          <p className="text-xs font-extrabold tracking-[.25em] uppercase text-center" style={accent}>Además</p>
-          <h2 className="font-cinema text-5xl md:text-7xl text-center mt-4 mb-12">Ya disponible <span style={accent}>fuera del plan</span></h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <section className="relative px-4 md:px-8 lg:px-10 pb-20">
+        <div className="w-full">
+          <p className="text-xs font-extrabold tracking-[.25em] uppercase" style={accent}>Además</p>
+          <h2 className="font-cinema text-5xl md:text-7xl mt-4 mb-12">Ya disponible <span style={accent}>fuera del plan</span></h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-8">
             {extras.map((e) => (
-              <div key={e.title} className="liquid-glass rounded-[2rem] p-7">
+              <div key={e.title} className="border-t border-white/25 pt-6">
                 <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wide"
                   style={{ background: statusMeta.hecho.bg, color: statusMeta.hecho.color }}>Nuevo</span>
                 <h3 className="font-cinema text-2xl leading-tight mt-4">{e.title}</h3>
@@ -215,7 +196,7 @@ export default function RoadmapPage() {
       </section>
 
       {/* ───────── PRÓXIMO PASO ───────── */}
-      <section className="relative px-5 md:px-14 lg:px-24 pb-24">
+      <section className="relative px-4 md:px-8 lg:px-10 pb-24">
         <div className="liquid-glass relative max-w-[1100px] mx-auto rounded-[3.5rem] px-8 py-16 text-center overflow-hidden">
           <div className="hidden md:block absolute -top-64 left-1/2 -ml-72 w-[580px] h-[580px] rounded-full blur-[110px] opacity-80 cinema-drift-a pointer-events-none"
             style={{ background: hero.row, transition: "background 1.6s" }} />

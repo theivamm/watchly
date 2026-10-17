@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, BarChart3, Check, ChevronDown, RotateCw, Search, Shield, Users, Activity, Trash2 } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import PageHeader from "@/components/ui/PageHeader";
 import {
   deleteUser, getDaily, getErrors, getFunnel, getOverview, getRecentEvents, getTopEvents, getUsers, resolveErrors,
   type AdminDay, type AdminEventCount, type AdminFunnelWeek, type AdminOverview, type AdminUser, type AnalyticsEvent, type ClientError,
@@ -20,7 +21,8 @@ const EVENT_LABELS: Record<string, string> = {
   login: "Inicio de sesión", login_failed: "Login fallido", sign_up: "Registro", oauth_start: "Inicio con Google",
 };
 
-const card = "liquid-glass rounded-[1.75rem] p-6";
+const card = "border-t border-white/20 pt-6";
+const slab = "liquid-glass rounded-[1.75rem]";
 const label = "text-[11px] font-extrabold uppercase tracking-widest text-white/55";
 const fmtDate = (s: string | null) => s ? new Date(s).toLocaleString("es-AR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
 const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) : 0);
@@ -30,22 +32,17 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("resumen");
 
   return (
-    <div className="w-full text-white px-5 md:px-10 pt-8 pb-24 max-w-[1300px] mx-auto">
-      <header className="flex flex-wrap items-end justify-between gap-4 mb-8">
-        <div>
-          <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-white/60"><Shield className="w-4 h-4" /> Super admin</p>
-          <h1 className="font-cinema text-5xl md:text-6xl leading-none mt-2">Panel de control</h1>
-        </div>
-        <nav className="liquid-glass-sm flex rounded-full p-1 overflow-x-auto no-scrollbar max-w-full" role="tablist">
-          {TABS.map(({ id, label: l, icon: Icon }) => (
-            <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-full text-sm font-extrabold whitespace-nowrap transition-colors"
-              style={tab === id ? { background: "#fff", color: "#111" } : { color: "rgba(255,255,255,.8)" }}>
-              <Icon className="w-4 h-4" /> {l}
-            </button>
-          ))}
-        </nav>
-      </header>
+    <div className="w-full text-white px-4 md:px-6 pt-20 pb-24">
+      <PageHeader title="Panel de control" eyebrow="Super admin" subtitle="Salud, uso y actividad de Watchly." />
+      <nav className="flex gap-6 md:gap-9 border-b border-white/20 mb-10 overflow-x-auto no-scrollbar" role="tablist">
+        {TABS.map(({ id, label: l, icon: Icon }) => (
+          <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
+            className="inline-flex items-center gap-2 px-1 pb-3 -mb-px text-base font-extrabold whitespace-nowrap border-b-[3px] transition-colors"
+            style={{ borderColor: tab === id ? "#fff" : "transparent", color: tab === id ? "#fff" : "rgba(255,255,255,.65)" }}>
+            <Icon className="w-4 h-4" /> {l}
+          </button>
+        ))}
+      </nav>
       {tab === "resumen" && <OverviewTab />}
       {tab === "errores" && <ErrorsTab />}
       {tab === "usuarios" && <UsersTab />}
@@ -103,12 +100,12 @@ function OverviewTab() {
 
   return (
     <div className="space-y-6">
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="liquid-glass rounded-[2.25rem] grid grid-cols-2 lg:grid-cols-4 [&>div]:p-6 md:[&>div]:p-7 [&>div]:border-white/15 [&>div:not(:nth-child(2n+1))]:border-l lg:[&>div:not(:nth-child(4n+1))]:border-l-0 lg:[&>div:not(:nth-child(4n+1))]:border-l [&>div:nth-child(n+3)]:border-t lg:[&>div:nth-child(n+3)]:border-t-0 lg:[&>div:nth-child(n+5)]:border-t">
         {tiles.map((t) => (
-          <div key={t.l} className={card}>
+          <div key={t.l} className="min-w-0">
             <p className={label}>{t.l}</p>
-            <p className="font-cinema text-5xl leading-none mt-3">{t.v.toLocaleString("es-AR")}</p>
-            <p className={`text-xs font-bold mt-2 ${t.warn ? "text-amber-300" : "text-white/60"}`}>
+            <p className="font-cinema text-6xl md:text-7xl leading-none mt-4" style={t.warn ? { color: "#fcd34d" } : undefined}>{t.v.toLocaleString("es-AR")}</p>
+            <p className={`text-xs font-bold mt-3 ${t.warn ? "text-amber-300" : "text-white/65"}`}>
               {t.warn && <AlertTriangle className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />}{t.s}
             </p>
           </div>
@@ -211,7 +208,7 @@ function DailyChart({ days }: { days: AdminDay[] }) {
                 onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onClick={() => setHover(i)}
                 className="flex-1 h-full flex items-end group">
                 <span className="w-full rounded-t-[4px] transition-opacity"
-                  style={{ height: v > 0 ? `max(3px, ${(v / max) * 100}%)` : "0", background: "var(--accent-light, #c4b5fd)", opacity: hover == null || hover === i ? 1 : 0.4 }} />
+                  style={{ height: v > 0 ? `max(3px, ${(v / max) * 100}%)` : "0", background: "#fff", opacity: hover == null || hover === i ? 1 : 0.4 }} />
               </button>
             );
           })}
@@ -233,7 +230,7 @@ function FunnelBars({ steps }: { steps: { l: string; v: number }[] }) {
           <div className="flex justify-between text-sm"><span className="font-bold">{s.l}</span>
             <span className="tabular-nums text-white/70">{s.v} <span className="text-white/45">· {pct(s.v, top)}%</span></span></div>
           <div className="h-2 rounded-full bg-white/10 mt-1.5 overflow-hidden">
-            <div className="h-full rounded-full" style={{ width: `${pct(s.v, top)}%`, background: "var(--accent-light, #c4b5fd)" }} />
+            <div className="h-full rounded-full" style={{ width: `${pct(s.v, top)}%`, background: "#fff" }} />
           </div>
         </li>
       ))}
@@ -280,7 +277,7 @@ function ErrorsTab() {
       {!data ? <Loading error={error} /> : groups.length === 0 ? (
         <div className={`${card} text-center py-12`}><Check className="w-8 h-8 mx-auto text-emerald-300" /><p className="font-extrabold mt-3">Sin errores pendientes</p></div>
       ) : groups.map((g) => (
-        <div key={g.message} className={`${card} !p-0 overflow-hidden`}>
+        <div key={g.message} className={`${slab} overflow-hidden`}>
           <button type="button" onClick={() => setOpen(open === g.message ? null : g.message)} className="w-full text-left p-5 flex items-start gap-4">
             <span className="shrink-0 mt-0.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-white/10">{g.last.source}</span>
             <span className="min-w-0 flex-1">
@@ -334,7 +331,7 @@ function UsersTab() {
           onDeleted={() => { setDeletedMsg(`Se eliminó ${toDelete.email}.`); setToDelete(null); reload(); }} />
       )}
       {!data ? <Loading error={error} /> : data.length === 0 ? <Empty text="Sin resultados." /> : (
-        <div className={`${card} !p-0 overflow-x-auto`}>
+        <div className={`${slab} overflow-x-auto`}>
           <table className="w-full text-sm min-w-[760px]">
             <thead><tr className="text-left text-white/55 text-xs">
               <th className="px-5 py-3 font-bold">Usuario</th><th className="font-bold">Alta</th><th className="font-bold">Último ingreso</th>
@@ -439,7 +436,7 @@ function EventsTab() {
         <button type="button" onClick={reload} className="liquid-glass-sm inline-flex items-center gap-2 h-10 px-4 rounded-full text-sm font-bold"><RotateCw className="w-4 h-4" /> Actualizar</button>
       </div>
       {!data ? <Loading error={error} /> : data.length === 0 ? <Empty text="Todavía no hay eventos. Se registran solo en producción." /> : (
-        <div className={`${card} !p-0 overflow-x-auto`}>
+        <div className={`${slab} overflow-x-auto`}>
           <table className="w-full text-sm min-w-[640px]">
             <thead><tr className="text-left text-white/55 text-xs">
               <th className="px-5 py-3 font-bold">Cuándo</th><th className="font-bold">Evento</th><th className="font-bold">Página</th><th className="font-bold px-5">Datos</th>

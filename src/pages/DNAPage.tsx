@@ -4,8 +4,9 @@ import { Link } from "react-router-dom";
 import { RotateCw, Sparkles, BookOpen, Users, Share2, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { getMyDna, calculateDna } from "@/services/dna";
+import { getUserLibrary } from "@/services/library";
 import type { UserDNA } from "@/types";
-import DNAView from "@/components/dna/DNAView";
+import DNAView, { type DnaPoster } from "@/components/dna/DNAView";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 const whiteBtn = "inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full bg-white text-[#111] hover:text-[#111] text-sm font-extrabold shadow-[0_12px_40px_rgba(0,0,0,.35)] transition-transform hover:scale-[1.03] disabled:opacity-50";
@@ -21,7 +22,7 @@ function LockedState({ dna }: { dna: UserDNA }) {
       <div className="max-w-md mx-auto mb-10">
         <div className="flex items-center justify-between mb-2.5 text-sm font-extrabold"><span>{dna.validTitleCount} de 5 títulos</span><span>{pct}%</span></div>
         <div className="h-3.5 rounded-full bg-white/12 overflow-hidden">
-          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: "var(--gradient-accent)", boxShadow: "0 0 18px var(--accent)" }} />
+          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: "#fff", boxShadow: "0 0 18px rgba(255,255,255,.5)" }} />
         </div>
       </div>
 
@@ -46,6 +47,12 @@ export default function DNAPage() {
   const [error, setError] = useState("");
   const [stale, setStale] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
+  const [posters, setPosters] = useState<DnaPoster[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    getUserLibrary(user.id).then((es) => setPosters(es.filter((e) => e.poster_path).map((e) => ({ path: e.poster_path as string, title: e.title, rating: e.rating ?? null, type: e.media_type })))).catch(() => {});
+  }, [user]);
 
   const load = useCallback(async (force = false) => {
     if (!user) return;
@@ -87,7 +94,7 @@ export default function DNAPage() {
     }
   };
 
-  const shell = "w-full px-5 md:px-10 py-8 md:py-12 max-w-[1400px] mx-auto text-white";
+  const shell = "w-full px-4 md:px-6 pt-20 pb-12 text-white";
 
   if (loading && !dna) {
     return (
@@ -129,6 +136,7 @@ export default function DNAPage() {
       <DNAView
         dna={dna}
         title="Mi ADN"
+        posters={posters}
         actions={showUpdateButton ? (
           <button onClick={handleRecalc} disabled={recalculating} className="liquid-glass-sm inline-flex items-center gap-2 h-10 px-5 rounded-full text-xs font-extrabold text-white disabled:opacity-50">
             <RotateCw className={`w-3.5 h-3.5 ${recalculating ? "animate-spin" : ""}`} />

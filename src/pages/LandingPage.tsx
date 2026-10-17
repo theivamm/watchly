@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { LogIn, UserPlus } from "lucide-react";
 import { useTrending } from "@/hooks/useMedia";
+import { useRandomCovers } from "@/hooks/useRandomCovers";
+import PublicNav from "@/components/layout/PublicNav";
 import { useHeroCycle } from "@/hooks/useHeroCycle";
 import HeroBackdrop from "@/components/home/HeroBackdrop";
 import { getBackdropUrl, getPosterUrl } from "@/services/tmdb";
 import { genreLabel } from "@/lib/genres";
-import { useAuth } from "@/app/auth-context";
-import UserMenu from "@/components/layout/UserMenu";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 const FEATURES = [
@@ -24,12 +23,14 @@ const ROADMAP = [
   { title: "Créditos del año", desc: "Tus créditos finales: primera y última película del año, mejor calificada y países recorridos." },
 ];
 
+const EDGES = "inset 3px 0 0 rgba(255,80,140,.4), inset -3px 0 0 rgba(70,170,255,.4), 0 30px 80px -20px rgba(0,0,0,.6)";
+const TICKER = ["Viví tu cine", "Compartí lo que ves", "Tu ADN audiovisual", "¿Qué vemos hoy?", "Tu historial, tuyo"];
+
 export default function LandingPage() {
   usePageTitle("Watchly — Tu biblioteca de películas y series", "Organizá tu biblioteca, calificá y compartí lo que ves. Descubrí tu ADN audiovisual.");
-  const { user } = useAuth();
   const { data } = useTrending("all");
   const trending = (data?.results || []).filter((i) => i.posterPath);
-  const heroItems = trending.filter((i) => i.overview).slice(0, 5);
+  const heroItems = useRandomCovers(6, true);
   const hero = useHeroCycle(heroItems.map((i) => i.posterPath));
   const active = heroItems[hero.index];
   const [showDeletedBanner, setShowDeletedBanner] = useState(false);
@@ -41,137 +42,74 @@ export default function LandingPage() {
     }
   }, []);
 
-  const accent = { color: "#fff" } as const;
-  const glassCard = "liquid-glass rounded-[2.5rem]";
+  const poster = (n: number) => trending[n % Math.max(trending.length, 1)];
+  const imgOf = (it: (typeof heroItems)[number]) => (it.backdropPath ? getBackdropUrl(it.backdropPath, "w1280") : getPosterUrl(it.posterPath, "w500"));
 
   return (
     <div className="min-h-screen flex flex-col text-white">
       {showDeletedBanner && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-6 py-3 rounded-full text-sm font-semibold"
-          style={{ backgroundColor: "rgba(234,179,163,0.9)", color: "#7c2d12" }}>
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-6 py-3 rounded-full text-sm font-semibold" style={{ backgroundColor: "rgba(234,179,163,0.9)", color: "#7c2d12" }}>
           Cuenta eliminada correctamente. ¡Esperamos verte de vuelta pronto!
         </div>
       )}
 
       {/* ───────── HERO ───────── */}
       <section className="relative min-h-[100svh] overflow-hidden flex flex-col">
-        <HeroBackdrop items={heroItems} index={hero.index} glow={hero.glow} glow2={hero.glow2} />
+        <HeroBackdrop chroma items={heroItems} index={hero.index} glow={hero.glow} glow2={hero.glow2} />
 
-        {/* Nav */}
-        <header className="relative z-20 px-4 md:px-10 pt-6">
-          <div className="liquid-glass mx-auto max-w-[1288px] h-16 rounded-full flex items-center gap-2 pl-7 pr-2.5">
-            <span className="font-cinema text-3xl" style={accent}>Watchly</span>
-            <div className="flex-1" />
-            <a href="/roadmap" className="hidden sm:block px-4 py-2.5 text-sm font-semibold text-white/80 hover:text-white">Roadmap</a>
-            {user ? <UserMenu /> : (
-              <>
-                <a href="/login" aria-label="Iniciar sesión" title="Iniciar sesión" className="liquid-glass-sm h-11 w-11 sm:w-auto sm:px-5 shrink-0 rounded-full flex items-center justify-center gap-2 text-sm font-bold text-white hover:text-white whitespace-nowrap">
-                  <LogIn className="w-[18px] h-[18px] sm:hidden" /><span className="hidden sm:inline">Iniciar sesión</span>
-                </a>
-                <a href="/registro" aria-label="Crear cuenta" title="Crear cuenta" className="h-11 w-11 sm:w-auto sm:px-6 shrink-0 rounded-full bg-white text-[#111] hover:text-[#111] flex items-center justify-center gap-2 text-sm font-extrabold whitespace-nowrap">
-                  <UserPlus className="w-[18px] h-[18px] sm:hidden" /><span className="hidden sm:inline">Crear cuenta</span>
-                </a>
-              </>
-            )}
+        <PublicNav />
+
+        <div className="relative z-10 flex-1 flex flex-col justify-center px-5 md:px-10 lg:px-16 py-12">
+          <span className="liquid-glass-sm inline-flex self-start px-[18px] py-2 rounded-full text-xs font-extrabold tracking-[.2em] uppercase">Tu mundo de cine</span>
+          <h1 className="font-cinema mt-7 mb-6 text-7xl md:text-9xl xl:text-[11rem] leading-[0.95] drop-shadow-[0_10px_60px_rgba(0,0,0,.4)]">
+            Viví tu cine.<br />Compartí todo<br />lo que ves.
+          </h1>
+          <p className="text-lg md:text-xl leading-relaxed font-medium text-white/85 max-w-xl text-pretty">
+            Guardá lo que viste y lo que querés ver, calificá, escribí notas y armá listas. Tu historial de cine — hermoso, simple, tuyo.
+          </p>
+          <div className="flex flex-wrap gap-3.5 mt-9">
+            <a href="/registro" className="h-16 px-9 rounded-full bg-white text-[#111] hover:text-[#111] text-lg font-extrabold flex items-center gap-2.5 shadow-[0_12px_40px_rgba(0,0,0,.35)] hover:scale-[1.03] transition-transform">Crear mi perfil gratis <span className="text-xl">→</span></a>
+            <a href="/login" className="liquid-glass-sm h-16 px-9 rounded-full text-lg font-bold flex items-center text-white hover:text-white hover:scale-[1.03] transition-transform">Ya tengo cuenta</a>
           </div>
-        </header>
-
-        {/* Copy + title card */}
-        <div className="relative z-10 flex-1 flex items-center justify-between gap-10 px-5 md:px-14 lg:px-24 py-12">
-          <div className="max-w-[840px]">
-            <span className="liquid-glass-sm inline-flex px-[18px] py-2 rounded-full text-xs font-extrabold tracking-[.2em] uppercase">Tu mundo de cine</span>
-            <h1 className="font-cinema mt-7 mb-6 text-6xl md:text-8xl xl:text-[8.5rem] leading-[1.02] drop-shadow-[0_10px_60px_rgba(0,0,0,.4)]">
-              Viví tu cine.<br />
-              <span style={accent}>Compartí todo</span><br />
-              lo que ves.
-            </h1>
-            <p className="text-lg md:text-xl leading-relaxed font-medium text-white/85 max-w-xl text-pretty">
-              Guardá lo que viste y lo que querés ver, calificá, escribí notas y armá listas. Tu historial de cine — hermoso, simple, tuyo.
-            </p>
-            <div className="flex flex-wrap gap-3.5 mt-9">
-              <a href="/registro" className="h-14 px-8 rounded-full bg-white text-[#111] hover:text-[#111] font-extrabold flex items-center gap-2.5 shadow-[0_12px_40px_rgba(0,0,0,.35)] hover:scale-[1.03] transition-transform">
-                Crear mi perfil gratis <span className="text-xl">→</span>
-              </a>
-              <a href="/login" className="liquid-glass-sm h-14 px-8 rounded-full font-bold flex items-center text-white hover:text-white hover:scale-[1.03] transition-transform">
-                Ya tengo cuenta
-              </a>
-            </div>
-          </div>
-
-          {active && (
-            <div className="liquid-glass hidden xl:block w-[380px] shrink-0 rounded-[2.25rem] p-[18px]">
-              <div className="grid">
-                {heroItems.map((it, i) => (
-                  <div key={it.tmdbId} className="[grid-area:1/1] flex flex-col gap-3.5 transition-all duration-1000"
-                    style={{ opacity: i === hero.index ? 1 : 0, transform: `translateY(${i === hero.index ? 0 : 18}px)` }}>
-                    <div className="relative h-[210px] rounded-3xl overflow-hidden">
-                      <img src={it.backdropPath ? getBackdropUrl(it.backdropPath, "w780") : getPosterUrl(it.posterPath, "w500")}
-                        alt="" className="w-full h-full object-cover" />
-                      {it.tmdbRating ? (
-                        <span className="absolute top-3 right-3 px-3 py-1.5 rounded-full text-[#111] text-[13px] font-extrabold"
-                          style={{ background: hero.accent }}>★ {it.tmdbRating.toFixed(1)}</span>
-                      ) : null}
-                    </div>
-                    <div className="px-1.5">
-                      <p className="text-xs font-bold text-white/70">{[it.year, genreLabel(it.genreIds)].filter(Boolean).join(" · ")}</p>
-                      <p className="font-cinema text-4xl leading-none my-2 line-clamp-2">{it.title}</p>
-                      <p className="text-sm leading-relaxed text-white/85 line-clamp-3">{it.overview}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-2 pt-4 pb-1">
-                <span className="flex-1 h-11 rounded-full flex items-center justify-center text-[13px] font-extrabold text-[#111]" style={{ background: hero.accent, transition: "background 1.2s" }}>+ Quiero ver</span>
-                <span className="liquid-glass-sm flex-1 h-11 rounded-full flex items-center justify-center text-[13px] font-bold">✓ Vista</span>
-                <span className="liquid-glass-sm flex-1 h-11 rounded-full flex items-center justify-center text-[13px] font-bold">Lista</span>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Rail + stats */}
-        <div className="relative z-10 flex items-end justify-between gap-6 px-5 md:px-14 lg:px-24 pb-10">
+        <div className="relative z-10 flex items-end justify-between gap-8 px-5 md:px-10 lg:px-16 pb-10">
           <div className="flex items-end gap-3.5 overflow-x-auto no-scrollbar py-2">
             {heroItems.map((it, i) => {
               const on = i === hero.index;
               return (
-                <button key={it.tmdbId} type="button" onClick={() => hero.select(i)} aria-label={it.title}
-                  className="shrink-0 flex flex-col gap-2.5 transition-all duration-700" style={{ width: on ? 120 : 86 }}>
-                  <img src={getPosterUrl(it.posterPath, "w342")} alt={it.title}
-                    className="w-full object-cover rounded-[18px] transition-all duration-700"
-                    style={{ aspectRatio: "2/3", border: `1px solid rgba(255,255,255,${on ? 0.6 : 0.18})`, boxShadow: `0 20px 40px rgba(0,0,0,.45), 0 0 0 ${on ? 2 : 0}px ${hero.accent}` }} />
+                <button key={it.tmdbId} type="button" onClick={() => hero.select(i)} aria-label={it.title} className="shrink-0 flex flex-col gap-2.5 transition-all duration-700" style={{ width: on ? 120 : 86 }}>
+                  <img src={getPosterUrl(it.posterPath, "w342")} alt={it.title} className="w-full object-cover rounded-[18px] transition-all duration-700"
+                    style={{ aspectRatio: "2/3", border: `1px solid rgba(255,255,255,${on ? 0.6 : 0.18})`, boxShadow: `0 20px 40px rgba(0,0,0,.45), 0 0 0 ${on ? 2 : 0}px rgba(255,255,255,.9)` }} />
                   <span className="h-[3px] rounded-full bg-white/20 overflow-hidden" style={{ opacity: on ? 1 : 0 }}>
-                    <span key={hero.cycle} className="block h-full hero-progress" style={{ animationDuration: `${hero.duration}ms`, background: hero.accent }} />
+                    <span key={hero.cycle} className="block h-full hero-progress" style={{ animationDuration: `${hero.duration}ms`, background: "#fff" }} />
                   </span>
                 </button>
               );
             })}
           </div>
-          <div className="liquid-glass hidden md:flex rounded-[2rem] py-4 px-1.5 shrink-0">
-            {[["+10K", "títulos"], ["5", "estados"], ["∞", "listas"]].map(([n, l]) => (
-              <div key={l} className="px-7 text-center">
-                <div className="font-cinema text-4xl leading-none" style={accent}>{n}</div>
-                <div className="text-xs font-bold mt-2 text-white/75">{l}</div>
-              </div>
-            ))}
-          </div>
+          {active && (
+            <div className="hidden lg:block text-right max-w-sm min-w-0">
+              <p className="text-xs font-extrabold uppercase tracking-widest text-white/70">Ahora en tendencia{active.tmdbRating ? ` · ★ ${active.tmdbRating.toFixed(1)}` : ""}</p>
+              <p className="font-cinema text-5xl leading-none mt-2 line-clamp-2">{active.title}</p>
+              <p className="text-sm font-bold text-white/75 mt-2">{[active.year, genreLabel(active.genreIds)].filter(Boolean).join(" · ")}</p>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ───────── TENDENCIA (marquee) ───────── */}
+      {/* ───────── TENDENCIA ───────── */}
       {trending.length > 0 && (
         <section className="relative py-12 overflow-hidden">
-          <div className="absolute top-0 left-1/4 w-[900px] h-[420px] rounded-full blur-[150px] opacity-50 cinema-drift-a pointer-events-none"
-            style={{ background: hero.row, transition: "background 1.6s" }} />
-          <div className="relative flex items-center gap-5 px-6 md:px-24 mb-7">
-            <h2 className="font-cinema text-3xl md:text-5xl whitespace-nowrap">Tendencia de la semana</h2>
+          <div className="absolute top-0 left-1/4 w-[900px] h-[420px] rounded-full blur-[150px] opacity-50 cinema-drift-a pointer-events-none" style={{ background: hero.row, transition: "background 1.6s" }} />
+          <div className="relative flex items-center gap-5 px-5 md:px-10 lg:px-16 mb-7">
+            <h2 className="font-cinema text-4xl md:text-6xl whitespace-nowrap">Tendencia de la semana</h2>
             <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(255,255,255,.3), transparent)" }} />
           </div>
           <div className="relative flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
             <div className="flex gap-6 animate-marquee shrink-0">
               {[...trending, ...trending].map((it, i) => (
-                <div key={`${it.tmdbId}-${i}`}
-                  className="relative w-44 md:w-56 shrink-0 aspect-[2/3] rounded-[1.75rem] overflow-hidden border border-white/18 shadow-[0_24px_50px_-12px_rgba(0,0,0,.7)]">
+                <div key={`${it.tmdbId}-${i}`} className="relative w-44 md:w-56 shrink-0 aspect-[2/3] rounded-[1.75rem] overflow-hidden border border-white/25 shadow-[0_24px_50px_-12px_rgba(0,0,0,.7)]">
                   <img src={getPosterUrl(it.posterPath, "w342")} alt={it.title} loading="lazy" className="w-full h-full object-cover" />
                 </div>
               ))}
@@ -181,78 +119,115 @@ export default function LandingPage() {
       )}
 
       {/* ───────── FEATURES ───────── */}
-      <section className="relative px-5 md:px-24 py-20">
-        <p className="text-xs font-extrabold tracking-[.25em] uppercase text-center" style={accent}>Por qué Watchly</p>
-        <h2 className="font-cinema text-5xl md:text-7xl text-center mt-4 mb-14">
-          Todo tu cine, <span style={accent}>en un solo lugar</span>
-        </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-[1248px] mx-auto">
+      <section className="relative px-5 md:px-10 lg:px-16 py-20">
+        <p className="text-xs font-extrabold tracking-[.25em] uppercase text-white/70">Por qué Watchly</p>
+        <h2 className="font-cinema text-5xl md:text-8xl leading-[0.98] mt-4 mb-14">Todo tu cine,<br />en un solo lugar</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-14">
           {FEATURES.map((f, i) => (
-            <div key={f.title} className={`${glassCard} relative overflow-hidden min-h-[320px] p-9 flex flex-col gap-3.5 transition-transform duration-300 hover:-translate-y-2`}>
-              <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[80px] opacity-60 pointer-events-none"
-                style={{ background: hero.row, filter: `blur(80px) hue-rotate(${i * 50}deg)` }} />
-              <div className="relative font-cinema text-7xl leading-none" style={accent}>0{i + 1}</div>
-              <h3 className="relative font-cinema text-3xl leading-tight mt-auto">{f.title}</h3>
-              <p className="relative text-[15px] leading-relaxed text-white/80 text-pretty">{f.desc}</p>
+            <div key={f.title} className="border-t border-white/25 pt-6">
+              <div className="relative h-56 mb-8 flex items-center justify-center" aria-hidden="true">
+                {[0, 1, 2].map((n) => {
+                  const it = poster(i * 3 + n);
+                  if (!it) return null;
+                  return <img key={n} src={getPosterUrl(it.posterPath, "w342")} alt="" loading="lazy" className="h-full aspect-[2/3] object-cover rounded-2xl border border-white/30 shadow-[0_20px_40px_rgba(0,0,0,.6)]"
+                    style={{ marginLeft: n ? -56 : 0, transform: `rotate(${(n - 1) * 8}deg) translateY(${n === 1 ? -8 : 6}px)`, zIndex: n === 1 ? 3 : 1 }} />;
+                })}
+              </div>
+              <div className="font-cinema text-7xl leading-none text-transparent" style={{ WebkitTextStroke: "2px rgba(255,255,255,.45)" }}>0{i + 1}</div>
+              <h3 className="font-cinema text-4xl leading-tight mt-3">{f.title}</h3>
+              <p className="text-base leading-relaxed text-white/80 text-pretty mt-3 max-w-md">{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ───────── ROADMAP ───────── */}
-      <section className="relative px-5 md:px-24 py-20 overflow-hidden">
-        <div className="absolute top-0 -right-24 w-[700px] h-[700px] rounded-full blur-[150px] opacity-45 cinema-drift-b pointer-events-none"
-          style={{ background: hero.row, transition: "background 1.6s" }} />
-        <div className="relative max-w-[1248px] mx-auto">
-          <p className="text-xs font-extrabold tracking-[.25em] uppercase text-center" style={accent}>Roadmap</p>
-          <h2 className="font-cinema text-5xl md:text-7xl text-center mt-4 mb-5">
-            Lo que se viene <span style={accent}>en Watchly</span>
-          </h2>
-          <p className="text-base md:text-lg text-center max-w-2xl mx-auto mb-12 text-white/75">
-            Una función diferencial por etapa, medida y consolidada antes de avanzar.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <section className="relative px-5 md:px-10 lg:px-16 py-20 overflow-hidden">
+        <div className="absolute top-0 -right-24 w-[700px] h-[700px] rounded-full blur-[150px] opacity-45 cinema-drift-b pointer-events-none" style={{ background: hero.row, transition: "background 1.6s" }} />
+        <div className="relative grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+          <div>
+            <p className="text-xs font-extrabold tracking-[.25em] uppercase text-white/70">Roadmap</p>
+            <h2 className="font-cinema text-5xl md:text-7xl leading-[0.98] mt-4 mb-5">Lo que se viene en Watchly</h2>
+            <p className="text-base md:text-lg max-w-md mb-8 text-white/75">Una función diferencial por etapa, medida y consolidada antes de avanzar.</p>
+            <a href="/roadmap" className="liquid-glass-sm inline-flex h-14 px-8 rounded-full items-center font-bold text-white hover:text-white hover:scale-[1.03] transition-transform">Ver el roadmap completo →</a>
+          </div>
+          <div>
             {ROADMAP.map((r, i) => (
-              <div key={r.title} className="liquid-glass rounded-[2rem] px-7 py-6 flex items-center gap-5">
-                <div className="shrink-0 w-16 h-16 rounded-[1.4rem] flex items-center justify-center font-cinema text-3xl text-[#111]"
-                  style={{ background: hero.accent, filter: `hue-rotate(${(i % 3) * 50}deg)`, transition: "background 1.2s" }}>
-                  {i + 1}
-                </div>
-                <div>
-                  <p className="font-extrabold text-lg mb-1.5">{r.title}</p>
-                  <p className="text-sm leading-relaxed text-white/75 text-pretty">{r.desc}</p>
-                </div>
+              <div key={r.title} className="grid grid-cols-[auto_minmax(0,1fr)] gap-6 py-6 border-t border-white/20 items-baseline">
+                <span className="font-cinema text-5xl leading-none text-transparent" style={{ WebkitTextStroke: "2px rgba(255,255,255,.45)" }}>{String(i + 1).padStart(2, "0")}</span>
+                <div><p className="font-cinema text-3xl leading-tight">{r.title}</p><p className="text-sm leading-relaxed text-white/75 text-pretty mt-2 max-w-xl">{r.desc}</p></div>
               </div>
             ))}
-          </div>
-          <div className="flex justify-center mt-10">
-            <a href="/roadmap" className="liquid-glass-sm h-14 px-8 rounded-full flex items-center font-bold text-white hover:text-white hover:scale-[1.03] transition-transform">
-              Ver el roadmap completo →
-            </a>
           </div>
         </div>
       </section>
 
       {/* ───────── CTA ───────── */}
-      <section className="relative px-5 md:px-24 pb-24">
-        <div className="liquid-glass relative max-w-[1248px] mx-auto rounded-[3.5rem] px-8 py-20 text-center overflow-hidden">
-          <div className="absolute -top-64 left-1/2 -ml-80 w-[640px] h-[640px] rounded-full blur-[110px] opacity-80 cinema-drift-a pointer-events-none"
-            style={{ background: hero.row, transition: "background 1.6s" }} />
+      <section className="relative px-4 md:px-6 pb-20">
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-white/20 px-8 py-24 text-center" style={{ boxShadow: EDGES }}>
+          {trending.length > 0 && (
+            <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+              <div className="absolute -inset-[18%] grid gap-3 -rotate-[8deg]" style={{ gridTemplateColumns: "repeat(10, 1fr)" }}>
+                {Array.from({ length: 30 }, (_, i) => poster(i)).map((it, i) => <img key={i} src={getPosterUrl(it.posterPath, "w200")} alt="" loading="lazy" className="w-full aspect-[2/3] object-cover rounded-xl" style={{ marginTop: (i % 10) % 2 ? 36 : 0 }} />)}
+              </div>
+              <div className="absolute inset-0" style={{ background: "rgba(8,7,14,.82)" }} />
+            </div>
+          )}
           <div className="relative">
-            <h2 className="font-cinema text-6xl md:text-8xl leading-none">Empezá hoy. <span style={accent}>Gratis.</span></h2>
+            <h2 className="font-cinema text-6xl md:text-9xl leading-[0.95]">Empezá hoy.<br />Gratis.</h2>
             <p className="text-lg text-white/80 mx-auto mt-6 mb-9 max-w-lg">Tu perfil de cine te está esperando. Creá tu cuenta en menos de un minuto.</p>
-            <a href="/registro" className="inline-flex h-16 px-10 items-center gap-2.5 rounded-full bg-white text-[#111] hover:text-[#111] font-extrabold text-lg shadow-[0_12px_40px_rgba(0,0,0,.35)] hover:scale-[1.03] transition-transform">
-              Crear mi cuenta →
-            </a>
+            <a href="/registro" className="inline-flex h-16 px-10 items-center gap-2.5 rounded-full bg-white text-[#111] hover:text-[#111] font-extrabold text-lg shadow-[0_12px_40px_rgba(0,0,0,.35)] hover:scale-[1.03] transition-transform">Crear mi cuenta →</a>
           </div>
         </div>
       </section>
 
-      <footer className="px-6 md:px-10 py-8 text-center text-sm text-white/60 border-t border-white/10">
-        <span className="font-cinema text-lg" style={accent}>Watchly</span> — Tu identidad audiovisual.
-        <span className="block mt-2 text-xs">
-          <a href="/privacidad" className="hover:text-white">Privacidad</a> · <a href="/terminos" className="hover:text-white">Términos</a> · <a href="/roadmap" className="hover:text-white">Roadmap</a>
-        </span>
+      {/* ───────── FOOTER ───────── */}
+      <footer className="relative overflow-hidden border-t border-white/20">
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          {heroItems.map((it, i) => (
+            <div key={it.tmdbId} className="absolute left-1/2 bottom-0 w-[90vw] h-[90vw] max-w-[1500px] max-h-[1500px] -translate-x-1/2 translate-y-[45%] rounded-full blur-[130px] transition-opacity duration-[1800ms]"
+              style={{ opacity: i === hero.index ? 0.55 : 0, backgroundImage: `url(${imgOf(it)})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+          ))}
+        </div>
+        <div className="relative flex overflow-hidden border-b border-white/15 py-4 [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]" aria-hidden="true">
+          <div className="flex shrink-0 animate-marquee items-center">
+            {[...TICKER, ...TICKER, ...TICKER, ...TICKER].map((t, i) => (
+              <span key={i} className="font-cinema text-2xl md:text-3xl whitespace-nowrap text-white/70 px-8 flex items-center gap-8">{t}<span className="w-2 h-2 rounded-full bg-white/50" /></span>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative px-5 md:px-10 lg:px-16 pt-14 grid gap-12 md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
+          <div>
+            <p className="font-cinema text-4xl leading-none">Tu identidad audiovisual.</p>
+            <p className="text-sm text-white/70 mt-4 max-w-xs">Guardá lo que ves, entendé lo que te gusta y decidí qué ver hoy.</p>
+            <a href="/registro" className="mt-6 inline-flex h-12 px-6 items-center rounded-full bg-white text-[#111] hover:text-[#111] text-sm font-extrabold transition-transform hover:scale-[1.04]">Crear cuenta →</a>
+          </div>
+          {[
+            { h: "Producto", l: [["Roadmap", "/roadmap"], ["Iniciar sesión", "/login"], ["Crear cuenta", "/registro"]] },
+            { h: "Legal", l: [["Privacidad", "/privacidad"], ["Términos", "/terminos"]] },
+            { h: "Explorar", l: [["Tendencia", "#"], ["ADN Audiovisual", "/roadmap"], ["¿Qué vemos hoy?", "/roadmap"]] },
+          ].map((c) => (
+            <div key={c.h}>
+              <p className="text-xs font-extrabold tracking-[.25em] uppercase text-white/60 mb-4">{c.h}</p>
+              <ul className="space-y-2.5">{c.l.map(([t, href]) => <li key={t}><a href={href} className="text-base font-bold text-white/85 hover:text-white">{t}</a></li>)}</ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="relative mt-10 px-2 select-none grid" aria-hidden="true">
+          {(heroItems.length ? heroItems : [null]).map((it, i) => (
+            <p key={it ? it.tmdbId : "none"} className="[grid-area:1/1] font-cinema text-center whitespace-nowrap text-[26vw] md:text-[24vw] leading-none pt-[0.08em] pb-[0.02em] -mb-[3vw] transition-opacity duration-[1800ms]"
+              style={it ? { opacity: i === hero.index ? 1 : 0, backgroundImage: `url(${imgOf(it)})`, backgroundSize: "cover", backgroundPosition: "center", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", WebkitTextStroke: "2px rgba(255,255,255,.5)" } : { color: "rgba(255,255,255,.15)" }}>
+              WATCHLY
+            </p>
+          ))}
+        </div>
+        <div className="relative z-10 px-5 md:px-10 lg:px-16 py-5 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-white/60 border-t border-white/15 bg-black/30 backdrop-blur-md">
+          <span>© {new Date().getFullYear()} Watchly</span>
+          <span>Hecho para quienes viven el cine.</span>
+          <a href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="hover:text-white">Volver arriba ↑</a>
+        </div>
       </footer>
     </div>
   );

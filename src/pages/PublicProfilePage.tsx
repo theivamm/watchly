@@ -13,6 +13,7 @@ import { getPublicDnaByUsername } from "@/services/dna";
 import MediaCard from "@/components/media/MediaCard";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import Avatar from "@/components/ui/Avatar";
+import { PosterWall, EDGES } from "@/components/ui/PageHeader";
 import { getPosterUrl } from "@/services/tmdb";
 import type { Profile, List, Entry, EntryStatus, TMDBSearchResult, ListItem, UserDNA } from "@/types";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -49,24 +50,6 @@ function PosterTile({ entry, onClick, wide = false }: { entry: Entry; onClick: (
       )}
       <p className="absolute left-3 right-3 bottom-3 text-xs font-extrabold leading-tight line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">{entry.title}</p>
     </button>
-  );
-}
-
-function CoverCycle({ covers }: { covers: Entry[] }) {
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    if (covers.length <= 1) return;
-    const t = setInterval(() => setI((n) => (n + 1) % covers.length), 5000);
-    return () => clearInterval(t);
-  }, [covers.length]);
-  return (
-    <>
-      {covers.map((entry, k) => (
-        <img key={entry.id} src={getPosterUrl(entry.poster_path, "w500")} alt=""
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2400ms] ease-in-out"
-          style={{ opacity: k === i ? 1 : 0, filter: "blur(44px) saturate(1.4)", transform: "scale(1.35)" }} />
-      ))}
-    </>
   );
 }
 
@@ -139,7 +122,7 @@ export default function PublicProfilePage() {
     return base.filter((e) => e.status === statusFilter);
   }, [section, movies, series, wantToWatch, statusFilter]);
 
-  const heroCovers = useMemo(() => entries.filter((e) => e.poster_path).slice(0, 6), [entries]);
+  const heroCovers = useMemo(() => entries.filter((e) => e.poster_path).slice(0, 14), [entries]);
 
   useEffect(() => {
     if (!profile?.is_profile_public || lists.length === 0) {
@@ -237,7 +220,7 @@ export default function PublicProfilePage() {
   };
 
   const Empty = ({ msg }: { msg: string }) => (
-    <div className="frost-card flex flex-col items-center justify-center py-16 rounded-[2.5rem]">
+    <div className="flex flex-col items-center justify-center py-16 border-t border-white/20">
       <Film className="w-8 h-8 mb-3 text-white/70" />
       <p className="text-sm font-bold text-white/75">{msg}</p>
     </div>
@@ -251,7 +234,7 @@ export default function PublicProfilePage() {
   );
 
   const Grid = ({ items }: { items: Entry[] }) => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-5">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
       {items.map((e) => (
         <MediaCard key={e.id} tmdbId={e.tmdb_id} title={e.title} posterPath={e.poster_path} year={null} mediaType={e.media_type}
           status={e.status} rating={e.rating} notes={e.notes} onClick={() => openCard(e)} />
@@ -261,34 +244,44 @@ export default function PublicProfilePage() {
 
   const ListCard = ({ list }: { list: List }) => {
     const items = listPreviews[list.id] ?? [];
-    const posters = items.filter((i) => i.poster_path).slice(0, 4).map((i) => i.poster_path as string);
+    const posters = items.filter((i) => i.poster_path).slice(0, 5).map((i) => i.poster_path as string);
     const expanded = expandedListId === list.id;
     return (
-      <div className="frost-card overflow-hidden rounded-[2.25rem]">
-        <button onClick={() => setExpandedListId(expanded ? null : list.id)} className="group relative block w-full h-52 text-left overflow-hidden">
+      <div className="relative overflow-hidden rounded-[2.25rem] border border-white/20" style={{ background: "rgba(255,255,255,.06)", boxShadow: "inset 3px 0 0 rgba(255,80,140,.4), inset -3px 0 0 rgba(70,170,255,.4), 0 30px 60px -20px rgba(0,0,0,.7)" }}>
+        <button onClick={() => setExpandedListId(expanded ? null : list.id)} className="group relative block w-full h-[22rem] text-left overflow-hidden">
           {posters.length > 0 && (
-            <div className="absolute inset-0 grid h-full w-full" style={{ gridTemplateColumns: `repeat(${posters.length}, 1fr)` }}>
-              {posters.map((p, i) => (
-                <img key={i} src={getPosterUrl(p, "w342")} alt="" aria-hidden="true" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-              ))}
-            </div>
+            <>
+              <img src={getPosterUrl(posters[0], "w342")} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-70" />
+              <div className="absolute inset-x-0 top-14 bottom-28 flex items-center justify-center">
+                {posters.map((p, i) => {
+                  const d = i - (posters.length - 1) / 2;
+                  return <img key={i} src={getPosterUrl(p, "w342")} alt="" aria-hidden="true" loading="lazy"
+                    className="h-full aspect-[2/3] object-cover rounded-2xl border border-white/30 shadow-[0_20px_40px_rgba(0,0,0,.6)] transition-transform duration-500 group-hover:scale-105"
+                    style={{ marginLeft: i ? -40 : 0, transform: `rotate(${d * 7}deg) translateY(${Math.abs(d) * 8}px)`, zIndex: 10 - Math.round(Math.abs(d)) }} />;
+                })}
+              </div>
+            </>
           )}
-          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(7,7,13,.3), transparent 35%, rgba(7,7,13,.6))" }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(7,7,13,.35), transparent 35%, rgba(7,7,13,.55))" }} />
           <span className="liquid-glass-sm absolute top-4 left-4 px-3 py-1.5 rounded-full text-[11px] font-extrabold">{items.length} {items.length === 1 ? "título" : "títulos"}</span>
           <span className="liquid-glass-sm absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center transition-transform duration-300" style={{ transform: expanded ? "rotate(180deg)" : "none" }}>
             <ChevronDown className="w-4 h-4" />
           </span>
-          <div className="liquid-glass absolute left-3.5 right-3.5 bottom-3.5 rounded-[1.5rem] px-5 py-3.5">
+          <div className="liquid-glass absolute left-3.5 right-3.5 bottom-3.5 rounded-[1.75rem] px-5 py-4">
             <h3 className="font-cinema text-3xl leading-none truncate">{list.name}</h3>
-            {list.description && <p className="text-xs mt-1.5 line-clamp-1 text-white/75">{list.description}</p>}
+            {list.description && <p className="text-xs mt-2 line-clamp-1 text-white/75">{list.description}</p>}
           </div>
         </button>
         {expanded && (
-          <div className="p-6 animate-slide-up border-t border-white/10">
+          <div className="p-5 animate-slide-up border-t border-white/15">
             {items.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))" }}>
                 {items.map((item) => (
-                  <MediaCard key={item.id} tmdbId={item.tmdb_id} title={item.title} posterPath={item.poster_path} year={null} mediaType={item.media_type} onClick={() => openListItem(item)} />
+                  <button key={item.id} type="button" onClick={() => openListItem(item)} className="group/it text-left min-w-0">
+                    <img src={getPosterUrl(item.poster_path, "w342")} alt={item.title} loading="lazy" className="w-full aspect-[2/3] object-cover rounded-2xl border border-white/20 transition-transform duration-300 group-hover/it:scale-[1.04]" />
+                    <p className="text-xs font-extrabold mt-2 line-clamp-2">{item.title}</p>
+                    <p className="text-[11px] text-white/60">{item.media_type === "movie" ? "Película" : "Serie"}</p>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -303,7 +296,7 @@ export default function PublicProfilePage() {
   const Resumen = () => (
     <div className="space-y-12">
       <div className="grid gap-5 lg:grid-cols-3">
-        <div className="liquid-glass rounded-[2.25rem] p-7 lg:col-span-2">
+        <div className="border-t border-white/20 pt-6 lg:col-span-2">
           <p className={label}>Su cine en números</p>
           <div className="flex h-4 rounded-full overflow-hidden bg-white/10 mt-5">
             {statusCounts.filter((s) => s.count > 0).map((s) => (
@@ -394,17 +387,16 @@ export default function PublicProfilePage() {
   );
 
   return (
-    <div className="w-full px-5 md:px-10 py-8 md:py-10 max-w-[1500px] mx-auto text-white">
+    <div className="w-full px-4 md:px-6 pt-20 pb-12 text-white">
       {/* ───────── HERO ───────── */}
-      <section className="relative overflow-hidden rounded-[2.75rem] border border-white/20 mb-6 shadow-[0_30px_70px_-20px_rgba(0,0,0,.7)]">
+      <section className="relative overflow-hidden rounded-[2.5rem] border border-white/20 mb-8" style={{ boxShadow: EDGES }}>
         <div className="absolute inset-0 bg-[#0b0b14]">
-          <CoverCycle covers={heroCovers} />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(7,7,13,.75), rgba(7,7,13,.35) 60%, rgba(7,7,13,.6))" }} />
-        </div>
+          <PosterWall posters={heroCovers.map((e) => e.poster_path as string)} />
+          </div>
 
         <div className="relative z-10 p-7 md:p-12 flex flex-col lg:flex-row lg:items-end gap-8 lg:gap-12">
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 min-w-0 flex-1">
-            <div className="relative shrink-0 rounded-full p-1.5" style={{ background: "var(--gradient-accent)", boxShadow: "0 24px 60px -12px var(--accent)" }}>
+            <div className="relative shrink-0 rounded-full p-1.5" style={{ background: "linear-gradient(135deg, #ff5a8c, #fff 50%, #5aaaff)", boxShadow: "0 24px 60px -12px rgba(0,0,0,.7)" }}>
               <div className="rounded-full overflow-hidden bg-[#0b0b14] p-1"><Avatar profile={profile} size={132} /></div>
             </div>
             <div className="min-w-0 text-center sm:text-left">
@@ -456,16 +448,16 @@ export default function PublicProfilePage() {
       </section>
 
       {/* ───────── NAV ───────── */}
-      <nav className="liquid-glass sticky top-4 z-30 rounded-full p-2 mb-10 flex gap-1.5 overflow-x-auto no-scrollbar">
+      <nav className="flex gap-6 md:gap-9 border-b border-white/20 mb-10 overflow-x-auto no-scrollbar">
         {sections.map(({ key, label: l, icon: Icon, count }) => {
           const active = section === key;
           return (
             <button key={key} onClick={() => { setSection(key); setStatusFilter("all"); }}
-              className="flex items-center gap-2 px-5 h-11 rounded-full text-sm font-extrabold whitespace-nowrap transition-all"
-              style={{ background: active ? "#fff" : "transparent", color: active ? "#111" : "rgba(255,255,255,.85)" }}>
+              className="flex items-center gap-2 px-1 pb-3 -mb-px text-base font-extrabold whitespace-nowrap border-b-[3px] transition-colors"
+              style={{ borderColor: active ? "#fff" : "transparent", color: active ? "#fff" : "rgba(255,255,255,.65)" }}>
               <Icon className="w-4 h-4" />
               {l}
-              <span className="px-2 py-0.5 rounded-full text-[11px]" style={{ background: active ? "rgba(0,0,0,.1)" : "rgba(255,255,255,.14)" }}>{count}</span>
+              <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/15">{count}</span>
             </button>
           );
         })}

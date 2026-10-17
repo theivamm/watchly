@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { useTrending } from "@/hooks/useMedia";
+import { useRandomCovers } from "@/hooks/useRandomCovers";
+import PublicNav from "@/components/layout/PublicNav";
 import { useHeroCycle } from "@/hooks/useHeroCycle";
 import HeroBackdrop from "@/components/home/HeroBackdrop";
 
@@ -15,26 +14,15 @@ interface Props {
 
 /** Marco cinematográfico compartido por login / registro / recuperar contraseña. */
 export default function AuthShell({ title, subtitle, back, footer, children }: Props) {
-  const { data } = useTrending("all");
-  const items = (data?.results || []).filter((i) => i.posterPath && i.backdropPath).slice(0, 5);
-  const hero = useHeroCycle(items.map((i) => i.posterPath));
+  const items = useRandomCovers(8);
+  const hero = useHeroCycle(items.map((i) => i.posterPath), 7000);
   const active = items[hero.index];
 
   return (
     <div className="relative min-h-screen overflow-hidden text-white flex flex-col">
-      <HeroBackdrop items={items} index={hero.index} glow={hero.glow} glow2={hero.glow2} />
+      <HeroBackdrop chroma items={items} index={hero.index} glow={hero.glow} glow2={hero.glow2} />
 
-      <header className="relative z-10 flex items-center justify-between px-5 md:px-10 pt-6">
-        <Link to="/" className="liquid-glass h-14 px-7 rounded-full flex items-center font-cinema text-3xl text-white hover:text-white"
-          style={{ color: "#fff" }}>
-          Watchly
-        </Link>
-        {back && (
-          <Link to={back} className="liquid-glass-sm h-12 px-5 rounded-full flex items-center gap-2 text-sm font-bold text-white hover:text-white">
-            <ArrowLeft className="w-4 h-4" /> Volver
-          </Link>
-        )}
-      </header>
+      <PublicNav back={back} />
 
       <main className="relative z-10 flex-1 flex items-center justify-between gap-12 px-5 md:px-14 lg:px-24 py-10">
         <div className="hidden lg:block max-w-[640px]">
@@ -53,7 +41,7 @@ export default function AuthShell({ title, subtitle, back, footer, children }: P
         </div>
 
         <div className="w-full max-w-[460px] mx-auto lg:mx-0 shrink-0">
-          <div className="liquid-glass rounded-[2.5rem] p-8 md:p-10">
+          <div className="liquid-glass rounded-[2.5rem] p-8 md:p-10" style={{ boxShadow: "inset 3px 0 0 rgba(255,80,140,.45), inset -3px 0 0 rgba(70,170,255,.45), inset 0 1px 0 rgba(255,255,255,.5), 0 30px 80px -20px rgba(0,0,0,.7)" }}>
             <h1 className="font-cinema text-5xl leading-none">{title}</h1>
             <p className="text-sm text-white/70 mt-3 mb-8">{subtitle}</p>
             {children}
