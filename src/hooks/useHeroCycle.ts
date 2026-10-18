@@ -19,6 +19,7 @@ export function useHeroCycle(posters: (string | null)[], ms = 8000) {
   const count = posters.length;
   const [index, setIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [cycle, setCycle] = useState(0);
   const [tint, setTint] = useState<RGB>(DEFAULT_TINT);
   const startRef = useRef(0);
   const cache = useRef<Record<string, RGB>>({});
@@ -30,6 +31,7 @@ export function useHeroCycle(posters: (string | null)[], ms = 8000) {
       const elapsed = performance.now() - startRef.current;
       if (elapsed >= ms) {
         setIndex((i) => (i + 1) % count);
+        setCycle((c) => c + 1);
         startRef.current = performance.now();
         setProgress(0);
       } else {
@@ -41,6 +43,7 @@ export function useHeroCycle(posters: (string | null)[], ms = 8000) {
 
   const select = useCallback((i: number) => {
     setIndex(i);
+    setCycle((c) => c + 1);
     setProgress(0);
     startRef.current = performance.now();
   }, []);
@@ -66,6 +69,8 @@ export function useHeroCycle(posters: (string | null)[], ms = 8000) {
   return {
     index,
     progress,
+    cycle,
+    duration: ms,
     select,
     hue,
     accent: `hsl(${hue} ${sat}% 72%)`,

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { getProfile, upsertProfile } from "@/services/profile";
+import { checkIsAdmin } from "@/services/admin";
 import type { Profile } from "@/types";
 
 interface AuthContextType {
@@ -9,6 +10,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   profile: Profile | null;
+  isAdmin: boolean;
   refreshProfile: () => Promise<void>;
 }
 
@@ -17,6 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   profile: null,
+  isAdmin: false,
   refreshProfile: async () => {},
 });
 
@@ -64,6 +67,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    let off = false;
+    checkIsAdmin().then((v) => { if (!off) setIsAdmin(!!v); });
+    return () => { off = true; };
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -136,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, loading, profile, isAdmin, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -127,7 +127,7 @@ export default function RecommendationsPage() {
   }, [rows, hasDna, entries]);
   const hero = useHeroCycle(heroItems.map((i) => i.posterPath));
   const visibleRows = rows.map((r) => ({ ...r, items: r.items.filter((i) => !inLibrary(i)) })).filter((r) => r.items.length > 0);
-  const reasonFor = (it: TMDBSearchResult, genre?: string) => taste ? explainTaste(it, taste, genre) : "Selección para explorar el catálogo.";
+  const reasonFor = (it: TMDBSearchResult, _genre?: string) => taste ? explainTaste(it, taste) : "Selección para explorar el catálogo.";
 
   const quickAdd = async (item: TMDBSearchResult) => {
     if (!user || adding) return;
