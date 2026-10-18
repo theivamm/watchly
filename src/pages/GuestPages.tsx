@@ -29,10 +29,10 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 /** Póster con aberración cromática: dos copias desplazadas en rosa y cian. */
-function ChromaPoster({ it, size = "w342", className = "", rounded = "rounded-[1.4rem]", spread = 7 }: { it: TMDBSearchResult; size?: Parameters<typeof getPosterUrl>[1]; className?: string; rounded?: string; spread?: number }) {
+function ChromaPoster({ it, size = "w342", className = "", rounded = "rounded-[1.4rem]", spread = 7 }: { it: TMDBSearchResult; size?: string; className?: string; rounded?: string; spread?: number }) {
   const src = getPosterUrl(it.posterPath, size);
   return (
-    <div className={`relative ${className}`}>
+    <div className={`${/\babsolute\b/.test(className) ? "" : "relative"} ${className}`}>
       {[-1, 1].map((d) => (
         <img key={d} src={src} alt="" aria-hidden="true" loading="lazy" className={`absolute inset-0 w-full h-full object-cover ${rounded} opacity-60`}
           style={{ transform: `translate(${d * spread}px, ${-d * 2}px)`, mixBlendMode: "screen", filter: FRINGE[d < 0 ? 0 : 1] }} />
@@ -73,7 +73,7 @@ function SignupCta({ title, text, covers }: { title: string; text: string; cover
   const fan = covers.slice(0, 3);
   return (
     <section className="relative px-5 md:px-14 pb-24">
-      <div className="liquid-menu relative max-w-[1200px] mx-auto rounded-[3rem] overflow-hidden" style={{ animation: "none", boxShadow: edgeShadow }}>
+      <div className="liquid-menu relative max-w-[1200px] mx-auto rounded-[3rem] overflow-hidden" style={{ animation: "none", boxShadow: edgeShadow, overscrollBehavior: "auto", touchAction: "pan-y" }}>
         <div aria-hidden="true" className="absolute inset-0 grid grid-cols-6 md:grid-cols-8 gap-3 p-3 -rotate-6 scale-[1.4] opacity-30">
           {wall.map((p, i) => <img key={`${p.tmdbId}-${i}`} src={getPosterUrl(p.posterPath, "w185")} alt="" loading="lazy" className="aspect-[2/3] w-full object-cover rounded-xl" />)}
         </div>
@@ -149,7 +149,7 @@ export function TrendingPublicPage() {
                 <div aria-hidden="true" className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(8,7,16,.15) 0%, rgba(8,7,16,.55) 45%, rgba(8,7,16,.96) 100%)" }} />
                 <div aria-hidden="true" className="absolute -top-16 -left-12 w-52 h-52 rounded-full blur-[80px] opacity-70" style={{ background: "rgba(255,50,130,.45)" }} />
                 <div aria-hidden="true" className="absolute -bottom-20 -right-12 w-60 h-60 rounded-full blur-[90px] opacity-60" style={{ background: "rgba(40,190,255,.4)" }} />
-                <ChromaPoster it={it} size="w185" rounded="rounded-2xl" spread={5} className="absolute top-5 right-5 w-24 aspect-[2/3] rotate-3 group-hover:rotate-0 transition-transform" />
+                <ChromaPoster it={it} size="w185" rounded="rounded-2xl" spread={5} className="hidden md:block absolute top-5 right-5 w-24 aspect-[2/3] rotate-3 group-hover:rotate-0 transition-transform" />
                 <div className="relative p-6 md:p-8">
                   <span className="font-cinema text-8xl md:text-9xl leading-none block" style={fringeText}>{String(i + 1).padStart(2, "0")}</span>
                   <h3 className="font-cinema text-4xl leading-[0.95] mt-1 line-clamp-2">{it.title}</h3>
@@ -370,7 +370,7 @@ function TonightDemo({ pool, steps }: { pool: TMDBSearchResult[]; steps: readonl
   const cur = deck[n % deck.length];
   return (
     <section className="px-5 md:px-14 pb-20">
-      <div className="liquid-menu relative max-w-[1000px] mx-auto rounded-[2.5rem] p-6 md:p-10 overflow-hidden" style={{ animation: "none", boxShadow: edgeShadow }}>
+      <div className="liquid-menu relative max-w-[1000px] mx-auto rounded-[2.5rem] p-6 md:p-10 overflow-hidden" style={{ animation: "none", boxShadow: edgeShadow, overscrollBehavior: "auto", touchAction: "pan-y" }}>
         <img key={cur.tmdbId} src={getBackdropUrl(cur.backdropPath ?? cur.posterPath, "w780")} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover opacity-25 scale-110 animate-fade-in" style={{ filter: "blur(6px) saturate(1.3)" }} />
         <div aria-hidden="true" className="absolute inset-0" style={{ background: "linear-gradient(110deg, rgba(12,10,24,.9), rgba(12,10,24,.55))" }} />
         <div className="relative">
@@ -408,7 +408,7 @@ function TonightDemo({ pool, steps }: { pool: TMDBSearchResult[]; steps: readonl
 function DnaPreview({ f, picks }: { f: { previewTitle: string; previewQuote: string; preview: readonly { l: string; v: number }[] }; picks: TMDBSearchResult[] }) {
   return (
     <section className="px-5 md:px-14 pb-20">
-      <div className="liquid-menu relative max-w-[1100px] mx-auto rounded-[2.5rem] p-7 md:p-10 grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-10 items-center overflow-hidden" style={{ animation: "none", boxShadow: edgeShadow }}>
+      <div className="liquid-menu relative max-w-[1100px] mx-auto rounded-[2.5rem] p-7 md:p-10 grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-10 items-center overflow-hidden" style={{ animation: "none", boxShadow: edgeShadow, overscrollBehavior: "auto", touchAction: "pan-y" }}>
         <div>
           <p className="text-xs font-extrabold tracking-[.2em] uppercase text-white/70 flex items-center gap-2"><Dna className="w-4 h-4" /> {f.previewTitle} · ejemplo</p>
           <p className="font-cinema text-3xl md:text-4xl leading-tight mt-4">{f.previewQuote}</p>
