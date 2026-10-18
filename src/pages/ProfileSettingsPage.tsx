@@ -148,17 +148,17 @@ export default function ProfileSettingsPage() {
           </div>
           <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(8,7,14,.94) 0%, rgba(8,7,14,.8) 45%, rgba(8,7,14,.45) 100%)" }} />
         </div>
-        <div className="relative flex flex-wrap items-center gap-x-8 gap-y-6">
+        <div className="relative flex flex-col md:flex-row md:flex-wrap items-center text-center md:text-left gap-x-8 gap-y-5">
           <div className="rounded-full p-1 shrink-0" style={{ background: "linear-gradient(135deg, #ff5a8c, #fff 50%, #5aaaff)" }}>
             <div className="rounded-full p-1 bg-[#0b0b14]"><Avatar profile={form as Profile} size={116} /></div>
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 w-full md:w-auto md:flex-1">
             <p className="text-xs font-extrabold uppercase tracking-[.25em] text-white/70">Configuración</p>
-            <h1 className="font-cinema text-6xl md:text-8xl leading-[.95] truncate mt-1">{form.display_name || user?.email?.split("@")[0]}</h1>
-            <p className="text-base font-bold text-white/75 mt-2">@{profile?.username || "..."}{user?.email ? <span className="text-white/50"> · {user.email}</span> : null}</p>
+            <h1 className="font-cinema text-4xl sm:text-5xl md:text-8xl leading-[1] break-words md:truncate mt-1">{form.display_name || user?.email?.split("@")[0]}</h1>
+            <p className="text-base font-bold text-white/75 mt-2 break-all">@{profile?.username || "..."}{user?.email ? <span className="text-white/50"> · {user.email}</span> : null}</p>
           </div>
           {link && (
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <button onClick={handleShare} className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-white text-[#111] text-sm font-extrabold transition-transform hover:scale-[1.03]">
                 {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}{copied ? "¡Link copiado!" : "Copiar link"}
               </button>
@@ -236,12 +236,12 @@ export default function ProfileSettingsPage() {
 
       {/* ───────── BARRA DE GUARDADO ───────── */}
       {showBar && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 pl-6 pr-2 py-2 rounded-full animate-slide-up" style={{ background: "linear-gradient(135deg, rgba(255,60,130,.28), rgba(12,10,24,.9) 50%, rgba(40,190,255,.26))", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", border: "1px solid rgba(255,255,255,.25)", boxShadow: "0 24px 60px -12px rgba(0,0,0,.8)" }}>
-          <span className="text-sm font-bold" style={{ color: message ? (message.type === "ok" ? "#86efac" : "#fca5a5") : "rgba(255,255,255,.85)" }}>
-            {message ? message.text : "Tenés cambios sin guardar"}
+        <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md md:w-auto flex items-center justify-between gap-3 md:gap-4 pl-5 md:pl-6 pr-2 py-2 rounded-full animate-slide-up" style={{ background: "linear-gradient(135deg, rgba(255,60,130,.28), rgba(12,10,24,.9) 50%, rgba(40,190,255,.26))", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", border: "1px solid rgba(255,255,255,.25)", boxShadow: "0 24px 60px -12px rgba(0,0,0,.8)" }}>
+          <span className="text-xs sm:text-sm font-bold truncate min-w-0" style={{ color: message ? (message.type === "ok" ? "#86efac" : "#fca5a5") : "rgba(255,255,255,.85)" }}>
+            {message ? message.text : <><span className="sm:hidden">Cambios sin guardar</span><span className="hidden sm:inline">Tenés cambios sin guardar</span></>}
           </span>
           {dirty && (
-            <button onClick={handleSave} disabled={saving} className="h-11 px-7 rounded-full bg-white text-[#111] text-sm font-extrabold shadow-[0_8px_24px_rgba(0,0,0,.4)] transition-transform hover:scale-[1.04] disabled:opacity-50">
+            <button onClick={handleSave} disabled={saving} className="h-11 px-6 md:px-7 shrink-0 rounded-full bg-white text-[#111] text-sm font-extrabold shadow-[0_8px_24px_rgba(0,0,0,.4)] transition-transform hover:scale-[1.04] disabled:opacity-50">
               {saving ? "Guardando..." : "Guardar"}
             </button>
           )}

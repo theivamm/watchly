@@ -444,7 +444,7 @@ export default function PublicProfilePage() {
               <span className="liquid-glass-sm inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold tracking-wider" style={{ color: "#fff" }}>
                 @{profile.username}
               </span>
-              <h1 className="font-cinema mt-3 text-6xl md:text-8xl leading-[1.02] drop-shadow-[0_10px_50px_rgba(0,0,0,.5)] break-words">
+              <h1 className="font-cinema mt-3 text-4xl sm:text-6xl md:text-8xl leading-[1.02] [overflow-wrap:anywhere] drop-shadow-[0_10px_50px_rgba(0,0,0,.5)] break-words">
                 {profile.display_name || profile.username}
               </h1>
               {profile.bio && <p className="mt-3 text-base leading-relaxed max-w-2xl text-white/85 text-pretty">{profile.bio}</p>}

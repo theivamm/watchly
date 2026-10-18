@@ -18,24 +18,31 @@ function rgbToHsl({ r, g, b }: RGB): [number, number, number] {
 export function useHeroCycle(posters: (string | null)[], ms = 8000) {
   const count = posters.length;
   const [index, setIndex] = useState(0);
-  // Cambia en cada avance; sirve de `key` para reiniciar la barra de progreso (animada por CSS,
-  // no por estado: re-renderizar la página 10 veces por segundo la hacía parpadear en mobile).
-  const [cycle, setCycle] = useState(0);
+  const [progress, setProgress] = useState(0);
   const [tint, setTint] = useState<RGB>(DEFAULT_TINT);
+  const startRef = useRef(0);
   const cache = useRef<Record<string, RGB>>({});
 
   useEffect(() => {
     if (count <= 1) return;
-    const t = setTimeout(() => {
-      setIndex((i) => (i + 1) % count);
-      setCycle((c) => c + 1);
-    }, ms);
-    return () => clearTimeout(t);
-  }, [count, ms, cycle]);
+    startRef.current = performance.now();
+    const t = setInterval(() => {
+      const elapsed = performance.now() - startRef.current;
+      if (elapsed >= ms) {
+        setIndex((i) => (i + 1) % count);
+        startRef.current = performance.now();
+        setProgress(0);
+      } else {
+        setProgress((elapsed / ms) * 100);
+      }
+    }, 100);
+    return () => clearInterval(t);
+  }, [count, ms]);
 
   const select = useCallback((i: number) => {
     setIndex(i);
-    setCycle((c) => c + 1);
+    setProgress(0);
+    startRef.current = performance.now();
   }, []);
 
   const activePoster = posters[index] ?? null;
@@ -58,8 +65,7 @@ export function useHeroCycle(posters: (string | null)[], ms = 8000) {
   const sat = Math.round(Math.min(90, Math.max(62, s0 * 100 + 25)));
   return {
     index,
-    cycle,
-    duration: ms,
+    progress,
     select,
     hue,
     accent: `hsl(${hue} ${sat}% 72%)`,

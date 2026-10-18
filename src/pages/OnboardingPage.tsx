@@ -32,7 +32,7 @@ export default function OnboardingPage() {
     });
 
     if (insertError) {
-      setError(insertError.code === "23505" ? "Ese nombre de usuario ya está en uso. Probá con otro." : "No pudimos guardar tu perfil. Intentá de nuevo.");
+      setError(insertError.message);
       setLoading(false);
       return;
     }

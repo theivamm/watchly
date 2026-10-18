@@ -178,7 +178,7 @@ function Bath({ posters = [], children, className = "", strength = 1, offset = 0
   return (
     <BathTint.Provider value={tint}>
       <div className={`relative ${className}`}>
-        <div aria-hidden="true" className="absolute -inset-x-6 -inset-y-10 pointer-events-none overflow-hidden" style={{ WebkitMaskImage: m, maskImage: m }}>
+        <div aria-hidden="true" className="absolute inset-x-0 md:-inset-x-6 -inset-y-10 pointer-events-none overflow-hidden" style={{ WebkitMaskImage: m, maskImage: m }}>
           {posters.map((p, k) => <BathLayer key={p.path} poster={p} active={k === cur} strength={strength} />)}
         </div>
         <div className="relative">{children}</div>
@@ -189,9 +189,9 @@ function Bath({ posters = [], children, className = "", strength = 1, offset = 0
 
 function Opener({ n, title, id }: { n: string; title: string; id: string }) {
   return (
-    <div id={id} className="flex items-end gap-5 md:gap-8">
-      <span className="font-cinema text-[6rem] md:text-[9rem] leading-[.8] select-none" style={{ WebkitTextStroke: "2px rgba(255,255,255,.5)", color: "transparent" }}>{n}</span>
-      <h2 className="font-cinema text-5xl md:text-7xl leading-[.9] pb-1">{title}</h2>
+    <div id={id} className="flex items-end gap-3 md:gap-8 min-w-0">
+      <span className="font-cinema text-[4.5rem] md:text-[9rem] leading-[.8] select-none shrink-0" style={{ WebkitTextStroke: "2px rgba(255,255,255,.5)", color: "transparent" }}>{n}</span>
+      <h2 className="font-cinema text-4xl md:text-7xl leading-[.9] pb-1 min-w-0 [overflow-wrap:anywhere]">{title}</h2>
     </div>
   );
 }
@@ -316,7 +316,7 @@ function FormatPanel({ label, pct, ps, k, lead }: { label: string; pct: number; 
       </div>
       <div aria-hidden="true" className="absolute inset-0" style={{ background: `linear-gradient(0deg, rgba(8,7,14,.9), transparent 62%), radial-gradient(100% 80% at ${k ? "100%" : "0%"} 100%, ${tintCss(tint, 0.3)}, transparent 70%)` }} />
       <div className={`relative p-6 md:p-8 w-full ${k ? "text-right" : ""}`}>
-        <p className="font-cinema text-7xl md:text-8xl leading-none"><CountUp value={pct} suffix="%" /></p>
+        <p className="font-cinema text-6xl md:text-8xl leading-none"><CountUp value={pct} suffix="%" /></p>
         <p className="text-xs font-extrabold uppercase tracking-[.25em] text-white/80 mt-2">{label}</p>
       </div>
     </div>
@@ -407,7 +407,7 @@ function RatingBlock({ average, median, label, distribution, coverage, posters }
   return (
     <div>
       <div className="flex flex-wrap items-end gap-x-8 gap-y-3 mb-7">
-        <p className="font-cinema text-8xl md:text-9xl leading-[.85]">{average.toFixed(1)}</p>
+        <p className="font-cinema text-7xl md:text-9xl leading-[.85]">{average.toFixed(1)}</p>
         <div className="pb-2">
           <div className="relative inline-block text-3xl leading-none tracking-wider" aria-label={`${average.toFixed(1)} de 5`}>
             <span className="text-white/20">★★★★★</span>
@@ -447,7 +447,7 @@ function RuntimeBlock({ minutes, label, posters }: { minutes: number; label: str
     <div>
       <div className="flex items-end gap-4 mb-7">
         <Clock className="w-6 h-6 text-white/70 mb-3" />
-        <p className="font-cinema text-8xl md:text-9xl leading-[.85]">{minutes}<span className="text-3xl ml-3 text-white/70">min</span></p>
+        <p className="font-cinema text-7xl md:text-9xl leading-[.85]">{minutes}<span className="text-3xl ml-3 text-white/70">min</span></p>
       </div>
       <p className="text-sm font-extrabold mb-6">{label}</p>
       <div className="relative h-3 rounded-full" style={{ background: "linear-gradient(90deg, #ff5a8c, #fff 50%, #5aaaff)", boxShadow: "0 0 30px rgba(255,255,255,.25)" }}>
@@ -516,7 +516,7 @@ function RankRow({ it, max, ps }: { it: WeightedMetric; max: number; ps: DnaPost
           <div key={p.path} className="absolute top-0 h-full aspect-[2/3]" style={{ left: k * 18, zIndex: 5 - k }}><Chroma p={p} spread={2} className="w-full h-full" rounded="rounded-lg" /></div>
         ))}
       </div>
-      <span className="font-cinema text-2xl md:text-3xl leading-none w-36 md:w-44 truncate">{it.label}</span>
+      <span className="font-cinema text-xl md:text-3xl leading-none w-24 md:w-44 truncate">{it.label}</span>
       <div className="flex-1 min-w-0"><Ticks pct={it.percentage} max={max} tint={tint} n={14} /></div>
       <span className="font-cinema text-2xl md:text-3xl leading-none w-16 text-right text-white/85">{it.percentage}%</span>
     </li>
@@ -549,7 +549,7 @@ function FaderList({ items }: { items: WeightedMetric[] }) {
     <ul className="divide-y divide-white/10">
       {items.map((it) => (
         <li key={it.key} className="flex items-center gap-4 py-3">
-          <span className="font-cinema text-2xl md:text-3xl leading-none w-40 md:w-48 truncate">{it.label}</span>
+          <span className="font-cinema text-xl md:text-3xl leading-none w-28 md:w-48 truncate">{it.label}</span>
           <div className="flex-1 min-w-0"><Ticks pct={it.percentage} max={max} n={16} /></div>
           <span className="font-cinema text-2xl md:text-3xl leading-none w-16 text-right text-white/85">{it.percentage}%</span>
         </li>
@@ -607,21 +607,21 @@ export default function DNAView({ dna, title = "Mi ADN", owner, actions, posters
   };
 
   return (
-    <div className="space-y-20 text-white">
+    <div className="space-y-16 md:space-y-20 text-white overflow-x-clip">
       {/* ───────── PORTADA ───────── */}
-      <section className="relative overflow-hidden rounded-[2.5rem] min-h-[540px] flex flex-col justify-between gap-10 p-7 md:p-12"
+      <section className="relative overflow-hidden rounded-[2.5rem] min-h-[480px] md:min-h-[540px] flex flex-col justify-between gap-8 md:gap-10 px-5 py-8 md:p-12 text-center md:text-left"
         style={{ boxShadow: `${edge}, 0 30px 80px -20px rgba(0,0,0,.6)`, background: posters.length ? undefined : "linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,.03))" }}>
         <PosterWall posters={posters} />
         <div className="relative">
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-extrabold uppercase tracking-[.25em] text-white/80 mb-6">
+          <p className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1 text-[11px] md:text-xs font-extrabold uppercase tracking-[.2em] md:tracking-[.25em] text-white/80 mb-5 md:mb-6">
             <Sparkles className="w-4 h-4" /> ADN Audiovisual <span className="text-white/40">/</span> {cls.badgeLabel}{owner && <><span className="text-white/40">/</span> @{owner}</>}
           </p>
-          <h1 className="font-cinema text-7xl md:text-[10rem] leading-[0.95] break-words">{title}</h1>
-          {dna.summary && <p className="mt-5 text-lg md:text-xl leading-relaxed font-medium text-white/90 max-w-3xl text-pretty">{dna.summary}</p>}
-          {dna.tags.length > 0 && <p className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-sm font-extrabold text-white/85">{dna.tags.map((t) => <span key={t}>#{t.replace(/\s+/g, "")}</span>)}</p>}
+          <h1 className="font-cinema text-6xl sm:text-7xl md:text-[10rem] leading-[0.95] [overflow-wrap:anywhere]">{title}</h1>
+          {dna.summary && <p className="mt-5 text-base md:text-xl leading-relaxed font-medium text-white/90 max-w-3xl mx-auto md:mx-0 text-pretty">{dna.summary}</p>}
+          {dna.tags.length > 0 && <p className="mt-5 flex flex-wrap justify-center md:justify-start gap-x-4 md:gap-x-5 gap-y-1 text-sm font-extrabold text-white/85">{dna.tags.map((t) => <span key={t}>#{t.replace(/\s+/g, "")}</span>)}</p>}
         </div>
         <div className="relative">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-y-6 [&>div]:pl-5 [&>div]:border-l [&>div]:border-white/25">
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-y-6 gap-x-2 border-t border-white/20 pt-6 md:border-0 md:pt-0 md:[&>div]:pl-5 md:[&>div]:border-l md:[&>div]:border-white/25">
             {[
               { l: "Títulos", v: String(dna.validTitleCount) },
               { l: "Películas", v: `${dna.formatDistribution.movie}%` },
@@ -630,17 +630,17 @@ export default function DNAView({ dna, title = "Mi ADN", owner, actions, posters
               { l: "Género #1", v: genres[0]?.label ?? "—" },
             ].map(({ l, v }) => (
               <div key={l} className="min-w-0">
-                <p className="font-cinema text-4xl md:text-5xl leading-none truncate">{v}</p>
-                <p className="text-[11px] font-extrabold uppercase tracking-widest mt-2 text-white/70">{l}</p>
+                <p className="font-cinema text-3xl md:text-5xl leading-none truncate">{v}</p>
+                <p className="text-[10px] md:text-[11px] font-extrabold uppercase tracking-wider md:tracking-widest mt-2 text-white/70">{l}</p>
               </div>
             ))}
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-4 mt-8">
-            <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-col md:flex-row md:flex-wrap items-center justify-between gap-4 mt-8">
+            <div className="flex flex-wrap items-center justify-center gap-4">
               <p className="text-xs font-bold text-white/70">Actualizado el {formatDate(dna.calculatedAt)}</p>
               {actions}
             </div>
-            <nav className="flex gap-6 text-sm font-extrabold" aria-label="Secciones del ADN">
+            <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2 md:gap-6 text-sm font-extrabold" aria-label="Secciones del ADN">
               {[["Gustos", "dna-gustos"], ["Cómo mirás", "dna-habitos"], ["Perfil y confianza", "dna-perfil"]].map(([l, id]) => (
                 <button key={id} type="button" onClick={() => go(id)} className="text-white/85 hover:text-white underline-offset-8 hover:underline">{l}</button>
               ))}
@@ -768,7 +768,7 @@ export default function DNAView({ dna, title = "Mi ADN", owner, actions, posters
           <Bath posters={set(20)}>
             <Sec title="Confianza del ADN" hint={cls.hint} />
             <div className="flex flex-wrap items-center gap-8">
-              <Ring pct={dna.confidenceScore} size={190} stroke={14}>
+              <Ring pct={dna.confidenceScore} size={160} stroke={14}>
                 <span className="font-cinema text-6xl leading-none"><CountUp value={dna.confidenceScore} /></span>
                 <span className="text-[11px] font-extrabold uppercase tracking-widest text-white/70 mt-1">de 100</span>
               </Ring>

@@ -129,28 +129,6 @@ h1, h2, h3 {
 }
 .animate-pop { animation: pop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 
-@keyframes status-tap {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,.55); }
-  35% { transform: scale(0.94); }
-  65% { transform: scale(1.04); box-shadow: 0 0 0 10px rgba(255,255,255,0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0); }
-}
-.animate-status-tap { animation: status-tap 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
-
-@keyframes check-in {
-  0% { opacity: 0; transform: scale(0.3) rotate(-30deg); }
-  70% { transform: scale(1.25) rotate(0); }
-  100% { opacity: 1; transform: scale(1); }
-}
-.animate-check-in { animation: check-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-
-@keyframes star-pop {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.45) rotate(-12deg); }
-  100% { transform: scale(1); }
-}
-.animate-star-pop { animation: star-pop 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
-
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
