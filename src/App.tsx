@@ -20,7 +20,6 @@ import PublicDNAPage from "@/pages/PublicDNAPage";
 import SharedMediaPage from "@/pages/SharedMediaPage";
 import DNAPage from "@/pages/DNAPage";
 import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
-import AccountSettingsPage from "@/pages/AccountSettingsPage";
 import RoadmapPage from "@/pages/RoadmapPage";
 import RoomsPage from "@/pages/RoomsPage";
 import RoomPage from "@/pages/RoomPage";
@@ -100,7 +99,7 @@ function AppRoutes() {
         <Route path="/salas" element={<RoomsPage />} />
         <Route path="/salas/:id" element={<RoomPage />} />
         <Route path="/configuracion/perfil" element={<ProfileSettingsPage />} />
-        <Route path="/configuracion/cuenta" element={<AccountSettingsPage />} />
+        <Route path="/configuracion/cuenta" element={<Navigate to="/configuracion/perfil" replace />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

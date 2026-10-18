@@ -34,12 +34,12 @@ export default function GlobalSearch() {
   return <header className="sticky top-0 z-40 h-0 text-white pointer-events-none">
     <div className="absolute inset-x-0 top-3 px-4 md:px-8"><div className="flex items-center max-w-2xl mx-auto pointer-events-auto">
       <div ref={root} className="relative flex-1 basis-full sm:basis-auto min-w-0" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false); }}>
-        <form role="search" onSubmit={(e) => { e.preventDefault(); search(query); }} className="flex items-center gap-3 rounded-full bg-white/10 backdrop-blur-xl border border-white/15 px-5 shadow-[0_8px_30px_rgba(0,0,0,.3)] transition-all focus-within:bg-white/15 focus-within:border-white/40 focus-within:shadow-[0_8px_40px_rgba(255,255,255,.12)]">
+        <div className="ai-border rounded-full"><form role="search" onSubmit={(e) => { e.preventDefault(); search(query); }} className="ai-border-inner flex items-center gap-3 rounded-full px-5">
           <Search size={18} className="shrink-0 text-white/60" />
           <input ref={input} aria-label="Buscar películas y series" aria-expanded={open && query.trim().length >= 2} aria-controls="search-suggestions" value={query} onFocus={() => setOpen(true)} onChange={(e) => { setQuery(e.target.value); setOpen(true); }} placeholder="Películas, series, tu próxima historia…" className="w-full min-w-0 bg-transparent outline-none h-11 text-sm placeholder:text-white/50" style={{ outline: "none", boxShadow: "none" }} />
           {query && <button type="button" aria-label="Borrar búsqueda" onClick={() => { setQuery(""); input.current?.focus(); }}><X size={16} /></button>}
           <kbd className="hidden md:inline-flex shrink-0 items-center rounded-md border border-white/20 px-1.5 py-0.5 text-[10px] font-bold text-white/60">Ctrl K</kbd><button type="submit" className="sr-only">Buscar</button>
-        </form>
+        </form></div>
         {open && query.trim().length >= 2 && <div id="search-suggestions" className="absolute top-full mt-3 inset-x-0 rounded-[1.75rem] border border-white/20 p-4 max-h-[75svh] overflow-y-auto shadow-[0_30px_80px_-20px_rgba(0,0,0,.8)]"
           style={{ background: "linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,.03)), rgba(18,16,30,.82)", backdropFilter: "blur(32px) saturate(1.8)", WebkitBackdropFilter: "blur(32px) saturate(1.8)" }}>
           <div className="flex items-center justify-between gap-3 px-1 pb-3">
