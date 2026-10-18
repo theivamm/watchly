@@ -621,7 +621,7 @@ export default function DNAView({ dna, title = "Mi ADN", owner, actions, posters
           {dna.tags.length > 0 && <p className="mt-5 flex flex-wrap justify-center md:justify-start gap-x-4 md:gap-x-5 gap-y-1 text-sm font-extrabold text-white/85">{dna.tags.map((t) => <span key={t}>#{t.replace(/\s+/g, "")}</span>)}</p>}
         </div>
         <div className="relative">
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-y-6 gap-x-2 border-t border-white/20 pt-6 md:border-0 md:pt-0 md:[&>div]:pl-5 md:[&>div]:border-l md:[&>div]:border-white/25">
+          <div className="flex flex-wrap justify-center md:grid md:grid-cols-5 gap-y-6 gap-x-2 border-t border-white/20 pt-6 md:border-0 md:pt-0 md:[&>div]:pl-5 md:[&>div]:border-l md:[&>div]:border-white/25">
             {[
               { l: "Títulos", v: String(dna.validTitleCount) },
               { l: "Películas", v: `${dna.formatDistribution.movie}%` },
@@ -629,7 +629,7 @@ export default function DNAView({ dna, title = "Mi ADN", owner, actions, posters
               { l: "Confianza", v: `${dna.confidenceScore}/100` },
               { l: "Género #1", v: genres[0]?.label ?? "—" },
             ].map(({ l, v }) => (
-              <div key={l} className="min-w-0">
+              <div key={l} className="min-w-0 basis-[30%] md:basis-auto">
                 <p className="font-cinema text-3xl md:text-5xl leading-none truncate">{v}</p>
                 <p className="text-[10px] md:text-[11px] font-extrabold uppercase tracking-wider md:tracking-widest mt-2 text-white/70">{l}</p>
               </div>
@@ -675,7 +675,7 @@ export default function DNAView({ dna, title = "Mi ADN", owner, actions, posters
           {dna.decadeDistribution.length === 0 ? <Empty text="Todavía no hay suficiente información de años de estreno." /> : <DecadeRow items={dna.decadeDistribution} posters={posters} />}
         </section>
 
-        <div className="grid gap-x-14 gap-y-16 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-14 gap-y-16 lg:grid-cols-2">
           <Bath posters={set(0)}>
             <Sec title="Cómo puntuás" />
             {average != null ? <RatingBlock average={average} median={median ?? null} label={ratingLabel} distribution={distribution} coverage={coverage} posters={posters} /> : <Empty text="Todavía no puntuaste títulos. Puntuar te ayuda a afinar tu ADN." />}
@@ -719,7 +719,7 @@ export default function DNAView({ dna, title = "Mi ADN", owner, actions, posters
             <Empty text="Todavía no hay sesiones registradas. En la ficha de cada título podés anotar dónde, cuándo y con quién lo viste, y esta sección se completa sola." />
           </section>
         ) : (
-          <div className="grid gap-x-14 gap-y-14 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-x-14 gap-y-14 lg:grid-cols-2">
             <HabitBlock title="Dónde lo ves" items={dna.venueDistribution} empty="Sin datos de lugar todavía." sessions={cov.venue?.sessions} posters={set(4)} offset={0} />
             <HabitBlock title="Cuándo lo ves" items={dna.timeDistribution} empty="Sin datos de horario todavía." sessions={cov.time?.sessions} posters={set(5)} offset={800} />
             <HabitBlock title="Con quién" items={dna.companionshipDistribution} empty="Sin datos de compañía todavía." sessions={cov.companionship?.sessions} posters={set(6)} offset={400} />
@@ -754,7 +754,7 @@ export default function DNAView({ dna, title = "Mi ADN", owner, actions, posters
         <section>
           <Sec title="Tu perfil de espectador" hint="Etiquetas calculadas con reglas, sin IA" />
           {dna.contextTags.length === 0 ? <Empty text="Todavía no hay suficientes sesiones para inferir un perfil." /> : (
-            <div className="grid gap-x-14 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-x-14 lg:grid-cols-2">
               {dna.contextTags.map((t, i) => (
                 <Bath key={t.slug} posters={set(i + 11, 2)} offset={i * 700} strength={0.8}>
                   <TagRow title={t.label} pct={Math.round(t.score <= 1 ? t.score * 100 : t.score)} text={t.explanation} poster={ranked[(i * 5 + 2) % Math.max(1, ranked.length)]} />
@@ -764,7 +764,7 @@ export default function DNAView({ dna, title = "Mi ADN", owner, actions, posters
           )}
         </section>
 
-        <div className="grid gap-x-14 gap-y-14 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-14 gap-y-14 lg:grid-cols-2">
           <Bath posters={set(20)}>
             <Sec title="Confianza del ADN" hint={cls.hint} />
             <div className="flex flex-wrap items-center gap-8">
