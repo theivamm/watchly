@@ -48,27 +48,45 @@
 
 /* Menús desplegables */
 .liquid-menu {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04)), rgba(24, 24, 38, 0.88);
-  backdrop-filter: blur(44px) saturate(180%);
-  -webkit-backdrop-filter: blur(44px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 30px 70px -10px rgba(0, 0, 0, 0.8);
+  position: relative;
+  background:
+    radial-gradient(130% 90% at 0% 0%, rgba(255, 50, 130, 0.34), transparent 60%),
+    radial-gradient(130% 90% at 100% 100%, rgba(40, 190, 255, 0.3), transparent 60%),
+    rgba(12, 10, 24, 0.68);
+  backdrop-filter: blur(36px) saturate(170%);
+  -webkit-backdrop-filter: blur(36px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  box-shadow: inset 3px 0 0 rgba(255, 80, 140, 0.55), inset -3px 0 0 rgba(70, 180, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 30px 70px -10px rgba(0, 0, 0, 0.85);
+  transform-origin: top right;
+  animation: menu-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
+@keyframes menu-pop { from { opacity: 0; transform: translateY(-6px) scale(0.94); } to { opacity: 1; transform: none; } }
+.liquid-menu-head { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.6rem 0.9rem; margin-bottom: 0.4rem; border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
 .liquid-menu-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   width: 100%;
-  padding: 0.7rem 0.9rem;
-  border-radius: 1rem;
-  font-size: 0.875rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #fff;
   text-align: left;
   cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+.liquid-menu-item > svg:first-child {
+  box-sizing: content-box; padding: 0.5rem; width: 1rem; height: 1rem; flex-shrink: 0;
+  border-radius: 0.8rem; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22);
   transition: background 0.2s;
 }
-.liquid-menu-item:hover { background: rgba(255, 255, 255, 0.14); }
+.liquid-menu-item:hover { background: rgba(255, 255, 255, 0.12); transform: translateX(2px); }
+.liquid-menu-item:hover > svg:first-child { background: rgba(255, 255, 255, 0.2); }
+.liquid-menu-item.is-danger { color: #fecaca; }
+.liquid-menu-item.is-danger > svg:first-child { background: rgba(248, 113, 113, 0.16); border-color: rgba(248, 113, 113, 0.3); color: #fca5a5; }
+.liquid-menu-item.is-danger:hover { background: rgba(248, 113, 113, 0.16); }
+.liquid-menu-sep { height: 1px; margin: 0.4rem 0.6rem; background: rgba(255, 255, 255, 0.1); }
 
 /* Pestañas / filtros */
 .frost-tab {
@@ -171,19 +189,6 @@ select option { background: #151520; color: #fff; }
   .cinema-kenburns { animation: none; transform: scale(1.04); }
 }
 
-@media (min-width: 768px) {
-  .hero-mask {
-    -webkit-mask-image: var(--hero-mask);
-    mask-image: var(--hero-mask);
-    -webkit-mask-composite: var(--hero-mask-composite-webkit);
-    mask-composite: var(--hero-mask-composite);
-  }
-}
-/* Mobile: sin máscaras ni sombras filtradas sobre las capas que hacen el fundido. */
-@media (max-width: 767px) {
-  .font-cinema[class*="drop-shadow"] { filter: none; text-shadow: 0 4px 30px rgba(0, 0, 0, 0.55); }
-}
-
 /* Aberración cromática en tipografía */
 .chroma { text-shadow: none; }
 
@@ -238,13 +243,14 @@ html { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.4) transpar
     -webkit-backdrop-filter: blur(16px) saturate(170%);
     border-color: rgba(255, 255, 255, 0.32);
   }
-  .liquid-menu { background: linear-gradient(145deg, hsl(var(--accent-h, 265) 70% 55% / 0.25), rgba(255, 255, 255, 0.04)), rgba(14, 12, 26, 0.94); }
   .glass-input,
   .frost-tab:not([data-active="true"]) { background: linear-gradient(145deg, hsl(var(--accent-h, 265) 70% 60% / 0.18), rgba(255, 255, 255, 0.03)), rgba(14, 12, 26, 0.82); border-color: rgba(255, 255, 255, 0.28); }
 }
 
 /* Sin scroll horizontal: recorta lo que se desborda (manchas de color, muros de portadas, grillas) sin romper el sticky */
 html, body, #root { max-width: 100%; overflow-x: clip; }
+html { scrollbar-gutter: stable; }
+.liquid-menu { overscroll-behavior: contain; }
 @media (max-width: 767px) {
   main, section, header, footer { min-width: 0; }
   img, video, canvas { max-width: 100%; }
