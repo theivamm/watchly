@@ -104,7 +104,7 @@ export default function RecommendationsPage() {
   }, [rows, hasDna, entries]);
   const hero = useHeroCycle(heroItems.map((i) => i.posterPath));
   const visibleRows = rows.map((r) => ({ ...r, items: r.items.filter((i) => !inLibrary(i)) })).filter((r) => r.items.length > 0);
-  const reasonFor = (it: TMDBSearchResult) => taste ? explainTaste(it, taste) : "Selección para explorar el catálogo.";
+  const reasonFor = (it: TMDBSearchResult, genre?: string) => taste ? explainTaste(it, taste, genre) : "Selección para explorar el catálogo.";
 
   const quickAdd = async (item: TMDBSearchResult) => {
     if (!user || adding) return;
@@ -250,7 +250,7 @@ export default function RecommendationsPage() {
                             </div>
                             <div className="liquid-glass absolute inset-x-2 bottom-2 rounded-2xl px-3 py-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
                               <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/70">Por qué</p>
-                              <p className="text-xs font-bold leading-snug mt-1 line-clamp-5">{isGenre ? reasonFor(it) : "Selección editorial de títulos coreanos; no se basa en tus estrellas."}</p>
+                              <p className="text-xs font-bold leading-snug mt-1 line-clamp-5">{isGenre ? reasonFor(it, row.id.slice(2)) : "Selección editorial de títulos coreanos; no se basa en tus estrellas."}</p>
                             </div>
                           </div>
                         </button>

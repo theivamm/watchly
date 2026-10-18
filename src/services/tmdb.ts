@@ -93,20 +93,36 @@ const TV_TO_MOVIE: Record<string, string> = { "10759": "28", "10765": "878", "10
 const TV_ONLY = new Set(["10762", "10763", "10764", "10766", "10767"]);
 const MOVIE_ONLY = new Set(["36", "10770", "10402", "27", "53", "10749"]);
 
+// Animación, familia e infantil se cuelan en casi todos los géneros (Minions en "Crimen",
+// Doraemon en "Acción") porque TMDB los etiqueta de forma amplia y son muy populares.
+const KIDS_GENRES = ["16", "10751", "10762"];
+
 async function discover(
   type: "movie" | "tv",
   genreIds: string[] | null,
   extra: Record<string, string> = {},
+  pages = 1,
 ): Promise<TMDBSearchResult[]> {
   if (genreIds && genreIds.length === 0) return [];
-  const data = await tmdbFetch(`/discover/${type}`, {
+  const excluded = KIDS_GENRES.filter((g) => !genreIds?.includes(g));
+  const responses = await Promise.all(Array.from({ length: pages }, (_, i) => tmdbFetch(`/discover/${type}`, {
     ...(genreIds ? { with_genres: genreIds.join("|") } : {}),
+    without_genres: excluded.join("|"),
     sort_by: "popularity.desc",
     "vote_count.gte": "200",
     "vote_average.gte": "6.5",
+    page: String(i + 1),
     ...extra,
-  });
-  return ((data.results as Record<string, unknown>[]) || []).map((r) => mapResult(r, type));
+  })));
+  const seen = new Set<number>();
+  return responses
+    .flatMap((data) => ((data.results as Record<string, unknown>[]) || []).map((r) => mapResult(r, type)))
+    .filter((r) => {
+      if (seen.has(r.tmdbId)) return false;
+      seen.add(r.tmdbId);
+      // El género pedido tiene que ser central (uno de los dos primeros), no una etiqueta secundaria.
+      return !genreIds || r.genreIds.slice(0, 2).some((id) => genreIds.includes(String(id)));
+    });
 }
 
 export async function getKoreanRecommendations(): Promise<{ dramas: TMDBSearchResult[]; movies: TMDBSearchResult[] }> {
@@ -121,8 +137,7 @@ export async function getKoreanRecommendations(): Promise<{ dramas: TMDBSearchRe
 export async function getDnaMovieDiscoveries(genreKeys: string[]): Promise<TMDBSearchResult[]> {
   const genres = [...new Set(genreKeys.slice(0, 3).map((key) => TV_TO_MOVIE[key] ?? key).filter((key) => !TV_ONLY.has(key)))];
   if (!genres.length) return [];
-  const pages = await Promise.all([1, 2, 3].map((page) => discover("movie", genres, { page: String(page) })));
-  return pages.flat();
+  return discover("movie", genres, {}, 3);
 }
 
 export async function getDnaRecommendations(
@@ -134,8 +149,8 @@ export async function getDnaRecommendations(
   const tvGenres = [...new Set(keys.map((k) => MOVIE_TO_TV[k] ?? k).filter((k) => !MOVIE_ONLY.has(k)))];
 
   const [movies, shows] = await Promise.all([
-    discover("movie", movieGenres).catch(() => []),
-    discover("tv", tvGenres).catch(() => []),
+    discover("movie", movieGenres, {}, 2).catch(() => []),
+    discover("tv", tvGenres, {}, 2).catch(() => []),
   ]);
 
   // Intercala según la proporción película/serie del ADN.

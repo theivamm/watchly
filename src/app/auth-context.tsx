@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { getProfile, upsertProfile } from "@/services/profile";
@@ -79,25 +79,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => { cancelled = true; };
   }, [user?.id]);
 
+  // Varias cargas del perfil pueden estar en vuelo a la vez (inicio, renovación de sesión, foco
+  // de la pestaña, guardado). Solo aplica la más reciente: si no, una respuesta vieja que llega
+  // tarde pisa lo que el usuario acaba de guardar.
+  const profileSeq = useRef(0);
+  const loadProfile = async (load: () => Promise<Profile | null>) => {
+    const id = ++profileSeq.current;
+    const p = await load().catch(() => null);
+    if (id === profileSeq.current) setProfile(p);
+    return p;
+  };
+
+  const userId = user?.id;
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
+      profileSeq.current++;
       setProfile(null);
       return;
     }
     let cancelled = false;
-    getProfile(user.id).catch(() => null).then((p) => {
-      if (cancelled) return;
-      setProfile(p);
-    });
+    loadProfile(() => getProfile(userId));
 
     // Realtime: refleja cambios de perfil (p. ej. avatar_id) sin recargar.
     const channel = supabase
-      .channel(`public:profiles:id=eq.${user.id}`)
+      .channel(`public:profiles:id=eq.${userId}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
         (payload) => {
           if (cancelled) return;
+          profileSeq.current++;
           setProfile((prev) => {
             const next = { ...(prev ?? null), ...(payload.new as Partial<Profile>) } as Profile | null;
             return next;
@@ -110,23 +121,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const refreshProfile = async () => {
     if (!user) {
+      profileSeq.current++;
       setProfile(null);
       return;
     }
-    const p = await getProfile(user.id).catch(() => null);
-    setProfile(p ?? null);
+    await loadProfile(() => getProfile(user.id));
   };
 
   useEffect(() => {
+    // Supabase emite eventos al renovar el token o al volver a la pestaña; con el mismo usuario
+    // no hace falta recargar ni "asegurar" el perfil otra vez.
+    let lastUserId: string | null | undefined;
     const init = async (u: User | null) => {
+      if (u?.id === lastUserId) return;
+      lastUserId = u?.id ?? null;
       if (u) {
-        const p = await ensureProfile(u);
-        setProfile(p);
+        await loadProfile(() => ensureProfile(u));
       } else {
+        profileSeq.current++;
         setProfile(null);
       }
       setLoading(false);

@@ -171,6 +171,19 @@ select option { background: #151520; color: #fff; }
   .cinema-kenburns { animation: none; transform: scale(1.04); }
 }
 
+@media (min-width: 768px) {
+  .hero-mask {
+    -webkit-mask-image: var(--hero-mask);
+    mask-image: var(--hero-mask);
+    -webkit-mask-composite: var(--hero-mask-composite-webkit);
+    mask-composite: var(--hero-mask-composite);
+  }
+}
+/* Mobile: sin máscaras ni sombras filtradas sobre las capas que hacen el fundido. */
+@media (max-width: 767px) {
+  .font-cinema[class*="drop-shadow"] { filter: none; text-shadow: 0 4px 30px rgba(0, 0, 0, 0.55); }
+}
+
 /* Aberración cromática en tipografía */
 .chroma { text-shadow: none; }
 

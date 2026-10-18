@@ -45,18 +45,19 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false, 
         return (
           <div
             key={`${it.backdropPath ?? it.posterPath}-${i}`}
-            className="absolute top-0 right-0 h-full w-full lg:w-[74%] transition-opacity duration-[1800ms] ease-in-out"
+            className="hero-mask absolute top-0 right-0 h-full w-full lg:w-[74%] transition-opacity duration-[1800ms] ease-in-out"
             style={{
               opacity: i === index ? 1 : 0,
               visibility: live || upcoming ? "visible" : "hidden",
               willChange: live || upcoming ? "opacity" : undefined,
               transform: "translateZ(0)",
               backfaceVisibility: "hidden",
-              WebkitMaskImage: mask,
-              maskImage: mask,
-              WebkitMaskComposite: soft ? "source-in" : undefined,
-              maskComposite: soft ? "intersect" : undefined,
-            }}
+              // La máscara se aplica solo desde md (ver .hero-mask): en mobile se recalculaba
+              // durante todo el fundido y hacía parpadear la página.
+              ["--hero-mask" as string]: mask,
+              ["--hero-mask-composite" as string]: soft ? "intersect" : "add",
+              ["--hero-mask-composite-webkit" as string]: soft ? "source-in" : "source-over",
+            } as React.CSSProperties}
           >
             {chroma && live && hasBackdrop && [-1, 1].map((d) => (
               <div key={d} className="hidden md:block absolute inset-0" style={{ transform: `translateX(${d * 9}px)`, mixBlendMode: "screen", opacity: 0.45, filter: d < 0 ? "sepia(1) saturate(6) hue-rotate(-50deg)" : "sepia(1) saturate(6) hue-rotate(150deg)" }}>
@@ -77,6 +78,7 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false, 
       })}
 
       <div className="absolute inset-0 lg:hidden" style={{ background: "linear-gradient(180deg, rgba(7,7,13,.5), rgba(7,7,13,.82))" }} />
+      {soft && <div className="absolute inset-0 md:hidden" style={{ background: "linear-gradient(180deg, #07070d 0, transparent 14%, transparent 70%, #07070d 100%)" }} />}
       <div className="absolute inset-0"
         style={{ ...(soft ? { WebkitMaskImage: "linear-gradient(180deg, transparent 0, #000 22%, #000 70%, transparent 100%)", maskImage: "linear-gradient(180deg, transparent 0, #000 22%, #000 70%, transparent 100%)" } : {}), background: soft
           ? "linear-gradient(90deg, rgba(7,7,13,.7) 0%, rgba(7,7,13,.2) 45%, transparent 70%)"

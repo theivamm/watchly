@@ -48,16 +48,21 @@ export default function ProfileSettingsPage() {
   const [copied, setCopied] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-  useEffect(() => { if (profile) setForm(profile); }, [profile]);
+  // No pisar lo que el usuario está editando cuando el perfil se recarga en segundo plano.
+  const [dirty, setDirty] = useState(false);
+  useEffect(() => { if (profile && !dirty) setForm(profile); }, [profile, dirty]);
 
-  const set = (key: keyof Profile, value: string | boolean | null) => setForm((f) => ({ ...f, [key]: value }));
+  const set = (key: keyof Profile, value: string | boolean | null) => {
+    setDirty(true);
+    setForm((f) => ({ ...f, [key]: value }));
+  };
 
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
     setMessage(null);
     try {
-      await updateProfile(user.id, {
+      const saved = await updateProfile(user.id, {
         display_name: (form.display_name ?? "").trim(),
         username: (form.username ?? "").trim().replace(/^@/, ""),
         bio: form.bio || null,
@@ -69,11 +74,14 @@ export default function ProfileSettingsPage() {
         show_dna_publicly: form.show_dna_publicly ?? true,
         avatar_id: form.avatar_id ?? null,
       });
+      setForm(saved);
+      setDirty(false);
       await refreshProfile();
       setMessage({ type: "ok", text: "Perfil guardado correctamente." });
     } catch (err) {
       console.error(err);
-      setMessage({ type: "err", text: "No se pudo guardar. Verificá que el usuario no esté en uso." });
+      const code = (err as { code?: string })?.code;
+      setMessage({ type: "err", text: code === "23505" ? "Ese usuario ya está en uso. Probá con otro." : "No se pudo guardar. Revisá tu conexión e intentá de nuevo." });
     } finally {
       setSaving(false);
     }
@@ -138,7 +146,7 @@ export default function ProfileSettingsPage() {
         <aside className="space-y-6 xl:sticky xl:top-20 h-fit">
           <div className="liquid-glass rounded-[2.25rem] p-6 md:p-7">
             <h2 className="font-cinema text-3xl leading-none mb-5">Tu avatar</h2>
-            {user && <AvatarPicker userId={user.id} currentId={form.avatar_id ?? null} onChange={(id) => setForm((f) => ({ ...f, avatar_id: id }))} />}
+            {user && <AvatarPicker userId={user.id} currentId={form.avatar_id ?? null} onChange={(id) => { setDirty(true); setForm((f) => ({ ...f, avatar_id: id })); }} />}
           </div>
           <div className="liquid-glass rounded-[2.25rem] p-6 md:p-7 space-y-4">
             <h2 className="font-cinema text-3xl leading-none">Tu perfil público</h2>
