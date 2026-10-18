@@ -70,19 +70,19 @@ export function AmbientLayer({ items, index }: { items: ReturnType<typeof useAmb
   const prev = usePrevIndex(index);
 
   return (
-    <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-[#07070d] pointer-events-none" style={{ contain: "strict" }}>
+    <div aria-hidden="true" className="fixed -z-10 pointer-events-none bg-[#07070d]" style={{ top: 0, left: 0, width: "100vw", height: "100lvh" }}>
       {items.map((it, i) => (i === index || i === prev || (items.length > 1 && i === (index + 1) % items.length)) && (
         <img
           key={`${it.mediaType}-${it.tmdbId}`}
-          src={it.backdropPath ? getBackdropUrl(it.backdropPath, "w780") : getPosterUrl(it.posterPath, "w500")}
+          src={getPosterUrl(it.posterPath ?? it.backdropPath, "w200")}
           alt=""
           decoding="async"
-          className="absolute inset-0 w-full h-full object-cover cinema-kenburns"
+          className="absolute max-w-none cinema-kenburns"
           style={{
+            top: "-15%", left: "-15%", width: "130%", height: "130%", objectFit: "cover",
             opacity: i === index ? 0.85 : 0,
             transition: "opacity 2.6s ease-in-out",
-            filter: "blur(90px) saturate(1.5)",
-            transform: "scale(1.4) translateZ(0)",
+            filter: "blur(36px) saturate(1.5)",
             willChange: "opacity",
           }}
         />

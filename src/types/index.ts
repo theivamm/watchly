@@ -216,6 +216,8 @@ export interface TMDBSearchResult {
 export interface TMDBMediaDetails extends TMDBSearchResult {
   genres: string[];
   runtime: number | null;
+  originalLanguage?: string;
+  countries?: string[];
   voteCount: number;
   videos: { name?: string; key?: string; site?: string }[];
   cast: { name: string }[];

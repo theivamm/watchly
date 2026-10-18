@@ -6,6 +6,7 @@ import HeroBackdrop from "@/components/home/HeroBackdrop";
 import { useHeroCycle } from "@/hooks/useHeroCycle";
 import { useAuth } from "@/app/auth-context";
 import HorizontalCarousel from "@/components/media/HorizontalCarousel";
+import PosterFrame from "@/components/media/PosterFrame";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import { addToLibrary, getUserLibrary } from "@/services/library";
 import { getMyDna } from "@/services/dna";
@@ -263,8 +264,7 @@ export default function RecommendationsPage() {
                     return (
                       <div key={key} className="group relative w-[180px] md:w-[210px] shrink-0 snap-start">
                         <button type="button" onClick={() => setSelected(it)} className="block w-full text-left">
-                          <div className="relative aspect-[2/3] rounded-[1.75rem] overflow-hidden border border-white/25 shadow-[0_24px_50px_-14px_rgba(0,0,0,.8)]">
-                            <img src={getPosterUrl(it.posterPath, "w342")} alt={it.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                          <PosterFrame src={getPosterUrl(it.posterPath, "w342")} alt={it.title} rounded="rounded-[1.75rem]" border="border-white/25">
                             <span className="liquid-glass-sm absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold">{it.mediaType === "movie" ? "Película" : "Serie"}</span>
                             <div className="liquid-glass absolute inset-x-2 bottom-2 rounded-2xl px-3 py-2.5 transition-all duration-300 group-hover:opacity-0">
                               <p className="text-sm font-extrabold truncate">{it.title}</p>
@@ -274,7 +274,7 @@ export default function RecommendationsPage() {
                               <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/70">Por qué</p>
                               <p className="text-xs font-bold leading-snug mt-1 line-clamp-5">{isGenre ? reasonFor(it, row.id.slice(2)) : row.note ?? "Selección editorial; no se basa en tus estrellas."}</p>
                             </div>
-                          </div>
+                          </PosterFrame>
                         </button>
                         <button type="button" onClick={() => quickAdd(it)} disabled={adding === key} title="Agregar a Por ver"
                           className="liquid-glass-sm absolute top-2.5 right-2.5 w-9 h-9 rounded-full flex items-center justify-center text-white hover:scale-110 transition-transform">

@@ -249,7 +249,7 @@ html { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.4) transpar
 
 /* Sin scroll horizontal: recorta lo que se desborda (manchas de color, muros de portadas, grillas) sin romper el sticky */
 html, body, #root { max-width: 100%; overflow-x: clip; }
-html { scrollbar-gutter: stable; }
+html, body { background-color: #07070d; }
 .liquid-menu { overscroll-behavior: contain; }
 @media (max-width: 767px) {
   main, section, header, footer { min-width: 0; }
@@ -260,3 +260,13 @@ html { scrollbar-gutter: stable; }
 @keyframes guest-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .guest-marquee { animation: guest-marquee 65s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .guest-marquee { animation: none; } }
+
+/* Navegación lateral: el efecto rosa-celeste va solo en el icono y la etiqueta, sin fondo */
+.nav-fx { color: rgba(255, 255, 255, 0.42); transition: color 0.3s, transform 0.2s; }
+.nav-fx svg, .nav-fx span { transition: filter 0.3s, transform 0.3s; }
+.nav-fx:hover { color: rgba(255, 255, 255, 0.92); }
+.nav-fx[data-active="true"] { color: #fff; }
+.nav-fx[data-active="true"] svg { transform: scale(1.14); }
+.nav-fx[data-active="true"] span { font-weight: 800; }
+.nav-fx:hover svg, .nav-fx:hover span { filter: drop-shadow(-1px 0 1px rgba(255, 70, 140, 0.55)) drop-shadow(1px 0 1px rgba(60, 190, 255, 0.55)); }
+.nav-fx[data-active="true"] svg, .nav-fx[data-active="true"] span { filter: drop-shadow(-2px 0 1.5px rgba(255, 70, 140, 0.8)) drop-shadow(2px 0 1.5px rgba(60, 190, 255, 0.8)) drop-shadow(0 0 12px rgba(130, 140, 255, 0.55)); }

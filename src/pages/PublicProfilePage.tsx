@@ -11,6 +11,7 @@ import { getPublicLists, getList } from "@/services/lists";
 import { getPublicLibrary } from "@/services/library";
 import { getPublicDnaByUsername } from "@/services/dna";
 import MediaCard from "@/components/media/MediaCard";
+import PosterFrame from "@/components/media/PosterFrame";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import Avatar from "@/components/ui/Avatar";
 import { PosterWall, EDGES } from "@/components/ui/PageHeader";
@@ -36,19 +37,19 @@ function PosterTile({ entry, onClick, wide = false }: { entry: Entry; onClick: (
   const Icon = meta.icon;
   return (
     <button type="button" onClick={onClick} title={entry.title}
-      className={`group relative shrink-0 snap-start aspect-[2/3] rounded-[1.5rem] overflow-hidden border border-white/15 shadow-[0_20px_44px_-16px_rgba(0,0,0,.7)] transition-transform duration-500 hover:-translate-y-1.5 text-left ${wide ? "w-[190px] md:w-[220px]" : "w-full"}`}>
-      <img src={getPosterUrl(entry.poster_path, "w342")} alt={entry.title} loading="lazy"
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: "linear-gradient(180deg, transparent 40%, rgba(0,0,0,.85))" }} />
-      <span className="liquid-glass-sm absolute top-2.5 left-2.5 w-8 h-8 rounded-full flex items-center justify-center" style={{ color: meta.color }} title={meta.label}>
-        <Icon className="w-4 h-4" />
-      </span>
-      {entry.rating != null && entry.rating > 0 && (
-        <span className="liquid-glass-sm absolute top-2.5 right-2.5 inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-extrabold text-white">
-          <Star className="w-3 h-3" fill="currentColor" /> {entry.rating}
+      className={`group relative shrink-0 snap-start text-left ${wide ? "w-[190px] md:w-[220px]" : "w-full"}`}>
+      <PosterFrame src={getPosterUrl(entry.poster_path, "w342")} alt={entry.title} rounded="rounded-[1.5rem]">
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: "linear-gradient(180deg, transparent 40%, rgba(0,0,0,.85))" }} />
+        <span className="liquid-glass-sm absolute top-2.5 left-2.5 w-8 h-8 rounded-full flex items-center justify-center" style={{ color: meta.color }} title={meta.label}>
+          <Icon className="w-4 h-4" />
         </span>
-      )}
-      <p className="absolute left-3 right-3 bottom-3 text-xs font-extrabold leading-tight line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">{entry.title}</p>
+        {entry.rating != null && entry.rating > 0 && (
+          <span className="liquid-glass-sm absolute top-2.5 right-2.5 inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-extrabold text-white">
+            <Star className="w-3 h-3" fill="currentColor" /> {entry.rating}
+          </span>
+        )}
+        <p className="absolute left-3 right-3 bottom-3 text-xs font-extrabold leading-tight line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">{entry.title}</p>
+      </PosterFrame>
     </button>
   );
 }

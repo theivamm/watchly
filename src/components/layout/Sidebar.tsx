@@ -26,13 +26,12 @@ export default function Sidebar() {
   if (!user) return null;
 
   const profileHref = profile?.username ? `/perfil/${profile.username}` : "/configuracion/perfil";
-  const iconBtn =
-    "liquid-glass-sm w-11 h-11 rounded-full flex items-center justify-center text-white hover:text-white transition-transform hover:scale-105";
+  const iconBtn = "nav-fx w-11 h-11 rounded-full flex items-center justify-center hover:text-white";
 
   return (
     <aside
-      className="hidden md:flex flex-col items-center sticky top-4 h-[calc(100vh-2rem)] shrink-0 z-40 m-4 mr-0 rounded-[2rem] py-5"
-      style={{ width: 84, background: "linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.03) 45%, rgba(255,255,255,.08))", backdropFilter: "blur(28px) saturate(1.9) brightness(1.08)", WebkitBackdropFilter: "blur(28px) saturate(1.9) brightness(1.08)", border: "1px solid rgba(255,255,255,.22)", boxShadow: "inset 1.5px 0 0 rgba(255,90,140,.35), inset -1.5px 0 0 rgba(90,170,255,.35), inset 0 1px 0 rgba(255,255,255,.35), 0 20px 50px -18px rgba(0,0,0,.6)" }}
+      className="hidden md:flex flex-col items-center sticky top-0 h-screen shrink-0 z-40 py-6"
+      style={{ width: 96, background: "linear-gradient(90deg, rgba(3,2,9,.94) 0%, rgba(3,2,9,.72) 55%, rgba(3,2,9,0) 100%)" }}
     >
       <Link to="/inicio" className="font-cinema text-4xl leading-none h-12 flex items-center text-white hover:text-white select-none" title="Watchly">
         W
@@ -46,13 +45,7 @@ export default function Sidebar() {
               key={to}
               to={to}
               title={label}
-              className="group flex flex-col items-center gap-1 w-[60px] py-2.5 rounded-[1.25rem] transition-all duration-300"
-              style={{
-                background: active ? "#fff" : "transparent",
-                color: active ? "#111" : "rgba(255,255,255,0.78)",
-                boxShadow: active ? "0 8px 24px rgba(0,0,0,0.35)" : "none",
-              }}
-            >
+              data-active={active} className="nav-fx group flex flex-col items-center gap-1 w-[64px] py-2.5 rounded-[1.25rem]">
               <Icon
                 className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
                 strokeWidth={active ? 2.4 : 2}
@@ -64,12 +57,12 @@ export default function Sidebar() {
       </nav>
 
       <div className="flex flex-col items-center gap-3 shrink-0">
-        <Link to={profileHref} title="Ver mi perfil" className="rounded-full p-[3px] bg-white/90 hover:scale-105 transition-transform">
+        <Link to={profileHref} title="Ver mi perfil" className="rounded-full p-[3px] hover:scale-105 transition-transform" style={{ background: "linear-gradient(135deg, #ff5a8c, #fff 50%, #5aaaff)" }}>
           <Avatar profile={profile ?? null} size={40} />
         </Link>
         {isAdmin && (
           <Link to="/admin" title="Panel admin" aria-label="Panel admin" className={iconBtn}
-            style={location.pathname.startsWith("/admin") ? { background: "#fff", color: "#111" } : undefined}>
+            data-active={location.pathname.startsWith("/admin")}>
             <Shield className="w-5 h-5" />
           </Link>
         )}

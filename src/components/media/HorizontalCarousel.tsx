@@ -113,12 +113,12 @@ export default function HorizontalCarousel({
   }, [loadingMore]);
 
   return (
-    <div className="relative">
+    <div className="relative -mr-4 md:-mr-6">
       <div
         ref={railRef}
         onPointerDown={startDrag}
         onClickCapture={onClickCapture}
-        className={`flex overflow-x-auto no-scrollbar snap-x snap-mandatory md:snap-proximity md:cursor-grab md:active:cursor-grabbing select-none ${className}`}
+        className={`flex overflow-x-auto no-scrollbar snap-x snap-mandatory md:snap-proximity md:cursor-grab md:active:cursor-grabbing select-none pr-4 md:pr-6 ${className}`}
         style={{ overscrollBehaviorX: "contain", WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y" }}
       >
         {children}
@@ -153,7 +153,7 @@ export default function HorizontalCarousel({
           type="button"
           aria-label="Ver más"
           onClick={() => scrollByCards(1)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full hidden md:flex items-center justify-center hover:scale-110 transition-transform"
+          className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full hidden md:flex items-center justify-center hover:scale-110 transition-transform"
           style={{
             backgroundColor: "rgba(15,15,26,0.85)",
             border: "1px solid var(--border)",

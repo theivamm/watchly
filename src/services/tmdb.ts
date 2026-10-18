@@ -238,6 +238,8 @@ export async function getMediaDetails(
     genreIds: ((data.genres as { id: number }[]) || []).map((g) => g.id),
     genres: ((data.genres as { name: string }[]) || []).map((g) => g.name),
     runtime: (data.runtime as number) || null,
+    originalLanguage: (data.original_language as string) || "",
+    countries: ((data.origin_country as string[]) || ((data.production_countries as { iso_3166_1: string }[]) || []).map((c) => c.iso_3166_1)).filter(Boolean),
     voteCount: (data.vote_count as number) || 0,
     videos: ((data.videos as { results: Record<string, unknown>[] })?.results || []).slice(0, 5),
     cast: ((data.credits as { cast: { name: string }[] })?.cast || []).slice(0, 10),

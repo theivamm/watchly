@@ -140,7 +140,7 @@ export default function ListDetailPage() {
                 onClick={() => handleRemoveItem(item.id)}
                 disabled={removingId === item.id}
                 title="Sacar de la lista"
-                className="liquid-glass-sm absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 disabled:opacity-40"
+                className="liquid-glass-sm absolute top-2.5 right-2.5 w-9 h-9 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 disabled:opacity-40"
                 style={{ color: "#fca5a5" }}
               >
                 {removingId === item.id ? (
