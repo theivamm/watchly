@@ -246,7 +246,7 @@ export async function getMediaDetails(
   };
 }
 
-export function getPosterUrl(posterPath: string | null, size: "w185" | "w200" | "w342" | "w500" = "w342"): string {
+export function getPosterUrl(posterPath: string | null, size: string = "w342"): string {
   if (!posterPath) return "/placeholder-poster.png";
   return `https://image.tmdb.org/t/p/${size}${posterPath}`;
 }
