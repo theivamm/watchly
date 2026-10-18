@@ -72,28 +72,28 @@ export default function LibraryPage() {
         stats={!loading && entries.length > 0 ? STATUS_ORDER.map((s) => ({ v: counts[s], l: STATUS_META[s].label, color: STATUS_META[s].color, active: status === s, onClick: () => setStatus(status === s ? "all" : s) })) : undefined}
       />
 
-      <div className="liquid-glass rounded-full p-2 flex flex-wrap items-center gap-2 mb-8">
-        <div className="relative flex-1 min-w-[220px]">
+      <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-3 mb-8">
+        <div className="relative flex-1 min-w-0 md:min-w-[260px] liquid-glass rounded-full">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar en tu biblioteca…" className="w-full h-12 pl-12 pr-4 bg-transparent outline-none text-sm placeholder:text-white/50" style={{ outline: "none", boxShadow: "none" }} />
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 p-1.5 liquid-glass rounded-full w-full md:w-auto">
           {([["all", "Todo"], ["movie", "Películas"], ["tv", "Series"]] as const).map(([k, l]) => (
-            <button key={k} onClick={() => setType(k)} className="h-12 px-5 rounded-full text-sm font-extrabold transition-colors" style={{ background: type === k ? "#fff" : "transparent", color: type === k ? "#111" : "rgba(255,255,255,.85)" }}>{l}</button>
+            <button key={k} onClick={() => setType(k)} className="flex-1 md:flex-none h-11 px-3 md:px-5 rounded-full text-sm font-extrabold transition-colors" style={{ background: type === k ? "#fff" : "transparent", color: type === k ? "#111" : "rgba(255,255,255,.85)" }}>{l}</button>
           ))}
         </div>
-        <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="glass-input !h-12 !w-auto !text-sm !pr-10 !rounded-full">
+        <div className="flex items-center gap-3 md:contents"><select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="glass-input !h-12 !flex-1 md:!flex-none !w-auto !text-sm !pr-10 !rounded-full min-w-0">
           <option value="recent">Más recientes</option>
           <option value="rating">Mejor calificadas</option>
           <option value="title">A – Z</option>
         </select>
-        <div className="flex gap-1 pr-1">
+        <div className="flex gap-1 p-1.5 liquid-glass rounded-full shrink-0">
           {([["grid", LayoutGrid], ["list", ListIcon]] as const).map(([v, Icon]) => (
-            <button key={v} onClick={() => setView(v)} aria-label={v === "grid" ? "Cuadrícula" : "Lista"} className="w-12 h-12 rounded-full flex items-center justify-center transition-colors" style={{ background: view === v ? "#fff" : "transparent", color: view === v ? "#111" : "#fff" }}>
+            <button key={v} onClick={() => setView(v)} aria-label={v === "grid" ? "Cuadrícula" : "Lista"} className="w-11 h-11 rounded-full flex items-center justify-center transition-colors" style={{ background: view === v ? "#fff" : "transparent", color: view === v ? "#111" : "#fff" }}>
               <Icon className="w-4 h-4" />
             </button>
           ))}
-        </div>
+        </div></div>
       </div>
 
       {loading ? (
