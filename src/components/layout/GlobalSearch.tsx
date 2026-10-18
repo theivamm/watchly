@@ -30,7 +30,6 @@ export default function GlobalSearch() {
     setOpen(false); input.current?.blur();
     navigate(`/buscar?${new URLSearchParams({ q: value.trim() })}`);
   };
-  if (location.pathname === "/roadmap") return null;
   return <header className="sticky top-0 z-40 h-0 text-white pointer-events-none">
     <div className="absolute inset-x-0 top-3 px-4 md:px-8"><div className="flex items-center max-w-2xl mx-auto pointer-events-auto">
       <div ref={root} className="relative flex-1 basis-full sm:basis-auto min-w-0" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false); }}>

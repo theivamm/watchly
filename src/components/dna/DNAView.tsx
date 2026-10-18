@@ -99,7 +99,7 @@ function useReady() {
 function useCycle(len: number, offset = 0, ms = 4200) {
   const [i, setI] = useState(0);
   useEffect(() => {
-    if (len < 2) return;
+    if (len < 2 || window.matchMedia("(max-width: 767px), (prefers-reduced-motion: reduce)").matches) return;
     let t: ReturnType<typeof setInterval> | undefined;
     const s = setTimeout(() => { t = setInterval(() => setI((v) => v + 1), ms); }, offset);
     return () => { clearTimeout(s); if (t) clearInterval(t); };
@@ -178,7 +178,7 @@ function Bath({ posters = [], children, className = "", strength = 1, offset = 0
   return (
     <BathTint.Provider value={tint}>
       <div className={`relative ${className}`}>
-        <div aria-hidden="true" className="absolute inset-x-0 md:-inset-x-6 -inset-y-10 pointer-events-none overflow-hidden" style={{ WebkitMaskImage: m, maskImage: m }}>
+        <div aria-hidden="true" className="absolute -inset-y-10 md:-inset-x-6 max-md:left-[calc(50%-50vw)] max-md:w-screen pointer-events-none overflow-hidden" style={{ WebkitMaskImage: m, maskImage: m }}>
           {posters.map((p, k) => <BathLayer key={p.path} poster={p} active={k === cur} strength={strength} />)}
         </div>
         <div className="relative">{children}</div>
@@ -607,7 +607,7 @@ export default function DNAView({ dna, title = "Mi ADN", owner, actions, posters
   };
 
   return (
-    <div className="space-y-16 md:space-y-20 text-white overflow-x-clip">
+    <div className="space-y-16 md:space-y-20 text-white">
       {/* ───────── PORTADA ───────── */}
       <section className="relative overflow-hidden rounded-[2.5rem] min-h-[480px] md:min-h-[540px] flex flex-col justify-between gap-8 md:gap-10 px-5 py-8 md:p-12 text-center md:text-left"
         style={{ boxShadow: `${edge}, 0 30px 80px -20px rgba(0,0,0,.6)`, background: posters.length ? undefined : "linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,.03))" }}>
