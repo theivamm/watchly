@@ -255,3 +255,8 @@ html { scrollbar-gutter: stable; }
   main, section, header, footer { min-width: 0; }
   img, video, canvas { max-width: 100%; }
 }
+
+/* Cintas de portadas */
+@keyframes guest-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.guest-marquee { animation: guest-marquee 65s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .guest-marquee { animation: none; } }
