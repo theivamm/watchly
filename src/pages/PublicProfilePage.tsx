@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   Share2, Check, MapPin, Globe, Aperture, X, Lock, Film, Layers, Clapperboard, Star, LayoutGrid, Tv,
-  Bookmark, Play, CheckCheck, Pause, XCircle, ChevronDown, Dna, Pencil, ArrowUpRight,
+  Bookmark, Play, CheckCheck, Pause, XCircle, ChevronDown, Dna, Pencil, ArrowUpRight, Sparkles, UserPlus,
 } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { getProfileByUsername, getProfileLink, getMediaShareLink } from "@/services/profile";
@@ -149,12 +149,23 @@ export default function PublicProfilePage() {
 
   const handleShare = async () => {
     if (!profile?.username) return;
+    const url = getProfileLink(profile.username);
+    const name = profile.display_name || profile.username;
+    // En el celular abre el menú nativo (WhatsApp, Instagram…); en la compu copia el link.
+    if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
+      try {
+        await navigator.share({ title: `${name} en Watchly`, text: `Mirá lo que ve ${name} en Watchly`, url });
+        return;
+      } catch (err) {
+        if ((err as DOMException)?.name === "AbortError") return;
+      }
+    }
     try {
-      await navigator.clipboard.writeText(getProfileLink(profile.username));
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      /* ignore */
+      window.prompt("Copiá el link de tu perfil:", url);
     }
   };
 
@@ -388,6 +399,35 @@ export default function PublicProfilePage() {
 
   return (
     <div className="w-full px-4 md:px-6 pt-20 pb-12 text-white">
+      {/* ───────── INVITACIÓN (sin sesión) ───────── */}
+      {!user && (
+        <section className="relative overflow-hidden rounded-[2.5rem] border border-white/20 mb-6 animate-pop"
+          style={{ background: "linear-gradient(120deg, #2a0f3d 0%, #12101f 55%, #0b1a33 100%)", boxShadow: EDGES }}>
+          <div aria-hidden="true" className="absolute inset-y-0 right-0 w-full md:w-[55%] flex gap-2.5 justify-end items-center pr-4 opacity-25 md:opacity-90"
+            style={{ WebkitMaskImage: "linear-gradient(90deg, transparent, #000 45%)", maskImage: "linear-gradient(90deg, transparent, #000 45%)" }}>
+            {heroCovers.slice(0, 5).map((e, i) => (
+              <img key={e.id} src={getPosterUrl(e.poster_path, "w342")} alt="" loading="lazy"
+                className="w-24 md:w-32 aspect-[2/3] object-cover rounded-2xl border border-white/25 shadow-[0_20px_40px_rgba(0,0,0,.5)]"
+                style={{ transform: `rotate(${(i - 2) * 4}deg) translateY(${Math.abs(i - 2) * 10}px)` }} />
+            ))}
+          </div>
+          <div className="absolute -top-20 -left-16 w-72 h-72 rounded-full blur-[90px] opacity-60 pointer-events-none" style={{ background: "#ff5a8c" }} />
+          <div className="relative z-10 p-7 md:p-10 max-w-xl">
+            <span className="liquid-glass-sm inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold uppercase tracking-widest">
+              <Sparkles className="w-3.5 h-3.5" /> Gratis
+            </span>
+            <h2 className="font-cinema text-4xl md:text-6xl leading-[0.95] mt-4">Vos también podés tener tu perfil</h2>
+            <p className="text-sm md:text-base text-white/80 mt-3 leading-relaxed">
+              Guardá todo lo que ves, calificá películas y series, descubrí tu ADN audiovisual y compartilo como {profile.display_name || profile.username}.
+            </p>
+            <div className="flex flex-wrap gap-3 mt-6">
+              <Link to={`/registro?from=/perfil/${profile.username}`} className={whiteBtn}><UserPlus className="w-4 h-4" /> Crear mi perfil</Link>
+              <Link to={`/login?from=/perfil/${profile.username}`} className="liquid-glass-sm inline-flex items-center justify-center h-12 px-6 rounded-full text-sm font-bold text-white hover:text-white transition-transform hover:scale-[1.03]">Ya tengo cuenta</Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ───────── HERO ───────── */}
       <section className="relative overflow-hidden rounded-[2.5rem] border border-white/20 mb-8" style={{ boxShadow: EDGES }}>
         <div className="absolute inset-0 bg-[#0b0b14]">
@@ -435,14 +475,18 @@ export default function PublicProfilePage() {
                 </div>
               ))}
             </div>
-            {isOwner ? (
-              <Link to="/configuracion/perfil" className={whiteBtn}><Pencil className="w-4 h-4" /> Editar perfil</Link>
-            ) : (
-              <button onClick={handleShare} className={whiteBtn}>
+            <div className="flex gap-3">
+              <button type="button" onClick={handleShare} className={`${whiteBtn} flex-1`}>
                 {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-                {copied ? "¡Link copiado!" : "Compartir perfil"}
+                {copied ? "¡Link copiado!" : isOwner ? "Compartir mi perfil" : "Compartir perfil"}
               </button>
-            )}
+              {isOwner && (
+                <Link to="/configuracion/perfil" title="Editar perfil" aria-label="Editar perfil"
+                  className="liquid-glass-sm w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-white hover:text-white transition-transform hover:scale-105">
+                  <Pencil className="w-4 h-4" />
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </section>
