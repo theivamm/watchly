@@ -29,7 +29,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 /** Póster con aberración cromática: dos copias desplazadas en rosa y cian. */
-function ChromaPoster({ it, size = "w342", className = "", rounded = "rounded-[1.4rem]", spread = 7 }: { it: TMDBSearchResult; size?: string; className?: string; rounded?: string; spread?: number }) {
+function ChromaPoster({ it, size = "w342", className = "", rounded = "rounded-[1.4rem]", spread = 7 }: { it: TMDBSearchResult; size?: Parameters<typeof getPosterUrl>[1]; className?: string; rounded?: string; spread?: number }) {
   const src = getPosterUrl(it.posterPath, size);
   return (
     <div className={`relative ${className}`}>

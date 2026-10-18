@@ -2,7 +2,7 @@ import "@/styles/cinema.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTrending } from "@/hooks/useMedia";
 import { DEFAULT_TINT, getDominantColor } from "@/lib/posterColor";
-import { getBackdropUrl, getPosterUrl } from "@/services/tmdb";
+import { getPosterUrl } from "@/services/tmdb";
 import { accentVars, hueFromRgb } from "@/lib/tone";
 import { usePrevIndex } from "@/components/home/HeroBackdrop";
 
