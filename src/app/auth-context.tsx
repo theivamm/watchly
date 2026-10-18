@@ -136,10 +136,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Supabase emite eventos al renovar el token o al volver a la pestaña; con el mismo usuario
     // no hace falta recargar ni "asegurar" el perfil otra vez.
-    let lastUserId: string | null | undefined;
+    // `undefined` = todavía no se resolvió la sesión; `null` = sin sesión. Distinguirlos es clave:
+    // si no, sin sesión se saltea la primera carga y `loading` nunca pasa a false.
+    let lastUserId: string | null | undefined = undefined;
     const init = async (u: User | null) => {
-      if (u?.id === lastUserId) return;
-      lastUserId = u?.id ?? null;
+      const id = u?.id ?? null;
+      if (id === lastUserId) return;
+      lastUserId = id;
       if (u) {
         await loadProfile(() => ensureProfile(u));
       } else {
