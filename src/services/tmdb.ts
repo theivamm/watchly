@@ -134,6 +134,65 @@ export async function getKoreanRecommendations(): Promise<{ dramas: TMDBSearchRe
   return { dramas, movies };
 }
 
+/** Títulos que TMDB recomienda a partir de uno concreto (basado en lo que vio la gente que lo vio). */
+export async function getSimilarTo(type: "movie" | "tv", tmdbId: number, sourceGenres: number[] = []): Promise<TMDBSearchResult[]> {
+  const pages = await Promise.all([1, 2].map((page) =>
+    tmdbFetch(`/${type}/${tmdbId}/recommendations`, { page: String(page) }).catch(() => ({ results: [] }))));
+  const kidsSource = sourceGenres.some((g) => KIDS_GENRES.includes(String(g)));
+  const seen = new Set<string>();
+  return pages
+    .flatMap((data) => ((data.results as Record<string, unknown>[]) || []).map((r) => mapResult(r, type)))
+    .filter((r) => {
+      const key = `${r.mediaType}-${r.tmdbId}`;
+      if (seen.has(key) || !r.posterPath) return false;
+      seen.add(key);
+      // Si el título de origen no es infantil, no recomendar infantiles; y descartar lo muy mal puntuado.
+      if (!kidsSource && r.genreIds.some((g) => KIDS_GENRES.includes(String(g)) && g !== 16)) return false;
+      return (r.tmdbRating ?? 0) >= 6;
+    });
+}
+
+export interface ExploreRow {
+  id: string;
+  title: string;
+  subtitle: string;
+  note: string;
+  /** Género TMDB que cubre la fila, para no duplicar una fila del ADN. */
+  genre?: string;
+  items: TMDBSearchResult[];
+}
+
+const LATAM = "AR|MX|CL|CO|PE|UY|BR|VE|CU";
+const INDEPENDENT_FILM_KEYWORD = "10183";
+
+/** Filas fijas de exploración: no dependen del ADN. */
+export async function getExploreRows(): Promise<ExploreRow[]> {
+  const safe = (p: Promise<TMDBSearchResult[]>) => p.catch(() => [] as TMDBSearchResult[]);
+  const mix = (a: TMDBSearchResult[], b: TMDBSearchResult[]) => a.flatMap((x, i) => (b[i] ? [x, b[i]] : [x])).concat(b.slice(a.length));
+  const [romance, horror, indie, animeTv, animeMovie, docMovie, docTv, latam, classics, gems] = await Promise.all([
+    safe(discover("movie", ["10749"], {}, 2)),
+    safe(discover("movie", ["27"], {}, 2)),
+    safe(discover("movie", null, { with_keywords: INDEPENDENT_FILM_KEYWORD, "vote_count.gte": "150", "vote_average.gte": "7" }, 2)),
+    safe(discover("tv", ["16"], { with_origin_country: "JP", "vote_count.gte": "300", without_genres: "10751|10762" })),
+    safe(discover("movie", ["16"], { with_origin_country: "JP", "vote_count.gte": "300", without_genres: "10751|10762" })),
+    safe(discover("movie", ["99"], { "vote_count.gte": "150" })),
+    safe(discover("tv", ["99"], { "vote_count.gte": "100" })),
+    safe(discover("movie", null, { with_origin_country: LATAM, "vote_count.gte": "150", "vote_average.gte": "7" }, 2)),
+    safe(discover("movie", null, { "primary_release_date.lte": "1979-12-31", "vote_count.gte": "1500", "vote_average.gte": "7.8", sort_by: "vote_average.desc" }, 2)),
+    safe(discover("movie", null, { "vote_count.gte": "600", "vote_count.lte": "3000", "vote_average.gte": "7.7", sort_by: "vote_average.desc", without_genres: "16|10751|10762|99|10402|10770" }, 2)),
+  ]);
+  return [
+    { id: "x-romance", genre: "10749", title: "Romance", subtitle: "Historias de amor bien valoradas", note: "Exploración de romance: películas muy bien valoradas del género.", items: romance },
+    { id: "x-terror", genre: "27", title: "Terror", subtitle: "Para no dormir", note: "Exploración de terror: lo más visto y mejor puntuado del género.", items: horror },
+    { id: "x-indie", title: "Cine independiente", subtitle: "Producciones fuera de los grandes estudios", note: "Cine independiente con muy buenas críticas.", items: indie },
+    { id: "x-anime", genre: "16", title: "Anime", subtitle: "Series y películas de animación japonesa", note: "Animación japonesa para público adulto y juvenil.", items: mix(animeTv, animeMovie) },
+    { id: "x-docs", genre: "99", title: "Documentales", subtitle: "Historias reales", note: "Documentales destacados.", items: mix(docMovie, docTv) },
+    { id: "x-latam", title: "Cine latino", subtitle: "Argentina, México, Chile, Colombia, Brasil y más", note: "Cine latinoamericano con muy buenas críticas.", items: latam },
+    { id: "x-classics", title: "Clásicos", subtitle: "Imprescindibles de antes de 1980", note: "Un clásico del cine entre los mejor puntuados de la historia.", items: classics },
+    { id: "x-gems", title: "Joyas ocultas", subtitle: "Excelentes críticas, poco conocidas", note: "Muy bien puntuada pero vista por poca gente: una joya para descubrir.", items: gems },
+  ];
+}
+
 export async function getDnaMovieDiscoveries(genreKeys: string[]): Promise<TMDBSearchResult[]> {
   const genres = [...new Set(genreKeys.slice(0, 3).map((key) => TV_TO_MOVIE[key] ?? key).filter((key) => !TV_ONLY.has(key)))];
   if (!genres.length) return [];

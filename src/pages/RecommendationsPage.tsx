@@ -9,7 +9,7 @@ import HorizontalCarousel from "@/components/media/HorizontalCarousel";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import { addToLibrary, getUserLibrary } from "@/services/library";
 import { getMyDna } from "@/services/dna";
-import { getDnaRecommendations, getKoreanRecommendations, getPosterUrl, getBackdropUrl } from "@/services/tmdb";
+import { getDnaRecommendations, getKoreanRecommendations, getExploreRows, getSimilarTo, getPosterUrl, getBackdropUrl } from "@/services/tmdb";
 import { getTasteProfile } from "@/services/taste";
 import { explainTaste, tasteScore, type TasteProfile } from "@/lib/tasteProfile";
 import { genreLabel } from "@/lib/genres";
@@ -20,6 +20,8 @@ interface Row {
   id: string;
   title: string;
   subtitle: string;
+  /** Motivo fijo para filas que no salen de tus géneros. */
+  note?: string;
   items: TMDBSearchResult[];
 }
 
@@ -59,20 +61,40 @@ export default function RecommendationsPage() {
       const format = dna?.formatDistribution ?? { movie: 1, tv: 1 };
       if (!cancelled) setHasDna(!!dna && dna.topGenres.length > 0);
 
-      const [genreRows, korea] = await Promise.all([
+      // Lo que calificaste con 4 o 5: las mejores notas primero, y entre iguales las más recientes.
+      const loved = library
+        .filter((e) => (e.rating ?? 0) >= 4 && e.status !== "want_to_watch")
+        .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0) || (b.updated_at ?? "").localeCompare(a.updated_at ?? ""))
+        .slice(0, 5);
+
+      const [genreRows, lovedRows, explore, korea] = await Promise.all([
         Promise.all(genres.map(async (g) => ({
           id: `g-${g.key}`,
           title: g.label,
           subtitle: profile.ratedCount ? "Afinidad según tus valoraciones" : "Exploración por género",
           items: (await getDnaRecommendations([g.key], format).catch(() => [])).sort((a, b) => tasteScore(b, profile) - tasteScore(a, profile)),
         }))),
+        Promise.all(loved.map(async (e): Promise<Row> => ({
+          id: `s-${e.media_type}-${e.tmdb_id}`,
+          title: `Porque te gustó «${e.title}»`,
+          subtitle: `Le diste ${e.rating} ${e.rating === 1 ? "estrella" : "estrellas"} · ${e.media_type === "movie" ? "películas" : "series"} parecidas`,
+          note: `Le gustó a la gente que también disfrutó «${e.title}», que calificaste con ${e.rating} ${e.rating === 1 ? "estrella" : "estrellas"}.`,
+          items: await getSimilarTo(e.media_type, e.tmdb_id).catch(() => []),
+        }))),
+        getExploreRows().catch(() => []),
         getKoreanRecommendations(),
       ]);
       if (cancelled) return;
+      const dnaGenres = new Set(genreRows.map((r) => r.id.slice(2)));
+      // Intercala las filas por título entre las de género, para que no queden todas al final.
+      const personal: Row[] = [];
+      genreRows.forEach((r, i) => { personal.push(r); if (lovedRows[i]) personal.push(lovedRows[i]); });
+      personal.push(...lovedRows.slice(genreRows.length));
       setRows([
-        ...genreRows,
-        { id: "kdrama", title: "K-Dramas", subtitle: "Series coreanas destacadas", items: korea.dramas },
-        { id: "kmovies", title: "Cine coreano", subtitle: "Películas de Corea del Sur", items: korea.movies },
+        ...personal,
+        ...explore.filter((x) => !x.genre || !dnaGenres.has(x.genre)),
+        { id: "kdrama", title: "K-Dramas", subtitle: "Series coreanas destacadas", note: "Selección de series coreanas destacadas; no se basa en tus estrellas.", items: korea.dramas },
+        { id: "kmovies", title: "Cine coreano", subtitle: "Películas de Corea del Sur", note: "Selección de cine coreano destacado; no se basa en tus estrellas.", items: korea.movies },
       ]);
       setLoading(false);
     })().catch(() => { if (!cancelled) { setLoadError(true); setLoading(false); } });
@@ -250,7 +272,7 @@ export default function RecommendationsPage() {
                             </div>
                             <div className="liquid-glass absolute inset-x-2 bottom-2 rounded-2xl px-3 py-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
                               <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/70">Por qué</p>
-                              <p className="text-xs font-bold leading-snug mt-1 line-clamp-5">{isGenre ? reasonFor(it, row.id.slice(2)) : "Selección editorial de títulos coreanos; no se basa en tus estrellas."}</p>
+                              <p className="text-xs font-bold leading-snug mt-1 line-clamp-5">{isGenre ? reasonFor(it, row.id.slice(2)) : row.note ?? "Selección editorial; no se basa en tus estrellas."}</p>
                             </div>
                           </div>
                         </button>
