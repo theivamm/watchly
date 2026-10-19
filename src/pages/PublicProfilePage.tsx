@@ -14,10 +14,9 @@ import MediaCard from "@/components/media/MediaCard";
 import PosterFrame from "@/components/media/PosterFrame";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import Avatar from "@/components/ui/Avatar";
-import { EDGES } from "@/components/ui/PageHeader";
+import { PosterWall, EDGES } from "@/components/ui/PageHeader";
 import { getPosterUrl } from "@/services/tmdb";
 import type { Profile, List, Entry, EntryStatus, TMDBSearchResult, ListItem, UserDNA } from "@/types";
-import { useHeroCycle } from "@/hooks/useHeroCycle";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 type Section = "resumen" | "quierover" | "peliculas" | "series" | "listas";
@@ -125,7 +124,6 @@ export default function PublicProfilePage() {
   }, [section, movies, series, wantToWatch, statusFilter]);
 
   const heroCovers = useMemo(() => entries.filter((e) => e.poster_path).slice(0, 14), [entries]);
-  const hero = useHeroCycle(heroCovers.slice(0, 10).map((e) => e.poster_path), 6000);
 
   useEffect(() => {
     if (!profile?.is_profile_public || lists.length === 0) {
@@ -432,64 +430,64 @@ export default function PublicProfilePage() {
       )}
 
       {/* ───────── HERO ───────── */}
-      <section className="relative overflow-hidden -mx-4 md:-mx-6 -mt-20 pt-28 pb-10 mb-8">
-        <div className="absolute inset-0 bg-[#0b0b14]" aria-hidden="true">
-          {heroCovers.slice(0, 10).map((e, i) => (
-            <img key={e.id} src={getPosterUrl(e.poster_path, "w500")} alt="" className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl transition-opacity duration-[1400ms]"
-              style={{ opacity: i === hero.index % Math.min(heroCovers.length, 10) ? 0.75 : 0 }} />
-          ))}
-          <div className="absolute inset-0 transition-colors duration-[1400ms]" style={{ background: `radial-gradient(70% 60% at 50% 0%, ${hero.glow}, transparent 70%), radial-gradient(60% 60% at 90% 100%, ${hero.glow2}, transparent 70%)` }} />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(7,7,13,.25), rgba(7,7,13,.35) 55%, #07070d)" }} />
-        </div>
-
-        <div className="relative z-10 px-5 md:px-12 flex flex-col items-center text-center gap-6 max-w-3xl mx-auto">
-          <div className="rounded-full p-1.5 transition-all duration-[1400ms]" style={{ background: `linear-gradient(135deg, ${hero.accent}, #fff 50%, ${hero.accent})`, boxShadow: "0 24px 60px -12px rgba(0,0,0,.7)" }}>
-            <div className="rounded-full overflow-hidden bg-[#0b0b14] p-1"><Avatar profile={profile} size={132} /></div>
-          </div>
-          <div className="min-w-0 w-full">
-            <span className="liquid-glass-sm inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold tracking-wider" style={{ color: "#fff" }}>@{profile.username}</span>
-            <h1 className="font-cinema mt-3 text-5xl sm:text-6xl md:text-8xl leading-[1.02] [overflow-wrap:anywhere] drop-shadow-[0_10px_50px_rgba(0,0,0,.5)] break-words">
-              {profile.display_name || profile.username}
-            </h1>
-            {profile.bio && <p className="mt-3 text-base leading-relaxed max-w-2xl mx-auto text-white/85 text-pretty">{profile.bio}</p>}
-            {(profile.location || socials.length > 0) && (
-              <div className="flex flex-wrap items-center justify-center gap-2.5 mt-4">
-                {profile.location && (
-                  <span className="liquid-glass-sm inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold"><MapPin className="w-3.5 h-3.5" /> {profile.location}</span>
-                )}
-                {socials.map(({ icon: Icon, href, key }) => (
-                  <a key={key} href={href} target="_blank" rel="noreferrer" className="liquid-glass-sm w-9 h-9 rounded-full flex items-center justify-center text-white hover:text-white hover:scale-110 transition-transform"><Icon className="w-4 h-4" /></a>
-                ))}
-              </div>
-            )}
+      <section className="relative overflow-hidden rounded-[2.5rem] border border-white/20 mb-8" style={{ boxShadow: EDGES }}>
+        <div className="absolute inset-0 bg-[#0b0b14]">
+          <PosterWall posters={heroCovers.map((e) => e.poster_path as string)} />
           </div>
 
-          <div className="grid grid-cols-4 w-full max-w-md">
-            {[
-              { icon: Clapperboard, n: movies.length, l: "Películas" },
-              { icon: Tv, n: series.length, l: "Series" },
-              { icon: Star, n: favorites.length, l: "Favoritas" },
-              { icon: Layers, n: lists.length, l: "Listas" },
-            ].map(({ icon: Icon, n, l }, i) => (
-              <div key={l} className="min-w-0 px-1 text-center" style={{ borderLeft: i ? "1px solid rgba(255,255,255,.18)" : "none" }}>
-                <Icon className="w-4 h-4 mx-auto mb-1.5 text-white/70" />
-                <p className="font-cinema text-3xl leading-none text-white">{n}</p>
-                <p className="text-[10px] font-extrabold mt-1.5 uppercase tracking-wider text-white/75 truncate">{l}</p>
-              </div>
-            ))}
+        <div className="relative z-10 p-7 md:p-12 flex flex-col lg:flex-row lg:items-end gap-8 lg:gap-12">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 min-w-0 flex-1">
+            <div className="relative shrink-0 rounded-full p-1.5" style={{ background: "linear-gradient(135deg, #ff5a8c, #fff 50%, #5aaaff)", boxShadow: "0 24px 60px -12px rgba(0,0,0,.7)" }}>
+              <div className="rounded-full overflow-hidden bg-[#0b0b14] p-1"><Avatar profile={profile} size={132} /></div>
+            </div>
+            <div className="min-w-0 text-center sm:text-left">
+              <span className="liquid-glass-sm inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold tracking-wider" style={{ color: "#fff" }}>
+                @{profile.username}
+              </span>
+              <h1 className="font-cinema mt-3 text-4xl sm:text-6xl md:text-8xl leading-[1.02] [overflow-wrap:anywhere] drop-shadow-[0_10px_50px_rgba(0,0,0,.5)] break-words">
+                {profile.display_name || profile.username}
+              </h1>
+              {profile.bio && <p className="mt-3 text-base leading-relaxed max-w-2xl text-white/85 text-pretty">{profile.bio}</p>}
+              {(profile.location || socials.length > 0) && (
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mt-4">
+                  {profile.location && (
+                    <span className="liquid-glass-sm inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold"><MapPin className="w-3.5 h-3.5" /> {profile.location}</span>
+                  )}
+                  {socials.map(({ icon: Icon, href, key }) => (
+                    <a key={key} href={href} target="_blank" rel="noreferrer" className="liquid-glass-sm w-9 h-9 rounded-full flex items-center justify-center text-white hover:text-white hover:scale-110 transition-transform"><Icon className="w-4 h-4" /></a>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex gap-3 w-full max-w-sm">
-            <button type="button" onClick={handleShare} className={`${whiteBtn} flex-1`}>
-              {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-              {copied ? "¡Link copiado!" : isOwner ? "Compartir mi perfil" : "Compartir perfil"}
-            </button>
-            {isOwner && (
-              <Link to="/configuracion/perfil" title="Editar perfil" aria-label="Editar perfil"
-                className="liquid-glass-sm w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-white hover:text-white transition-transform hover:scale-105">
-                <Pencil className="w-4 h-4" />
-              </Link>
-            )}
+          <div className="flex flex-col items-stretch gap-4 shrink-0">
+            <div className="liquid-glass rounded-[2rem] px-3 py-4 flex">
+              {[
+                { icon: Clapperboard, n: movies.length, l: "Películas" },
+                { icon: Tv, n: series.length, l: "Series" },
+                { icon: Star, n: favorites.length, l: "Favoritas" },
+                { icon: Layers, n: lists.length, l: "Listas" },
+              ].map(({ icon: Icon, n, l }, i) => (
+                <div key={l} className="px-4 text-center" style={{ borderLeft: i ? "1px solid rgba(255,255,255,.14)" : "none" }}>
+                  <Icon className="w-4 h-4 mx-auto mb-1.5 text-white/60" />
+                  <p className="font-cinema text-3xl leading-none" style={{ color: "#fff" }}>{n}</p>
+                  <p className="text-[10px] font-extrabold mt-1.5 uppercase tracking-wider text-white/70">{l}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={handleShare} className={`${whiteBtn} flex-1`}>
+                {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                {copied ? "¡Link copiado!" : isOwner ? "Compartir mi perfil" : "Compartir perfil"}
+              </button>
+              {isOwner && (
+                <Link to="/configuracion/perfil" title="Editar perfil" aria-label="Editar perfil"
+                  className="liquid-glass-sm w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-white hover:text-white transition-transform hover:scale-105">
+                  <Pencil className="w-4 h-4" />
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </section>

@@ -275,50 +275,25 @@ html, body { background-color: #07070d; }
 @property --ai-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
 @keyframes ai-spin { to { --ai-angle: 360deg; } }
 .ai-border {
-  border: 1.5px solid transparent;
-  background:
-    linear-gradient(rgb(14, 12, 26), rgb(14, 12, 26)) padding-box,
-    conic-gradient(from var(--ai-angle), rgba(255, 90, 140, 0.95), rgba(255, 255, 255, 0.22) 25%, rgba(90, 170, 255, 0.95) 50%, rgba(255, 255, 255, 0.22) 75%, rgba(255, 90, 140, 0.95)) border-box;
+  position: relative;
+  padding: 1.5px;
+  background: conic-gradient(from var(--ai-angle), rgba(255, 90, 140, 0.95), rgba(255, 255, 255, 0.22) 25%, rgba(90, 170, 255, 0.95) 50%, rgba(255, 255, 255, 0.22) 75%, rgba(255, 90, 140, 0.95));
   animation: ai-spin 5s linear infinite;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-  transition: box-shadow 0.4s;
+  transition: box-shadow 0.4s, padding 0.3s;
 }
-.ai-border:focus-within { animation-duration: 2.6s; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), 0 0 18px rgba(130, 140, 255, 0.35); }
+.ai-border::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: inherit;
+  filter: blur(14px);
+  opacity: 0.22;
+  transition: opacity 0.4s;
+}
+.ai-border:focus-within { animation-duration: 2.6s; padding: 2px; }
+.ai-border:focus-within::before { opacity: 0.5; }
+.ai-border-inner { background: rgba(11, 9, 22, 0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
 @media (prefers-reduced-motion: reduce) { .ai-border { animation: none; } }
-
-/* Anti-parpadeo mobile (no revertir): la máscara del hero solo desde md, y sin sombras
-   filtradas sobre los títulos que cruzan el fundido de imágenes. */
-@media (min-width: 768px) {
-  .hero-mask {
-    -webkit-mask-image: var(--hero-mask);
-    mask-image: var(--hero-mask);
-    -webkit-mask-composite: var(--hero-mask-composite-webkit);
-    mask-composite: var(--hero-mask-composite);
-  }
-}
-@media (max-width: 767px) {
-  .font-cinema[class*="drop-shadow"] { filter: none; text-shadow: 0 4px 30px rgba(0, 0, 0, 0.55); }
-}
-/* Máscara del banner del modal solo en desktop: en mobile se recalculaba al hacer scroll. */
-@media (min-width: 768px) {
-  .modal-banner-mask {
-    -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
-    mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
-  }
-}
-/* Entrada del modal: en mobile solo fundido (escalar un modal tan cargado parpadea). */
-.modal-enter { animation: fade-in 0.25s ease both; }
-@media (min-width: 768px) {
-  .modal-enter { animation: pop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-}
-/* Anti-parpadeo mobile (no revertir): los vidrios dentro de las diapositivas del hero se
-   funden en opacidad sobre una imagen que también cambia; con backdrop-filter eso parpadea
-   en mobile. Ahí usan un fondo translúcido fijo. */
-@media (max-width: 767px) {
-  .hero-slide .liquid-glass,
-  .hero-slide .liquid-glass-sm {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    background: linear-gradient(135deg, hsl(var(--accent-h, 265) 70% 55% / 0.3), rgba(255, 255, 255, 0.05)), rgba(16, 14, 30, 0.78);
-  }
-}

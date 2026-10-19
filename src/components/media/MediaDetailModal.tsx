@@ -689,18 +689,17 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-1.5 sm:p-3 text-white" onClick={close}>
-      <div className="absolute inset-0 bg-black/80 md:bg-black/60 md:backdrop-blur-2xl" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-2xl" />
 
       <div
-        className="relative w-[min(99vw,1600px)] h-full max-h-[97vh] overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] modal-enter border border-white/20"
+        className="relative w-[min(99vw,1600px)] h-full max-h-[97vh] overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] animate-pop border border-white/20"
         onClick={(e) => e.stopPropagation()}
         style={{ backgroundColor: "#0b0b14", boxShadow: `0 40px 120px -24px rgba(0,0,0,.9), 0 0 100px -20px ${tone.glow}, ${fringeEdges}, inset 0 1px 0 rgba(255,255,255,.25)` }}
       >
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 md:hidden" style={{ background: `radial-gradient(120% 70% at 0% 0%, ${tone.glow}, transparent 60%), radial-gradient(120% 70% at 100% 100%, ${tone.glow2}, transparent 60%)` }} />
-          <img src={posterUrl} alt="" aria-hidden="true" className="hidden md:block absolute inset-0 w-full h-full object-cover" style={{ filter: "blur(80px) saturate(1.7)", transform: "scale(1.5)", opacity: 0.75 }} />
-          <div className="hidden md:block absolute -top-40 -left-32 w-[640px] h-[640px] rounded-full blur-[120px] cinema-drift-a" style={{ background: tone.glow }} />
-          <div className="hidden md:block absolute -bottom-48 right-0 w-[720px] h-[720px] rounded-full blur-[130px] cinema-drift-b" style={{ background: tone.glow2 }} />
+          <img src={posterUrl} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" style={{ filter: "blur(80px) saturate(1.7)", transform: "scale(1.5)", opacity: 0.75 }} />
+          <div className="absolute -top-40 -left-32 w-[640px] h-[640px] rounded-full blur-[120px] cinema-drift-a" style={{ background: tone.glow }} />
+          <div className="absolute -bottom-48 right-0 w-[720px] h-[720px] rounded-full blur-[130px] cinema-drift-b" style={{ background: tone.glow2 }} />
           <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(8,8,16,.3), rgba(8,8,16,.72))" }} />
         </div>
 
@@ -708,14 +707,13 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
 
         <div className="relative z-10 h-full overflow-y-auto no-scrollbar">
           {/* ───────── BANNER con aberración cromática ───────── */}
-          <div className="relative h-[300px] md:h-[400px] modal-banner-mask" aria-hidden="true">
+          <div className="relative h-[300px] md:h-[400px]" style={{ WebkitMaskImage: "linear-gradient(180deg,#000 55%,transparent 100%)", maskImage: "linear-gradient(180deg,#000 55%,transparent 100%)" }} aria-hidden="true">
             <div className="absolute inset-0 overflow-hidden cinema-kenburns">
-              <img src={heroImg ?? posterUrl} alt="" className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-70" style={{ transform: "translateX(-8px)", filter: "sepia(1) saturate(6) hue-rotate(-50deg)", mixBlendMode: "screen" }} />
-              <img src={heroImg ?? posterUrl} alt="" className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-70" style={{ transform: "translateX(8px)", filter: "sepia(1) saturate(6) hue-rotate(150deg)", mixBlendMode: "screen" }} />
+              <img src={heroImg ?? posterUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-70" style={{ transform: "translateX(-8px)", filter: "sepia(1) saturate(6) hue-rotate(-50deg)", mixBlendMode: "screen" }} />
+              <img src={heroImg ?? posterUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-70" style={{ transform: "translateX(8px)", filter: "sepia(1) saturate(6) hue-rotate(150deg)", mixBlendMode: "screen" }} />
               <img src={heroImg ?? posterUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={heroImg ? undefined : { filter: "blur(24px)", transform: "scale(1.3)" }} />
             </div>
             <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, rgba(8,8,16,.85) 0%, rgba(8,8,16,.25) 55%, transparent 100%), linear-gradient(135deg, ${tone.glow}, transparent 55%)` }} />
-            <div className="absolute inset-x-0 bottom-0 h-1/2 md:hidden" style={{ background: "linear-gradient(180deg, transparent, #0b0b14)" }} />
           </div>
 
           <div className="relative px-4 sm:px-8 pb-8 -mt-[210px] md:-mt-[300px] grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[330px_minmax(0,1fr)]">
@@ -725,8 +723,8 @@ export default function MediaDetailModal({ result, onClose, onSaved, shareUrl, r
                 onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setTilt({ x: ((e.clientY - r.top) / r.height - 0.5) * -12, y: ((e.clientX - r.left) / r.width - 0.5) * 14 }); }}
                 onMouseLeave={() => setTilt({ x: 0, y: 0 })}>
                 <div className="relative transition-transform duration-200 ease-out" style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` }}>
-                  <img src={posterUrl} alt="" aria-hidden="true" className="hidden md:block absolute inset-0 w-full h-full object-cover rounded-[2rem] opacity-70" style={{ transform: "translateX(-9px)", filter: "sepia(1) saturate(6) hue-rotate(-50deg)", mixBlendMode: "screen" }} />
-                  <img src={posterUrl} alt="" aria-hidden="true" className="hidden md:block absolute inset-0 w-full h-full object-cover rounded-[2rem] opacity-70" style={{ transform: "translateX(9px)", filter: "sepia(1) saturate(6) hue-rotate(150deg)", mixBlendMode: "screen" }} />
+                  <img src={posterUrl} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover rounded-[2rem] opacity-70" style={{ transform: "translateX(-9px)", filter: "sepia(1) saturate(6) hue-rotate(-50deg)", mixBlendMode: "screen" }} />
+                  <img src={posterUrl} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover rounded-[2rem] opacity-70" style={{ transform: "translateX(9px)", filter: "sepia(1) saturate(6) hue-rotate(150deg)", mixBlendMode: "screen" }} />
                   <img src={posterUrl} alt={result.title} className="relative w-full aspect-[2/3] object-cover rounded-[2rem] border border-white/30" style={{ boxShadow: `0 30px 70px -15px rgba(0,0,0,.85), 0 10px 50px ${tone.glow}` }} />
                   <div className="absolute inset-0 rounded-[2rem] pointer-events-none" style={{ background: `linear-gradient(${115 + tilt.y * 4}deg, rgba(255,255,255,.22), transparent 40%)` }} />
                 </div>

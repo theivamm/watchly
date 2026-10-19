@@ -83,24 +83,29 @@ export default function RoadmapPage() {
         {!user && <PublicNav />}
         <HeroBackdrop soft chroma items={items} index={hero.index} glow={hero.glow} glow2={hero.glow2} />
 
-        <div className="relative z-10 flex-1 flex flex-col justify-center px-5 md:px-14 lg:px-16 pt-24 pb-14">
-          <span className="liquid-glass-sm inline-flex self-start px-[18px] py-2 rounded-full text-xs font-extrabold tracking-[.2em] uppercase">
-            Roadmap de producto
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-5 md:px-14 pt-24 pb-14">
+          <span className="inline-flex items-center gap-3 text-[11px] md:text-xs font-extrabold tracking-[.25em] uppercase text-white/80">
+            <span className="h-px w-8 bg-white/40" />Roadmap de producto<span className="h-px w-8 bg-white/40" />
           </span>
-          <h1 className="font-cinema mt-7 mb-6 text-6xl md:text-8xl xl:text-[8.5rem] leading-[1.02] drop-shadow-[0_10px_60px_rgba(0,0,0,.4)]">
-            Lo que se viene<br /><span style={accent}>en Watchly</span>
+          <h1 className="font-cinema mt-6 mb-6 text-5xl sm:text-6xl md:text-8xl xl:text-[8.5rem] leading-[1] drop-shadow-[0_10px_60px_rgba(0,0,0,.4)] [text-wrap:balance]">
+            Lo que se viene<br />en Watchly
           </h1>
-          <p className="text-lg md:text-xl leading-relaxed font-medium text-white/85 max-w-2xl text-pretty">
+          <p className="text-base md:text-xl leading-relaxed font-medium text-white/85 max-w-2xl text-pretty">
             Watchly es tu identidad audiovisual: lo que viste, lo que sentiste y lo próximo que querés descubrir.
             Una función diferencial por etapa, medida y consolidada antes de avanzar.
           </p>
-          <div className="liquid-glass self-start flex rounded-[2rem] py-4 px-1.5 mt-10">
-            {(["hecho", "en progreso", "pendiente"] as Status[]).map((st) => [String(stages.filter((s) => s.status === st).length), statusMeta[st].label.toLowerCase()]).map(([n, l]) => (
-              <div key={l} className="px-7 text-center">
-                <div className="font-cinema text-4xl leading-none" style={accent}>{n}</div>
-                <div className="text-xs font-bold mt-2 text-white/75">{l}</div>
-              </div>
-            ))}
+          <div className="mt-10 w-full max-w-xl">
+            <div className="flex h-1.5 rounded-full overflow-hidden bg-white/15 gap-[3px]" aria-hidden="true">
+              {stages.map((st) => <span key={st.n} className="flex-1 rounded-full" style={{ background: st.status === "hecho" ? "#fff" : st.status === "en progreso" ? "linear-gradient(90deg,#ff5a8c,#5aaaff)" : "transparent" }} />)}
+            </div>
+            <div className="grid grid-cols-3 mt-6">
+              {(["hecho", "en progreso", "pendiente"] as Status[]).map((st, i) => (
+                <div key={st} className={"text-center px-2 " + (i ? "border-l border-white/20" : "")}>
+                  <div className="font-cinema text-5xl md:text-6xl leading-none">{stages.filter((x) => x.status === st).length}</div>
+                  <div className="text-[11px] font-extrabold uppercase tracking-widest mt-2 text-white/75">{statusMeta[st].label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

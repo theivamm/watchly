@@ -32,35 +32,41 @@ export function PosterWall({ posters }: { posters: string[] }) {
 
 export const EDGES = "inset 3px 0 0 rgba(255,80,140,.4), inset -3px 0 0 rgba(70,170,255,.4), 0 30px 80px -20px rgba(0,0,0,.6)";
 
-/** Encabezado estándar: banner con muro de portadas, título grande y barra de datos en vidrio. */
+/** Encabezado estándar: portadas de fondo, texto centrado en mobile y datos en una fila sin cajas. */
 export default function PageHeader({ title, eyebrow, subtitle, actions, children, posters = [], stats }: Props) {
   return (
-    <header className="relative overflow-hidden rounded-[2.5rem] border border-white/20 mb-8 flex flex-col justify-between gap-8 px-6 md:px-10 pt-8 md:pt-10 pb-6 min-h-[240px]"
+    <header className="relative overflow-hidden rounded-[2rem] md:rounded-[2.5rem] border border-white/20 mb-8 flex flex-col justify-between gap-7 px-5 md:px-10 pt-9 md:pt-10 pb-6 min-h-[240px] text-center md:text-left"
       style={{ boxShadow: EDGES, background: posters.length ? undefined : "linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,.03))" }}>
       <PosterWall posters={posters} />
-      <div className="relative flex flex-wrap items-start justify-between gap-5">
-        <div className="min-w-0">
-          {eyebrow && <span className="liquid-glass-sm inline-flex px-4 py-2 rounded-full text-xs font-extrabold uppercase tracking-widest mb-4">{eyebrow}</span>}
-          <h1 className="font-cinema text-6xl md:text-8xl leading-[0.95] break-words">{title}</h1>
-          {subtitle && <div className="mt-3 text-base md:text-lg font-medium text-white/80 max-w-2xl">{subtitle}</div>}
+      <div aria-hidden="true" className="absolute inset-0 md:hidden pointer-events-none" style={{ background: "radial-gradient(90% 70% at 50% 40%, rgba(8,7,14,.55), rgba(8,7,14,.2))" }} />
+      <div className="relative flex flex-col md:flex-row md:flex-wrap items-center md:items-start md:justify-between gap-5">
+        <div className="min-w-0 w-full md:w-auto flex flex-col items-center md:items-start">
+          {eyebrow && (
+            <span className="inline-flex items-center gap-3 text-[11px] md:text-xs font-extrabold uppercase tracking-[.22em] text-white/80 mb-4">
+              <span className="h-px w-6 bg-white/40 md:hidden" />{eyebrow}<span className="h-px w-6 bg-white/40" />
+            </span>
+          )}
+          <h1 className="font-cinema text-5xl sm:text-6xl md:text-8xl leading-[0.95] [overflow-wrap:anywhere] [text-wrap:balance]">{title}</h1>
+          {subtitle && <div className="mt-3 text-sm md:text-lg font-medium text-white/80 max-w-2xl text-pretty">{subtitle}</div>}
           {children}
         </div>
-        {actions && <div className="flex items-center gap-2.5 flex-wrap">{actions}</div>}
+        {actions && <div className="flex items-center justify-center gap-2.5 flex-wrap">{actions}</div>}
       </div>
       {stats && stats.length > 0 && (
-        <div className="relative liquid-glass rounded-[2rem] grid [&>*]:px-5 [&>*]:py-4 md:[&>*+*]:border-l [&>*+*]:border-white/15" style={{ gridTemplateColumns: `repeat(${Math.min(stats.length, 5)}, minmax(0, 1fr))` }}>
-          {stats.map((s) => {
+        <div className="relative flex flex-wrap justify-center border-t border-white/20 pt-5 gap-y-4">
+          {stats.map((s, i) => {
             const body = (
               <>
-                <p className="font-cinema text-3xl md:text-4xl leading-none truncate">{s.v}</p>
-                <p className="text-[11px] font-extrabold uppercase tracking-widest mt-2 text-white/70 inline-flex items-center gap-1.5">
-                  {s.color && <span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color }} />}{s.l}
+                <p className="font-cinema text-3xl md:text-4xl leading-none">{s.v}</p>
+                <p className="text-[10px] md:text-[11px] font-extrabold uppercase tracking-wider mt-2 text-white/75 inline-flex items-start justify-center gap-1.5 leading-tight">
+                  {s.color && <span className="w-2 h-2 rounded-full shrink-0 mt-[1px]" style={{ background: s.color }} />}{s.l}
                 </p>
               </>
             );
+            const cls = `basis-1/3 md:basis-0 md:flex-1 min-w-0 px-1 text-center ${i ? "md:border-l md:border-white/15" : ""}`;
             return s.onClick ? (
-              <button key={s.l} type="button" onClick={s.onClick} className="text-left min-w-0 transition-colors hover:bg-white/10" style={{ background: s.active ? "rgba(255,255,255,.16)" : undefined }}>{body}</button>
-            ) : <div key={s.l} className="min-w-0">{body}</div>;
+              <button key={s.l} type="button" onClick={s.onClick} className={`${cls} rounded-2xl py-2 transition-colors hover:bg-white/10`} style={{ background: s.active ? "rgba(255,255,255,.16)" : undefined }}>{body}</button>
+            ) : <div key={s.l} className={`${cls} py-2`}>{body}</div>;
           })}
         </div>
       )}

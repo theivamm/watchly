@@ -22,23 +22,10 @@ export function lighten(c: RGB, amount: number): RGB {
   };
 }
 
-const colorCache = new Map<string, Promise<RGB>>();
-
 export function getDominantColor(src: string): Promise<RGB> {
-  const cached = colorCache.get(src);
-  if (cached) return cached;
-  const p = loadDominantColor(src);
-  colorCache.set(src, p);
-  return p;
-}
-
-function loadDominantColor(src: string): Promise<RGB> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
-    // URL distinta a la del <img> visible: si no, el navegador reusa la copia cacheada sin
-    // cabeceras CORS, la carga falla y el color cae al violeta por defecto en cada cambio.
-    src = `${src}${src.includes("?") ? "&" : "?"}cors=1`;
     img.onload = () => {
       const size = 24;
       const canvas = document.createElement("canvas");

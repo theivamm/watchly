@@ -1,5 +1,5 @@
 import { useLocation, Link } from "react-router-dom";
-import { Settings, LogOut, Film, Sparkles, Shuffle, Search, BookOpen, List, Dna, Map, User, Shield } from "lucide-react";
+import { Settings, LogOut, Film, Sparkles, Shuffle, BookOpen, List, Dna, Map, User, Shield } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { supabase } from "@/lib/supabase";
 import MobileMenu, { type MenuItem } from "./MobileMenu";
@@ -17,7 +17,6 @@ export default function MobileNavigation() {
     { to: "/inicio", label: "Inicio", icon: Film },
     { to: "/recomendaciones", label: "Para vos", icon: Sparkles },
     { to: "/que-vemos-hoy", label: "Qué vemos", icon: Shuffle },
-    { to: "/buscar", label: "Buscar", icon: Search },
     { to: "/biblioteca", label: "Biblioteca", icon: BookOpen },
     { to: "/listas", label: "Listas", icon: List },
     { to: "/adn", label: "Mi ADN", icon: Dna },

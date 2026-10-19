@@ -1,72 +1,110 @@
+
 import "@/styles/cinema.css";
-import { useEffect, useState, type ReactNode } from "react";
-import { Sparkles, Clock, MonitorPlay, ShieldCheck, Heart, Film } from "lucide-react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Sparkles, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import type { UserDNA, WeightedMetric } from "@/types";
 import { classifyDna } from "@/lib/dnaStatus";
 import { buildWatchingHabitsPhrase } from "@/lib/dnaPhrase";
+import type { RGB } from "@/lib/posterColor";
 import { getPosterUrl } from "@/services/tmdb";
 
-const label = "text-xs font-extrabold uppercase tracking-widest text-white/60";
-const PALETTE = ["#ff6b8a", "#ffb457", "#f4e062", "#7ee08f", "#6cc7ff", "#b794ff"];
-const hueColor = (i: number) => PALETTE[i % PALETTE.length];
-const fringe = "drop-shadow(-2px 0 0 rgba(255,60,120,.85)) drop-shadow(2px 0 0 rgba(60,200,255,.85))";
+export interface DnaPoster { path: string; title: string; rating: number | null; type: string; genreIds?: number[]; year?: number | null; countries?: string[]; lang?: string; runtime?: number | null }
 
-export interface DnaPoster { path: string; title: string; rating: number | null; type: string }
+/* ───────── utilidades ───────── */
+
+const edge = "inset 2px 0 0 rgba(255,80,140,.32), inset -2px 0 0 rgba(70,170,255,.32)";
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const sortRated = (l: DnaPoster[]) => [...l].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
 
 function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" });
-  } catch {
-    return iso;
-  }
+  try { return new Date(iso).toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" }); } catch { return iso; }
 }
 
-function Head({ title, hint }: { title: string; hint?: string }) {
-  return (
-    <div className="mb-6">
-      <h3 className="font-cinema text-3xl md:text-4xl leading-none chroma">{title}</h3>
-      {hint && <p className="text-[11px] font-bold text-white/65 mt-2">{hint}</p>}
-    </div>
-  );
+function rgbToHsl({ r, g, b }: RGB): [number, number, number] {
+  const rn = r / 255, gn = g / 255, bn = b / 255;
+  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+  const l = (max + min) / 2, d = max - min;
+  if (d === 0) return [0, 0, l];
+  const s = d / (1 - Math.abs(2 * l - 1));
+  let h = max === rn ? ((gn - bn) / d) % 6 : max === gn ? (bn - rn) / d + 2 : (rn - gn) / d + 4;
+  h = Math.round(h * 60);
+  return [h < 0 ? h + 360 : h, s, l];
 }
 
-function Empty({ text }: { text: string }) {
-  return <p className="text-sm text-white/65 leading-relaxed">{text}</p>;
+/**
+ * Color protagonista de un póster: el tono más presente entre los píxeles saturados
+ * (el promedio simple da grises). Devuelve null si no se pudo leer o es blanco y negro.
+ */
+function vividColor(src: string): Promise<RGB | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const size = 40;
+        const cv = document.createElement("canvas");
+        cv.width = size; cv.height = size;
+        const ctx = cv.getContext("2d");
+        if (!ctx) return resolve(null);
+        ctx.drawImage(img, 0, 0, size, size);
+        const d = ctx.getImageData(0, 0, size, size).data;
+        const B = 24, w = new Array(B).fill(0), acc = Array.from({ length: B }, () => [0, 0, 0, 0]);
+        for (let i = 0; i < d.length; i += 4) {
+          const c = { r: d[i], g: d[i + 1], b: d[i + 2] };
+          const [h, s, l] = rgbToHsl(c);
+          if (s < 0.25 || l < 0.12 || l > 0.9) continue;
+          const k = Math.floor(h / (360 / B)) % B, wt = s * (1 - Math.abs(l - 0.5));
+          w[k] += wt; acc[k][0] += c.r * wt; acc[k][1] += c.g * wt; acc[k][2] += c.b * wt; acc[k][3] += wt;
+        }
+        let best = -1, bw = 0;
+        w.forEach((v, k) => { if (v > bw) { bw = v; best = k; } });
+        if (best < 0 || bw < 0.4) return resolve(null);
+        const a = acc[best];
+        resolve({ r: Math.round(a[0] / a[3]), g: Math.round(a[1] / a[3]), b: Math.round(a[2] / a[3]) });
+      } catch { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
 }
 
-function Cloud({ items, empty }: { items: WeightedMetric[]; empty: string }) {
-  if (items.length === 0) return <Empty text={empty} />;
-  return (
-    <div className="flex flex-wrap items-baseline gap-x-5 gap-y-2">
-      {items.map((it, i) => (
-        <span key={it.key} className="font-cinema leading-none chroma" style={{ fontSize: `${1.5 + Math.min(it.percentage, 70) / 22}rem`, opacity: 1 - i * 0.07 }}>
-          {it.label} <span className="font-sans text-xs font-extrabold text-white/60 align-middle">{it.percentage}%</span>
-        </span>
-      ))}
-    </div>
-  );
+/** Color CSS vivo a partir del tono del póster. Sin póster o en blanco y negro: blanco suave, nunca un color inventado. */
+function tintCss(c: RGB | null, a = 1): string {
+  if (!c) return `hsl(0 0% 85% / ${a * 0.45})`;
+  const [h, s] = rgbToHsl(c);
+  return `hsl(${h} ${Math.round(Math.min(70, Math.max(42, s * 80)))}% 62% / ${a})`;
 }
 
-function PosterWall({ posters }: { posters: DnaPoster[] }) {
-  if (posters.length === 0) return null;
-  const cols = 10;
-  const items = Array.from({ length: cols * 3 }, (_, i) => posters[i % posters.length]);
-  return (
-    <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute -inset-[18%] grid gap-3 -rotate-[8deg]" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-        {items.map((p, i) => (
-          <img key={i} src={getPosterUrl(p.path, "w200")} alt="" loading="lazy" className="w-full aspect-[2/3] object-cover rounded-xl" style={{ marginTop: (i % cols) % 2 ? 36 : 0 }} />
-        ))}
-      </div>
-      <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(8,7,14,.94) 0%, rgba(8,7,14,.72) 38%, rgba(8,7,14,.3) 100%), linear-gradient(180deg, rgba(8,7,14,.25), rgba(8,7,14,.6))" }} />
-    </div>
-  );
+const tintCache = new Map<string, RGB | null>();
+function usePosterTint(path?: string | null): RGB | null {
+  const [t, setT] = useState<RGB | null>(path ? tintCache.get(path) ?? null : null);
+  useEffect(() => {
+    if (!path) { setT(null); return; }
+    if (tintCache.has(path)) { setT(tintCache.get(path) ?? null); return; }
+    let off = false;
+    vividColor(getPosterUrl(path, "w200")).then((c) => { tintCache.set(path, c); if (!off) setT(c); });
+    return () => { off = true; };
+  }, [path]);
+  return t;
 }
 
-function useReady(dep?: unknown) {
+const BathTint = createContext<RGB | null>(null);
+
+function useReady() {
   const [r, setR] = useState(false);
-  useEffect(() => { setR(false); const t = setTimeout(() => setR(true), 60); return () => clearTimeout(t); }, [dep]);
+  useEffect(() => { const t = setTimeout(() => setR(true), 80); return () => clearTimeout(t); }, []);
   return r;
+}
+
+function useCycle(len: number, offset = 0, ms = 4200) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (len < 2 || window.matchMedia("(max-width: 767px), (prefers-reduced-motion: reduce)").matches) return;
+    let t: ReturnType<typeof setInterval> | undefined;
+    const s = setTimeout(() => { t = setInterval(() => setI((v) => v + 1), ms); }, offset);
+    return () => { clearTimeout(s); if (t) clearInterval(t); };
+  }, [len, offset, ms]);
+  return len ? i % len : 0;
 }
 
 function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
@@ -80,443 +118,698 @@ function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
   return <>{n}{suffix}</>;
 }
 
-function GenreBubbles({ genres }: { genres: WeightedMetric[] }) {
-  const max = Math.max(1, ...genres.map((g) => g.percentage));
+/* ───────── piezas visuales ───────── */
+
+function Chroma({ p, size = "w200", rounded = "rounded-xl", spread = 5, className = "" }: { p: DnaPoster; size?: "w200" | "w342"; rounded?: string; spread?: number; className?: string }) {
+  const src = getPosterUrl(p.path, size);
   return (
-    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 py-6 min-h-[340px]">
-      {genres.map((g, i) => {
-        const size = 120 + (g.percentage / max) * 180;
-        return (
-          <div key={g.key} className="dna-pop" style={{ animationDelay: `${i * 120}ms` }}>
-            <div className="transition-transform duration-300 hover:scale-110">
-              <div className="dna-bob liquid-glass rounded-full flex flex-col items-center justify-center text-center text-[#0b0b14]"
-                style={{ width: size, height: size, animationDuration: `${5 + i * 0.9}s`, animationDelay: `${i * -1.1}s`, background: `radial-gradient(circle at 30% 25%, ${hueColor(i)}, ${hueColor(i)}88 78%)` }}>
-                <span className="font-cinema leading-none" style={{ fontSize: size / 3.1 }}><CountUp value={g.percentage} suffix="%" /></span>
-                <span className="font-extrabold px-3 leading-tight mt-1" style={{ fontSize: Math.max(11, size / 11) }}>{g.label}</span>
-              </div>
-            </div>
-          </div>
-        );
-      })}
+    <div className={`relative ${className}`}>
+      {[-1, 1].map((d) => (
+        <img key={d} src={src} alt="" aria-hidden="true" loading="lazy" className={`absolute inset-0 w-full h-full object-cover ${rounded} opacity-60`}
+          style={{ transform: `translate(${d * spread}px, ${-d * 2}px)`, mixBlendMode: "screen", filter: d < 0 ? "sepia(1) saturate(6) hue-rotate(-50deg)" : "sepia(1) saturate(6) hue-rotate(150deg)" }} />
+      ))}
+      <img src={src} alt={p.title} loading="lazy" className={`relative w-full h-full object-cover ${rounded} border border-white/30 shadow-[0_16px_32px_-10px_rgba(0,0,0,.8)]`} />
     </div>
   );
 }
 
-function Ring({ pct, size = 160, stroke = 14, children }: { pct: number; size?: number; stroke?: number; children?: ReactNode }) {
+function FringedCover({ src, className = "" }: { src: string; className?: string }) {
+  return (
+    <>
+      {[-1, 1].map((d) => (
+        <img key={d} src={src} alt="" aria-hidden="true" loading="lazy" className={`absolute inset-0 w-full h-full object-cover opacity-50 ${className}`}
+          style={{ transform: `translateX(${d * 6}px)`, mixBlendMode: "screen", filter: d < 0 ? "sepia(1) saturate(6) hue-rotate(-50deg)" : "sepia(1) saturate(6) hue-rotate(150deg)" }} />
+      ))}
+      <img src={src} alt="" loading="lazy" className={`absolute inset-0 w-full h-full object-cover ${className}`} />
+    </>
+  );
+}
+
+/** Marcas de película: cuántas están encendidas indica el porcentaje; el tamaño nunca cambia. */
+function Ticks({ pct, max = 100, tint, n = 20 }: { pct: number; max?: number; tint?: RGB | null; n?: number }) {
   const ready = useReady();
+  const ctx = useContext(BathTint);
+  const t = tint === undefined ? ctx : tint;
+  const lit = Math.max(1, Math.round((pct / Math.max(1, max)) * n));
+  return (
+    <div className="flex gap-[3px] h-2" aria-hidden="true">
+      {Array.from({ length: n }, (_, i) => (
+        <span key={i} className="flex-1 rounded-[2px] transition-all duration-700" style={{ transitionDelay: `${i * 20}ms`, background: ready && i < lit ? tintCss(t, 1) : "rgba(255,255,255,.16)", boxShadow: ready && i < lit ? `0 0 6px ${tintCss(t, 0.3)}` : undefined }} />
+      ))}
+    </div>
+  );
+}
+
+function BathLayer({ poster, active, strength }: { poster: DnaPoster; active: boolean; strength: number }) {
+  const tint = usePosterTint(poster.path);
+  return (
+    <div className="absolute inset-0 transition-opacity duration-[1800ms] ease-in-out" style={{ opacity: active ? 1 : 0 }}>
+      <img src={getPosterUrl(poster.path, "w342")} alt="" className="absolute inset-0 w-full h-full object-cover scale-125" style={{ opacity: 0.2 * strength, filter: "blur(55px) saturate(1.3)" }} />
+      <div className="absolute inset-0" style={{ background: `radial-gradient(75% 95% at 10% 15%, ${tintCss(tint, 0.26 * strength)}, transparent 70%), radial-gradient(65% 85% at 95% 95%, ${tintCss(tint, 0.18 * strength)}, transparent 70%)` }} />
+    </div>
+  );
+}
+
+/** Baño de color: los pósters rotan detrás del contenido y su color tiñe fondo, marcas y brillos. Sin bordes ni caja. */
+function Bath({ posters = [], children, className = "", strength = 1, offset = 0 }: { posters?: DnaPoster[]; children: ReactNode; className?: string; strength?: number; offset?: number }) {
+  const cur = useCycle(posters.length, offset, 6500);
+  const tint = usePosterTint(posters[cur]?.path);
+  const m = "linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent)";
+  return (
+    <BathTint.Provider value={tint}>
+      <div className={`relative ${className}`}>
+        <div aria-hidden="true" className="absolute -inset-y-10 md:-inset-x-6 max-md:left-[calc(50%-50vw)] max-md:w-screen pointer-events-none overflow-hidden" style={{ WebkitMaskImage: m, maskImage: m }}>
+          {posters.map((p, k) => <BathLayer key={p.path} poster={p} active={k === cur} strength={strength} />)}
+        </div>
+        <div className="relative">{children}</div>
+      </div>
+    </BathTint.Provider>
+  );
+}
+
+function Opener({ n, title, id }: { n: string; title: string; id: string }) {
+  return (
+    <div id={id} className="flex items-end gap-3 md:gap-8 min-w-0">
+      <span className="font-cinema text-[4.5rem] md:text-[9rem] leading-[.8] select-none shrink-0" style={{ WebkitTextStroke: "2px rgba(255,255,255,.5)", color: "transparent" }}>{n}</span>
+      <h2 className="font-cinema text-4xl md:text-7xl leading-[.9] pb-1 min-w-0 [overflow-wrap:anywhere]">{title}</h2>
+    </div>
+  );
+}
+
+function Sec({ title, hint }: { title: string; hint?: string }) {
+  return (
+    <div className="mb-6">
+      <h3 className="font-cinema text-3xl md:text-4xl leading-none">{title}</h3>
+      {hint && <p className="text-xs font-bold text-white/65 mt-2">{hint}</p>}
+    </div>
+  );
+}
+
+function Empty({ text }: { text: string }) {
+  return <p className="text-sm text-white/65 leading-relaxed">{text}</p>;
+}
+
+function PosterWall({ posters }: { posters: DnaPoster[] }) {
+  if (posters.length === 0) return null;
+  const cols = 10;
+  const items = Array.from({ length: cols * 3 }, (_, i) => posters[i % posters.length]);
+  return (
+    <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+      <div className="absolute -inset-[18%] grid gap-3 -rotate-[8deg]" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+        {items.map((p, i) => (
+          <img key={i} src={getPosterUrl(p.path, "w200")} alt="" loading="lazy" className="w-full aspect-[2/3] object-cover rounded-xl" style={{ marginTop: (i % cols) % 2 ? 36 : 0 }} />
+        ))}
+      </div>
+      <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(8,7,14,.9) 0%, rgba(8,7,14,.6) 40%, rgba(8,7,14,.2) 100%), linear-gradient(180deg, rgba(8,7,14,.2), rgba(8,7,14,.6))" }} />
+    </div>
+  );
+}
+
+function Ring({ pct, size = 160, stroke = 12, children }: { pct: number; size?: number; stroke?: number; children?: ReactNode }) {
+  const ready = useReady();
+  const tint = useContext(BathTint);
   const r = (size - stroke) / 2, c = 2 * Math.PI * r;
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,.14)" strokeWidth={stroke} />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#fff" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c}
-          strokeDashoffset={ready ? c * (1 - Math.min(100, pct) / 100) : c} style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(.2,.8,.2,1)", filter: fringe }} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={tintCss(tint, 1)} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c}
+          strokeDashoffset={ready ? c * (1 - Math.min(100, pct) / 100) : c} style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(.2,.8,.2,1), stroke 1.6s", filter: "drop-shadow(-1px 0 1px rgba(255,60,120,.5)) drop-shadow(1px 0 1px rgba(60,200,255,.5))" }} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">{children}</div>
     </div>
   );
 }
 
-function StackBar({ items }: { items: WeightedMetric[] }) {
-  const ready = useReady();
+/* ───────── gustos ───────── */
+
+const LABEL_IDS: [string, number[]][] = [
+  ["drama", [18]], ["comedia", [35]], ["animacion", [16]], ["thriller", [53]], ["suspenso", [53]], ["crimen", [80]], ["terror", [27]],
+  ["ciencia ficcion", [878, 10765]], ["sci", [878, 10765]], ["fantasia", [14, 10765]], ["accion", [28, 10759]], ["aventura", [12, 10759]], ["romance", [10749]],
+  ["misterio", [9648]], ["documental", [99]], ["familia", [10751]], ["musica", [10402]], ["historia", [36]], ["belica", [10752, 10768]], ["guerra", [10752, 10768]],
+  ["western", [37]], ["tv", [10770]], ["infantil", [10762]],
+];
+const idsFor = (label: string): number[] => { const n = norm(label); return LABEL_IDS.find(([k]) => n.includes(k))?.[1] ?? []; };
+const regionName = (code: string) => { try { return new Intl.DisplayNames(["es"], { type: "region" }).of(code) ?? code; } catch { return code; } };
+const langName = (code: string) => { try { return new Intl.DisplayNames(["es"], { type: "language" }).of(code) ?? code; } catch { return code; } };
+const sameName = (a: string, b: string) => { const x = norm(a), y = norm(b); return x === y || x.includes(y) || y.includes(x); };
+
+/** Tarjeta-foto: la imagen rota entre títulos tuyos y el color de cada póster baña borde, brillo y fondo. */
+function PhotoTile({ posters, label, pct, max, offset, note }: { posters: DnaPoster[]; label: string; pct: number; max: number; offset: number; note?: string }) {
+  const cur = useCycle(posters.length, offset);
+  const tint = usePosterTint(posters[cur]?.path);
+  const T = 1400;
   return (
-    <div>
-      <div className="liquid-glass rounded-[1.5rem] p-1 flex gap-1 h-16">
-        {items.map((it, i) => (
-          <div key={it.key} className="rounded-[1.1rem] transition-all duration-1000 ease-out" style={{ flex: ready ? `${Math.max(it.percentage, 4)} 1 0` : "0 1 0", background: hueColor(i) }} />
+    <div className="group relative overflow-hidden rounded-[1.8rem] aspect-[3/4]" style={{ boxShadow: `${edge}, 0 28px 60px -24px ${tintCss(tint, 0.42)}`, transition: `box-shadow ${T}ms`, background: "#0c0a18" }}>
+      {posters.map((p, k) => (
+        <div key={p.path} className="absolute inset-0 transition-opacity ease-in-out" style={{ opacity: k === cur ? 1 : 0, transitionDuration: `${T}ms` }}>
+          <FringedCover src={getPosterUrl(p.path, "w342")} className="transition-transform duration-[1600ms] group-hover:scale-105" />
+        </div>
+      ))}
+      <div aria-hidden="true" className="absolute inset-0" style={{ background: `linear-gradient(0deg, rgba(8,7,14,.92) 0%, rgba(8,7,14,.25) 48%, transparent 70%), radial-gradient(120% 70% at 0% 100%, ${tintCss(tint, 0.34)}, transparent 70%), radial-gradient(90% 60% at 100% 0%, ${tintCss(tint, 0.2)}, transparent 70%)` }} />
+      <div className="relative h-full flex flex-col justify-end gap-2 p-4 md:p-5">
+        {posters[cur] && <p key={cur} className="text-[11px] font-bold text-white/80 truncate animate-fade-in">{posters[cur].title}</p>}
+        <p className="font-cinema text-3xl md:text-4xl leading-none">{label}</p>
+        {note && <p className="text-[11px] font-bold text-white/70 line-clamp-2">{note}</p>}
+        <span className="font-cinema text-5xl md:text-6xl leading-none"><CountUp value={pct} suffix="%" /></span>
+        <Ticks pct={pct} max={max} tint={tint} />
+      </div>
+    </div>
+  );
+}
+
+function GenreMosaic({ genres, others, posters }: { genres: WeightedMetric[]; others: WeightedMetric[]; posters: DnaPoster[] }) {
+  const sum = genres.reduce((a, g) => a + g.percentage, 0);
+  const rest = Math.max(0, Math.round(100 - sum));
+  const showRest = rest >= 1 || others.length > 0;
+  const max = Math.max(1, ...genres.map((g) => g.percentage), showRest ? rest : 0);
+  const { lists, restList } = useMemo(() => {
+    const used = new Set<string>();
+    const all = new Set<number>();
+    const lists = genres.map((g) => {
+      const ids = idsFor(g.label);
+      ids.forEach((x) => all.add(x));
+      const own = sortRated(posters.filter((p) => p.genreIds?.some((x) => ids.includes(x))));
+      const pick = [...own.filter((p) => !used.has(p.path)), ...own.filter((p) => used.has(p.path))].slice(0, 5);
+      pick.slice(0, 2).forEach((p) => used.add(p.path));
+      return pick;
+    });
+    const restList = sortRated(posters.filter((p) => p.genreIds?.length && !p.genreIds.some((x) => all.has(x)))).slice(0, 5);
+    return { lists, restList: restList.length ? restList : sortRated(posters).slice(6, 11) };
+  }, [genres, posters]);
+  return (
+    <div className="grid gap-3 md:gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))" }}>
+      {genres.map((g, i) => <PhotoTile key={g.key} posters={lists[i]} label={g.label} pct={g.percentage} max={max} offset={i * 650} />)}
+      {showRest && <PhotoTile posters={restList} label="Otros géneros" pct={rest} max={max} offset={genres.length * 650} note={others.slice(0, 6).map((o) => o.label).join(" · ") || undefined} />}
+    </div>
+  );
+}
+
+function FormatPanel({ label, pct, ps, k, lead }: { label: string; pct: number; ps: DnaPoster[]; k: number; lead: boolean }) {
+  const cur = useCycle(ps.length > 4 ? ps.length : 0, k * 900, 5000);
+  const shown = ps.length > 4 ? [0, 1, 2, 3].map((o) => ps[(cur + o) % ps.length]) : ps.slice(0, 4);
+  const tint = usePosterTint(shown[0]?.path);
+  return (
+    <div className="relative overflow-hidden rounded-[2rem] h-60 md:h-72 flex items-end" style={{ boxShadow: `${edge}, 0 28px 60px -24px ${tintCss(tint, 0.42)}`, transition: "box-shadow 1400ms" }}>
+      <div className="absolute inset-0 flex gap-1" style={{ filter: lead ? undefined : "saturate(.45) brightness(.75)" }}>
+        {shown.map((x) => <div key={x.path} className="relative flex-1 min-w-0"><FringedCover src={getPosterUrl(x.path, "w342")} /></div>)}
+      </div>
+      <div aria-hidden="true" className="absolute inset-0" style={{ background: `linear-gradient(0deg, rgba(8,7,14,.9), transparent 62%), radial-gradient(100% 80% at ${k ? "100%" : "0%"} 100%, ${tintCss(tint, 0.3)}, transparent 70%)` }} />
+      <div className={`relative p-6 md:p-8 w-full ${k ? "text-right" : ""}`}>
+        <p className="font-cinema text-6xl md:text-8xl leading-none"><CountUp value={pct} suffix="%" /></p>
+        <p className="text-xs font-extrabold uppercase tracking-[.25em] text-white/80 mt-2">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function FormatSplit({ movie, tv, movieP, tvP }: { movie: number; tv: number; movieP: DnaPoster[]; tvP: DnaPoster[] }) {
+  const lead = movie >= tv ? 0 : 1;
+  return (
+    <div className="grid md:grid-cols-2 gap-3 md:gap-4">
+      <FormatPanel label="Películas" pct={movie} ps={movieP} k={0} lead={lead === 0} />
+      <FormatPanel label="Series" pct={tv} ps={tvP} k={1} lead={lead === 1} />
+    </div>
+  );
+}
+
+function TopRated({ posters }: { posters: DnaPoster[] }) {
+  const list = sortRated(posters.filter((p) => p.rating != null)).slice(0, 12);
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ l: false, r: false });
+  const update = () => { const el = ref.current; if (el) setPos({ l: el.scrollLeft > 8, r: el.scrollLeft + el.clientWidth < el.scrollWidth - 8 }); };
+  useEffect(() => { update(); const el = ref.current; if (!el) return; const ro = new ResizeObserver(update); ro.observe(el); return () => ro.disconnect(); }, [list.length]);
+  if (list.length === 0) return null;
+  const by = (d: number) => ref.current?.scrollBy({ left: d * (ref.current.clientWidth * 0.8), behavior: "smooth" });
+  const arrow = "absolute top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full hidden md:flex items-center justify-center bg-black/55 backdrop-blur-md border border-white/25 hover:scale-110 transition-transform";
+  return (
+    <div className="relative">
+      <div ref={ref} onScroll={update} className="flex gap-8 overflow-x-auto no-scrollbar pb-4 pt-2 -mx-1 px-1 snap-x">
+        {list.map((p, i) => (
+          <div key={p.path} className="relative shrink-0 snap-start pl-12 md:pl-16">
+            <span className="absolute left-0 bottom-12 font-cinema text-[8rem] md:text-[10rem] leading-none select-none" style={{ WebkitTextStroke: "2px rgba(255,255,255,.4)", color: "transparent" }}>{i + 1}</span>
+            <div className="relative w-[160px] md:w-[210px]">
+              <Chroma p={p} size="w342" rounded="rounded-[1.5rem]" spread={7} className="aspect-[2/3]" />
+              {p.rating != null && <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-black/50 backdrop-blur-md border border-white/25">★ {p.rating}</span>}
+              <p className="text-xs font-extrabold mt-3 line-clamp-2">{p.title}</p>
+            </div>
+          </div>
         ))}
       </div>
-      <ul className="flex flex-wrap gap-x-5 gap-y-1.5 mt-3">
-        {items.map((it, i) => (
-          <li key={it.key} className="flex items-center gap-2 text-sm font-extrabold"><span className="w-2.5 h-2.5 rounded-full" style={{ background: hueColor(i) }} />{it.label}<span className="text-white/60">{it.percentage}%</span></li>
+      {pos.l && <button type="button" aria-label="Ver anteriores" onClick={() => by(-1)} className={`${arrow} left-0`}><ChevronLeft className="w-5 h-5" /></button>}
+      {pos.r && <button type="button" aria-label="Ver más" onClick={() => by(1)} className={`${arrow} right-0`}><ChevronRight className="w-5 h-5" /></button>}
+    </div>
+  );
+}
+
+function DecadeCol({ d, ps, max }: { d: WeightedMetric; ps: DnaPoster[]; max: number }) {
+  const cur = useCycle(ps.length > 3 ? ps.length : 0, 0, 5000);
+  const shown = ps.length > 3 ? [0, 1, 2].map((o) => ps[(cur + o) % ps.length]) : ps;
+  const tint = usePosterTint(shown[0]?.path);
+  const title = /^\d{4}$/.test(d.label) ? `${d.label}s` : d.label;
+  const m = "radial-gradient(closest-side, #000 30%, transparent)";
+  return (
+    <div className="group relative flex flex-col items-center text-center">
+      <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[78%] pointer-events-none transition-[background] duration-[1400ms]" style={{ background: tintCss(tint, 0.26), WebkitMaskImage: m, maskImage: m }} />
+      <div className="relative h-60 md:h-72 w-full">
+        {shown.length === 0 ? <div className="absolute inset-x-10 inset-y-2 rounded-3xl border border-dashed border-white/25" /> : shown.map((p, k) => {
+          const o = k - (shown.length - 1) / 2;
+          return (
+            <div key={p.path} className="absolute bottom-0 left-1/2 h-[92%] aspect-[2/3] transition-transform duration-500 group-hover:scale-105" style={{ transform: `translateX(-50%) translateX(${o * 64}px) rotate(${o * 9}deg)`, zIndex: 10 - Math.round(Math.abs(o) * 2), transformOrigin: "50% 100%" }}>
+              <Chroma p={p} size="w342" rounded="rounded-2xl" spread={6} className="w-full h-full" />
+            </div>
+          );
+        })}
+      </div>
+      <p className="relative font-cinema text-5xl leading-none mt-5" style={{ WebkitTextStroke: "1.5px rgba(255,255,255,.85)", color: "transparent" }}>{title}</p>
+      <p className="relative font-cinema text-4xl leading-none mt-2">{d.percentage}%</p>
+      <div className="relative mt-3 w-full max-w-[230px]"><Ticks pct={d.percentage} max={max} tint={tint} n={14} /></div>
+    </div>
+  );
+}
+
+function DecadeRow({ items, posters }: { items: WeightedMetric[]; posters: DnaPoster[] }) {
+  const list = [...items].sort((a, b) => (parseInt(a.label) || 0) - (parseInt(b.label) || 0));
+  const max = Math.max(1, ...list.map((d) => d.percentage));
+  return (
+    <div className="grid gap-x-6 gap-y-12" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 230px), 1fr))" }}>
+      {list.map((d) => {
+        const y = parseInt(d.label);
+        const ps = sortRated(posters.filter((p) => p.year != null && !Number.isNaN(y) && p.year >= y && p.year < y + 10)).slice(0, 6);
+        return <DecadeCol key={d.key} d={d} ps={ps} max={max} />;
+      })}
+    </div>
+  );
+}
+
+/** Cómo puntuás: promedio grande y un póster por nota (todos del mismo tamaño). */
+function RatingBlock({ average, median, label, distribution, coverage, posters }: { average: number; median: number | null; label?: string | null; distribution: Record<string, number>; coverage: number; posters: DnaPoster[] }) {
+  return (
+    <div>
+      <div className="flex flex-wrap items-end gap-x-8 gap-y-3 mb-7">
+        <p className="font-cinema text-7xl md:text-9xl leading-[.85]">{average.toFixed(1)}</p>
+        <div className="pb-2">
+          <div className="relative inline-block text-3xl leading-none tracking-wider" aria-label={`${average.toFixed(1)} de 5`}>
+            <span className="text-white/20">★★★★★</span>
+            <span className="absolute left-0 top-0 overflow-hidden whitespace-nowrap text-white" style={{ width: `${(average / 5) * 100}%` }}>★★★★★</span>
+          </div>
+          <p className="text-sm font-extrabold mt-3">{label}{median != null && <span className="text-white/65 font-bold"> · mediana {median.toFixed(1)}</span>}</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-5 gap-2.5 md:gap-3">
+        {[1, 2, 3, 4, 5].map((s) => {
+          const n = distribution[String(s)] ?? 0;
+          const p = sortRated(posters.filter((x) => x.rating != null && Math.round(x.rating) === s))[0];
+          return (
+            <div key={s} className="relative aspect-[2/3] rounded-2xl overflow-hidden" style={{ boxShadow: n ? edge : "inset 0 0 0 1px rgba(255,255,255,.18)", opacity: n ? 1 : 0.5 }}>
+              {p ? <FringedCover src={getPosterUrl(p.path, "w200")} /> : <div className="absolute inset-0 border border-dashed border-white/20 rounded-2xl" />}
+              <div aria-hidden="true" className="absolute inset-0" style={{ background: "linear-gradient(0deg, rgba(8,7,14,.9), transparent 55%)" }} />
+              <div className="absolute inset-x-0 bottom-0 p-2 text-center">
+                <p className="font-cinema text-2xl md:text-3xl leading-none">{s}★</p>
+                <p className="text-[10px] font-extrabold text-white/80 mt-0.5">{n}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {coverage < 0.6 && <p className="text-xs text-white/65 mt-4">Puntuaste el {Math.round(coverage * 100)}% de tus títulos. A más puntuaciones, más precisa es esta sección.</p>}
+    </div>
+  );
+}
+
+function RuntimeBlock({ minutes, label, posters }: { minutes: number; label: string; posters: DnaPoster[] }) {
+  const ready = useReady();
+  const withRt = posters.filter((p) => p.type === "movie" && p.runtime && p.runtime > 20).sort((a, b) => (a.runtime ?? 0) - (b.runtime ?? 0));
+  const short = withRt[0], long = withRt.length > 1 ? withRt[withRt.length - 1] : undefined;
+  const lo = Math.min(short?.runtime ?? minutes, minutes) - 10, hi = Math.max(long?.runtime ?? minutes, minutes) + 10;
+  const pos = Math.min(100, Math.max(0, ((minutes - lo) / (hi - lo)) * 100));
+  return (
+    <div>
+      <div className="flex items-end gap-4 mb-7">
+        <Clock className="w-6 h-6 text-white/70 mb-3" />
+        <p className="font-cinema text-7xl md:text-9xl leading-[.85]">{minutes}<span className="text-3xl ml-3 text-white/70">min</span></p>
+      </div>
+      <p className="text-sm font-extrabold mb-6">{label}</p>
+      <div className="relative h-3 rounded-full" style={{ background: "linear-gradient(90deg, #ff5a8c, #fff 50%, #5aaaff)", boxShadow: "0 0 30px rgba(255,255,255,.25)" }}>
+        <span className="absolute top-1/2 w-7 h-7 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white border-4 border-[#0b0b14] transition-all duration-1000 ease-out" style={{ left: ready ? `${pos}%` : "0%", boxShadow: "-3px 0 0 rgba(255,60,130,.9), 3px 0 0 rgba(60,200,255,.9)" }} />
+      </div>
+      <div className="flex justify-between items-end gap-4 mt-6">
+        {[short, long].map((p, k) => p ? (
+          <div key={p.path} className={`flex items-center gap-3 min-w-0 ${k ? "flex-row-reverse text-right" : ""}`}>
+            <Chroma p={p} size="w200" className="w-16 aspect-[2/3] shrink-0" rounded="rounded-xl" spread={4} />
+            <div className="min-w-0"><p className="font-cinema text-3xl leading-none">{p.runtime} min</p><p className="text-[11px] font-bold text-white/75 mt-1 truncate">{k ? "La más larga" : "La más corta"} · {p.title}</p></div>
+          </div>
+        ) : <span key={k} />)}
+      </div>
+    </div>
+  );
+}
+
+/** Ranking: foto del primero y lista compacta con miniaturas para el resto. */
+function RankList({ items, pick, empty }: { items: WeightedMetric[]; pick: (label: string) => DnaPoster[]; empty: string }) {
+  if (items.length === 0) return <Empty text={empty} />;
+  const max = Math.max(1, ...items.map((i) => i.percentage));
+  const [first, ...rest] = items.slice(0, 7);
+  const ps = sortRated(pick(first.label)).slice(0, 4);
+  return (
+    <div>
+      <RankHero label={first.label} pct={first.percentage} max={max} ps={ps} />
+      {rest.length > 0 && (
+        <ul className="mt-2 divide-y divide-white/10">
+          {rest.map((it) => <RankRow key={it.key} it={it} max={max} ps={sortRated(pick(it.label)).slice(0, 2)} />)}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function RankHero({ label, pct, max, ps }: { label: string; pct: number; max: number; ps: DnaPoster[] }) {
+  const cur = useCycle(ps.length, 0, 5200);
+  const tint = usePosterTint(ps[cur]?.path);
+  return (
+    <div className="group relative overflow-hidden rounded-[1.8rem] aspect-[16/8] min-h-[200px]" style={{ boxShadow: `${edge}, 0 28px 60px -24px ${tintCss(tint, 0.42)}`, transition: "box-shadow 1400ms", background: "#0c0a18" }}>
+      <div className="absolute inset-0 flex gap-[3px]">
+        {ps.map((p, k) => (
+          <div key={p.path} className="relative min-w-0 overflow-hidden transition-[flex] duration-[1400ms] ease-in-out" style={{ flex: k === cur ? 2.4 : 1 }}>
+            <FringedCover src={getPosterUrl(p.path, "w342")} className="transition-transform duration-[1600ms] group-hover:scale-105" />
+          </div>
+        ))}
+      </div>
+      <div aria-hidden="true" className="absolute inset-0" style={{ background: `linear-gradient(0deg, rgba(8,7,14,.94) 0%, rgba(8,7,14,.2) 60%, transparent 80%), radial-gradient(120% 80% at 0% 100%, ${tintCss(tint, 0.34)}, transparent 70%)` }} />
+      <div className="relative h-full flex flex-col justify-end gap-2 p-5">
+        <div className="flex items-end justify-between gap-4">
+          <p className="font-cinema text-4xl md:text-5xl leading-[.95] break-words">{label}</p>
+          <span className="font-cinema text-5xl md:text-6xl leading-none">{pct}%</span>
+        </div>
+        <Ticks pct={pct} max={max} tint={tint} n={28} />
+      </div>
+    </div>
+  );
+}
+
+function RankRow({ it, max, ps }: { it: WeightedMetric; max: number; ps: DnaPoster[] }) {
+  const tint = usePosterTint(ps[0]?.path);
+  return (
+    <li className="flex items-center gap-4 py-3">
+      <div className="relative shrink-0 h-14 w-[60px]">
+        {ps.length === 0 ? <div className="absolute inset-0 rounded-lg border border-dashed border-white/25" /> : ps.map((p, k) => (
+          <div key={p.path} className="absolute top-0 h-full aspect-[2/3]" style={{ left: k * 18, zIndex: 5 - k }}><Chroma p={p} spread={2} className="w-full h-full" rounded="rounded-lg" /></div>
+        ))}
+      </div>
+      <span className="font-cinema text-xl md:text-3xl leading-none w-24 md:w-44 truncate">{it.label}</span>
+      <div className="flex-1 min-w-0"><Ticks pct={it.percentage} max={max} tint={tint} n={14} /></div>
+      <span className="font-cinema text-2xl md:text-3xl leading-none w-16 text-right text-white/85">{it.percentage}%</span>
+    </li>
+  );
+}
+
+function NameList({ title, list }: { title: string; list: { name: string; count: number }[] }) {
+  const max = Math.max(1, ...list.map((c) => c.count));
+  return (
+    <div>
+      <Sec title={title} />
+      <ul className="divide-y divide-white/10">
+        {list.slice(0, 7).map((c) => (
+          <li key={c.name} className="flex items-center gap-4 py-3">
+            <span className="font-cinema text-2xl md:text-3xl leading-none flex-1 min-w-0 truncate">{c.name}</span>
+            <div className="w-24 md:w-32"><Ticks pct={c.count} max={max} n={10} /></div>
+            <span className="font-cinema text-2xl leading-none w-10 text-right text-white/85">×{c.count}</span>
+          </li>
         ))}
       </ul>
     </div>
   );
 }
 
-function Pillars({ items }: { items: WeightedMetric[] }) {
-  const ready = useReady();
+/* ───────── cómo mirás ───────── */
+
+function FaderList({ items }: { items: WeightedMetric[] }) {
   const max = Math.max(1, ...items.map((i) => i.percentage));
   return (
-    <div className="flex items-end gap-4 h-44">
-      {items.map((it, i) => (
-        <div key={it.key} className="flex-1 min-w-0 h-full flex flex-col items-center justify-end gap-2">
-          <span className="text-xs font-extrabold text-white/80">{it.percentage}%</span>
-          <div className="liquid-glass w-full rounded-2xl transition-all duration-1000 ease-out" style={{ height: ready ? `${Math.max(8, (it.percentage / max) * 100)}%` : "4%", background: `linear-gradient(180deg, ${hueColor(i)}, ${hueColor(i)}55)` }} />
-          <span className="text-[11px] font-extrabold text-white/80 text-center leading-tight">{it.label}</span>
-        </div>
+    <ul className="divide-y divide-white/10">
+      {items.map((it) => (
+        <li key={it.key} className="flex items-center gap-4 py-3">
+          <span className="font-cinema text-xl md:text-3xl leading-none w-28 md:w-48 truncate">{it.label}</span>
+          <div className="flex-1 min-w-0"><Ticks pct={it.percentage} max={max} n={16} /></div>
+          <span className="font-cinema text-2xl md:text-3xl leading-none w-16 text-right text-white/85">{it.percentage}%</span>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
-function Dots({ items }: { items: WeightedMetric[] }) {
-  const max = Math.max(1, ...items.map((i) => i.percentage));
+function HabitBlock({ title, sessions, items, empty, posters, offset }: { title: string; sessions?: number; items: WeightedMetric[]; empty: string; posters: DnaPoster[]; offset: number }) {
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      {items.map((it, i) => {
-        const size = 76 + (it.percentage / max) * 70;
-        return (
-          <div key={it.key} className="dna-pop" style={{ animationDelay: `${i * 100}ms` }}>
-            <div className="liquid-glass rounded-full flex flex-col items-center justify-center text-center text-[#0b0b14]" style={{ width: size, height: size, background: `radial-gradient(circle at 30% 25%, ${hueColor(i)}, ${hueColor(i)}88 78%)` }}>
-              <span className="font-cinema leading-none" style={{ fontSize: size / 3.4 }}>{it.percentage}%</span>
-              <span className="text-[10px] font-extrabold px-2 leading-tight mt-0.5">{it.label}</span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <Bath posters={posters} offset={offset} strength={0.9}>
+      <Sec title={title} hint={sessions ? `${sessions} ${sessions === 1 ? "sesión" : "sesiones"}` : undefined} />
+      {items.length === 0 ? <Empty text={empty} /> : <FaderList items={items} />}
+    </Bath>
   );
 }
 
-function RankList({ items }: { items: WeightedMetric[] }) {
-  const ready = useReady();
+function TagRow({ title, pct, text, poster }: { title: string; pct: number; text: string; poster?: DnaPoster }) {
   return (
-    <div className="space-y-4">
-      {items.map((it, i) => (
-        <div key={it.key}>
-          <div className="flex items-baseline justify-between gap-3"><span className="font-cinema text-2xl leading-none">{it.label}</span><span className="text-sm font-extrabold text-white/70">{it.percentage}%</span></div>
-          <div className="h-[3px] rounded-full bg-white/15 mt-2 overflow-hidden"><div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: ready ? `${it.percentage}%` : "0%", background: hueColor(i) }} /></div>
+    <div className="flex gap-5 py-6 border-t border-white/15">
+      {poster && <Chroma p={poster} className="w-16 md:w-20 aspect-[2/3] shrink-0 self-start" rounded="rounded-xl" spread={4} />}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-4">
+          <p className="font-cinema text-3xl md:text-4xl leading-none">{title}</p>
+          <p className="font-cinema text-3xl md:text-4xl leading-none text-white/85">{pct}%</p>
         </div>
-      ))}
-    </div>
-  );
-}
-
-function HabitBlock({ title, sessions, items, empty, children, className = "" }: {
-  title: string; sessions?: number; items: WeightedMetric[]; empty: string; children: ReactNode; className?: string;
-}) {
-  return (
-    <div className={className}>
-      <Head title={title} hint={sessions ? `${sessions} ${sessions === 1 ? "sesión" : "sesiones"}` : undefined} />
-      {items.length === 0 ? <Empty text={empty} /> : children}
-    </div>
-  );
-}
-
-function TagRow({ title, pct, text }: { title: string; pct: number; text: string }) {
-  const ready = useReady();
-  return (
-    <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] md:items-center border-t border-white/20 py-6">
-      <div className="flex items-baseline gap-4"><span className="font-cinema text-5xl md:text-6xl leading-none">{pct}%</span><span className="font-cinema text-2xl md:text-3xl leading-tight text-white/90">{title}</span></div>
-      <div>
-        <div className="h-[3px] rounded-full bg-white/15 overflow-hidden mb-3"><div className="h-full rounded-full bg-white transition-all duration-1000 ease-out" style={{ width: ready ? `${pct}%` : "0%", filter: fringe }} /></div>
-        <p className="text-sm leading-relaxed text-white/80">{text}</p>
+        <div className="mt-3"><Ticks pct={pct} n={22} /></div>
+        <p className="text-sm leading-relaxed text-white/80 mt-3">{text}</p>
       </div>
     </div>
   );
 }
 
-type Tab = "gustos" | "habitos" | "perfil";
+/* ───────── vista principal ───────── */
 
 export default function DNAView({ dna, title = "Mi ADN", owner, actions, posters = [] }: {
   dna: UserDNA; title?: string; owner?: string; actions?: ReactNode; posters?: DnaPoster[];
 }) {
-  const [tab, setTab] = useState<Tab>("gustos");
   const cls = classifyDna(dna.status);
   const phrase = buildWatchingHabitsPhrase(dna);
   const { average, median, distribution, label: ratingLabel, coverage } = dna.ratingProfile;
-  const stars = [1, 2, 3, 4, 5];
-  const maxStar = Math.max(1, ...stars.map((s) => distribution[String(s)] ?? 0));
-  const maxDecade = Math.max(1, ...dna.decadeDistribution.map((d) => d.percentage));
   const cov = dna.contextCoverage;
   const hasHabits = [dna.venueDistribution, dna.timeDistribution, dna.companionshipDistribution, dna.languageModeDistribution, dna.platformDistribution].some((l) => l.length > 0);
-  const topRated = [...posters].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)).slice(0, 8);
-  const movieP = posters.filter((p) => p.type === "movie").slice(0, 4);
-  const tvP = posters.filter((p) => p.type !== "movie").slice(0, 4);
+  const movieP = posters.filter((p) => p.type === "movie");
+  const tvP = posters.filter((p) => p.type !== "movie");
+  const ranked = useMemo(() => sortRated(posters), [posters]);
+  const set = (k: number, n = 3) => (ranked.length ? Array.from({ length: Math.min(n, ranked.length) }, (_, i) => ranked[(k * 3 + i) % ranked.length]) : []);
   const rewatchPct = Math.round(dna.rewatchProfile.rewatchRate * (dna.rewatchProfile.rewatchRate <= 1 ? 100 : 1));
-  const split = Math.min(72, Math.max(28, dna.formatDistribution.movie));
   const genres = dna.topGenres.slice(0, 6);
-  const tabs: { key: Tab; label: string; icon: typeof Film }[] = [
-    { key: "gustos", label: "Gustos", icon: Heart },
-    { key: "habitos", label: "Cómo mirás", icon: MonitorPlay },
-    { key: "perfil", label: "Perfil y confianza", icon: ShieldCheck },
-  ];
+  const hasRuntime = dna.runtimeProfile.averageMinutes != null && !!dna.runtimeProfile.label;
+
+  const go = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 90, behavior: "smooth" });
+  };
 
   return (
-    <div className="space-y-10 text-white">
-      {/* ───────── HEADER ───────── */}
-      <section className="relative overflow-hidden rounded-[2.5rem] border border-white/20 min-h-[500px] flex flex-col justify-between gap-10 p-7 md:p-12"
-        style={{ boxShadow: "inset 3px 0 0 rgba(255,80,140,.4), inset -3px 0 0 rgba(70,170,255,.4), 0 30px 80px -20px rgba(0,0,0,.6)", background: posters.length ? undefined : "linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,.03))" }}>
+    <div className="space-y-16 md:space-y-20 text-white">
+      {/* ───────── PORTADA ───────── */}
+      <section className="relative overflow-hidden rounded-[2.5rem] min-h-[480px] md:min-h-[540px] flex flex-col justify-between gap-8 md:gap-10 px-5 py-8 md:p-12 text-center md:text-left"
+        style={{ boxShadow: `${edge}, 0 30px 80px -20px rgba(0,0,0,.6)`, background: posters.length ? undefined : "linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,.03))" }}>
         <PosterWall posters={posters} />
         <div className="relative">
-          <div className="flex flex-wrap items-center gap-2.5 mb-5">
-            <span className="liquid-glass-sm inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-extrabold uppercase tracking-widest"><Sparkles className="w-3.5 h-3.5" /> ADN Audiovisual</span>
-            <span className="liquid-glass-sm px-4 py-2 rounded-full text-xs font-extrabold">{cls.badgeLabel}</span>
-            {owner && <span className="liquid-glass-sm px-4 py-2 rounded-full text-xs font-extrabold">@{owner}</span>}
-          </div>
-          <h1 className="font-cinema chroma text-7xl md:text-[10rem] leading-[0.95] break-words">{title}</h1>
-          {dna.summary && <p className="mt-5 text-lg md:text-xl leading-relaxed font-medium text-white/90 max-w-3xl text-pretty">{dna.summary}</p>}
-          {dna.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-5">
-              {dna.tags.map((t) => <span key={t} className="liquid-glass-sm px-4 py-1.5 rounded-full text-xs font-extrabold">{t}</span>)}
-            </div>
-          )}
+          <p className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1 text-[11px] md:text-xs font-extrabold uppercase tracking-[.2em] md:tracking-[.25em] text-white/80 mb-5 md:mb-6">
+            <Sparkles className="w-4 h-4" /> ADN Audiovisual <span className="text-white/40">/</span> {cls.badgeLabel}{owner && <><span className="text-white/40">/</span> @{owner}</>}
+          </p>
+          <h1 className="font-cinema text-6xl sm:text-7xl md:text-[10rem] leading-[0.95] [overflow-wrap:anywhere]">{title}</h1>
+          {dna.summary && <p className="mt-5 text-base md:text-xl leading-relaxed font-medium text-white/90 max-w-3xl mx-auto md:mx-0 text-pretty">{dna.summary}</p>}
+          {dna.tags.length > 0 && <p className="mt-5 flex flex-wrap justify-center md:justify-start gap-x-4 md:gap-x-5 gap-y-1 text-sm font-extrabold text-white/85">{dna.tags.map((t) => <span key={t}>#{t.replace(/\s+/g, "")}</span>)}</p>}
         </div>
         <div className="relative">
-          <div className="liquid-glass rounded-[2rem] grid grid-cols-2 md:grid-cols-5 [&>div]:px-6 [&>div]:py-5 [&>div+div]:md:border-l [&>div+div]:border-white/15">
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-y-6 gap-x-2 border-t border-white/20 pt-6 md:border-0 md:pt-0 md:[&>div]:pl-5 md:[&>div]:border-l md:[&>div]:border-white/25">
             {[
               { l: "Títulos", v: String(dna.validTitleCount) },
               { l: "Películas", v: `${dna.formatDistribution.movie}%` },
               { l: "Series", v: `${dna.formatDistribution.tv}%` },
               { l: "Confianza", v: `${dna.confidenceScore}/100` },
               { l: "Género #1", v: genres[0]?.label ?? "—" },
-            ].map(({ l, v: val }) => (
+            ].map(({ l, v }) => (
               <div key={l} className="min-w-0">
-                <p className="font-cinema text-3xl md:text-4xl leading-none truncate">{val}</p>
-                <p className="text-[11px] font-extrabold uppercase tracking-widest mt-2 text-white/65">{l}</p>
+                <p className="font-cinema text-3xl md:text-5xl leading-none truncate">{v}</p>
+                <p className="text-[10px] md:text-[11px] font-extrabold uppercase tracking-wider md:tracking-widest mt-2 text-white/70">{l}</p>
               </div>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-4 mt-4">
-            <p className="text-xs font-bold text-white/65">Actualizado el {formatDate(dna.calculatedAt)}</p>
-            {actions}
+          <div className="flex flex-col md:flex-row md:flex-wrap items-center justify-between gap-4 mt-8">
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <p className="text-xs font-bold text-white/70">Actualizado el {formatDate(dna.calculatedAt)}</p>
+              {actions}
+            </div>
+            <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2 md:gap-6 text-sm font-extrabold" aria-label="Secciones del ADN">
+              {[["Gustos", "dna-gustos"], ["Cómo mirás", "dna-habitos"], ["Perfil y confianza", "dna-perfil"]].map(([l, id]) => (
+                <button key={id} type="button" onClick={() => go(id)} className="text-white/85 hover:text-white underline-offset-8 hover:underline">{l}</button>
+              ))}
+            </nav>
           </div>
         </div>
       </section>
 
-      {/* ───────── PESTAÑAS ───────── */}
-      <nav className="flex gap-2 md:gap-8 border-b border-white/20 overflow-x-auto no-scrollbar">
-        {tabs.map(({ key, label: l, icon: Icon }) => (
-          <button key={key} onClick={() => setTab(key)} className="flex items-center gap-2 px-2 pb-3 -mb-px text-sm font-extrabold whitespace-nowrap border-b-[3px] transition-colors"
-            style={{ borderColor: tab === key ? "#fff" : "transparent", color: tab === key ? "#fff" : "rgba(255,255,255,.65)" }}>
-            <Icon className="w-4 h-4" /> {l}
-          </button>
-        ))}
-      </nav>
+      {/* ───────── 01 GUSTOS ───────── */}
+      <div className="space-y-16">
+        <Opener n="01" title="Gustos" id="dna-gustos" />
 
-      {/* ───────── GUSTOS ───────── */}
-      {tab === "gustos" && (
-        <div className="space-y-14">
+        <section>
+          <Sec title="Tu mezcla de géneros" hint="Cada título reparte su peso entre sus géneros" />
+          {genres.length === 0 ? <Empty text="Todavía no hay géneros suficientes." /> : <GenreMosaic genres={genres} others={dna.topGenres.slice(6)} posters={posters} />}
+        </section>
+
+        <section>
+          <Sec title="Películas vs series" hint="Según cantidad de títulos, no horas" />
+          <FormatSplit movie={dna.formatDistribution.movie} tv={dna.formatDistribution.tv} movieP={sortRated(movieP).slice(0, 8)} tvP={sortRated(tvP).slice(0, 8)} />
+        </section>
+
+        {posters.some((p) => p.rating != null) && (
           <section>
-            <Head title="Tu mezcla de géneros" hint="Cada título reparte su peso entre sus géneros" />
-            {genres.length === 0 ? <Empty text="Todavía no hay géneros suficientes." /> : <GenreBubbles genres={genres} />}
+            <Sec title="Tus mejores puntuadas" hint="Las que más alto pusiste" />
+            <TopRated posters={posters} />
           </section>
+        )}
 
+        <section>
+          <Sec title="Décadas" hint="De qué época son tus títulos" />
+          {dna.decadeDistribution.length === 0 ? <Empty text="Todavía no hay suficiente información de años de estreno." /> : <DecadeRow items={dna.decadeDistribution} posters={posters} />}
+        </section>
+
+        <div className="grid gap-x-14 gap-y-16 lg:grid-cols-2">
+          <Bath posters={set(0)}>
+            <Sec title="Cómo puntuás" />
+            {average != null ? <RatingBlock average={average} median={median ?? null} label={ratingLabel} distribution={distribution} coverage={coverage} posters={posters} /> : <Empty text="Todavía no puntuaste títulos. Puntuar te ayuda a afinar tu ADN." />}
+          </Bath>
+          {hasRuntime ? (
+            <Bath posters={set(1)} offset={900}>
+              <Sec title="Duración" hint="Promedio de tus películas" />
+              <RuntimeBlock minutes={dna.runtimeProfile.averageMinutes as number} label={dna.runtimeProfile.label as string} posters={posters} />
+            </Bath>
+          ) : <span />}
+
+          <Bath posters={set(2)} offset={300}>
+            <Sec title="Países de origen" hint="Las coproducciones reparten su peso" />
+            <RankList items={dna.countryDistribution} empty="Todavía no hay suficiente información de países." pick={(l) => posters.filter((p) => p.countries?.some((c) => sameName(regionName(c), l)))} />
+          </Bath>
+          <Bath posters={set(3)} offset={1200}>
+            <Sec title="Idiomas originales" />
+            <RankList items={dna.languageDistribution} empty="Todavía no hay suficiente información de idiomas." pick={(l) => posters.filter((p) => p.lang && sameName(langName(p.lang), l))} />
+          </Bath>
+
+          {dna.recurringDirectors.length > 0 && <NameList title="Directores recurrentes" list={dna.recurringDirectors} />}
+          {dna.recurringCast.length > 0 && <NameList title="Actores recurrentes" list={dna.recurringCast} />}
+        </div>
+      </div>
+
+      {/* ───────── 02 CÓMO MIRÁS ───────── */}
+      <div className="space-y-16">
+        <Opener n="02" title="Cómo mirás" id="dna-habitos" />
+
+        {phrase && (
+          <section className="relative overflow-hidden rounded-[2.5rem] min-h-[280px] flex flex-col justify-end p-7 md:p-12" style={{ boxShadow: `${edge}, 0 30px 80px -20px rgba(0,0,0,.6)` }}>
+            <PosterWall posters={posters} />
+            <p className="relative font-cinema text-4xl md:text-6xl leading-[1.05] text-pretty max-w-5xl">{phrase.text}</p>
+            <p className="relative text-xs font-bold text-white/70 mt-4">{phrase.disclaimer}</p>
+          </section>
+        )}
+
+        {!hasHabits ? (
           <section>
-            <Head title="Películas vs series" hint="Según cantidad de títulos, no horas" />
-            <div className="relative h-64 md:h-72" style={{ filter: fringe }}>
-              <div className="absolute inset-0 overflow-hidden bg-[#0d0b16]" style={{ clipPath: `polygon(0 0, ${split + 7}% 0, ${split - 7}% 100%, 0 100%)`, borderRadius: "2rem 0 0 2rem" }}>
-                <div className="absolute inset-0 flex gap-2 opacity-60">{movieP.map((p) => <img key={p.path} src={getPosterUrl(p.path, "w342")} alt="" className="h-full flex-1 min-w-0 object-cover" />)}</div>
-                <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(8,7,14,.85), rgba(8,7,14,.1))" }} />
-                <div className="absolute left-7 md:left-10 bottom-6"><p className="font-cinema text-6xl md:text-8xl leading-none">{dna.formatDistribution.movie}%</p><p className={label}>Películas</p></div>
-              </div>
-              <div className="absolute inset-0 overflow-hidden bg-[#0d0b16]" style={{ clipPath: `polygon(${split + 7}% 0, 100% 0, 100% 100%, ${split - 7}% 100%)`, borderRadius: "0 2rem 2rem 0" }}>
-                <div className="absolute inset-0 flex gap-2 opacity-60">{tvP.map((p) => <img key={p.path} src={getPosterUrl(p.path, "w342")} alt="" className="h-full flex-1 min-w-0 object-cover" />)}</div>
-                <div className="absolute inset-0" style={{ background: "linear-gradient(270deg, rgba(8,7,14,.85), rgba(8,7,14,.1))" }} />
-                <div className="absolute right-7 md:right-10 bottom-6 text-right"><p className="font-cinema text-6xl md:text-8xl leading-none">{dna.formatDistribution.tv}%</p><p className={label}>Series</p></div>
-              </div>
-            </div>
+            <Sec title="Cómo mirás" />
+            <Empty text="Todavía no hay sesiones registradas. En la ficha de cada título podés anotar dónde, cuándo y con quién lo viste, y esta sección se completa sola." />
           </section>
-
-          {topRated.length > 0 && (
-            <section>
-              <Head title="Tus mejores puntuadas" hint="Las que más alto pusiste" />
-              <div className="flex gap-7 overflow-x-auto no-scrollbar pb-3 pt-1 -mx-1 px-1">
-                {topRated.map((p, i) => (
-                  <div key={p.path} className="relative shrink-0 pl-10 md:pl-14">
-                    <span className="absolute left-0 bottom-10 font-cinema text-[7rem] md:text-[9rem] leading-none text-transparent select-none" style={{ WebkitTextStroke: "2px rgba(255,255,255,.45)" }}>{i + 1}</span>
-                    <div className="relative w-[150px] md:w-[190px]">
-                      <div className="relative aspect-[2/3] rounded-[1.5rem] overflow-hidden border border-white/30 shadow-[0_24px_50px_-14px_rgba(0,0,0,.8)]">
-                        <img src={getPosterUrl(p.path, "w342")} alt={p.title} loading="lazy" className="w-full h-full object-cover" />
-                        {p.rating != null && <span className="liquid-glass-sm absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold">★ {p.rating}</span>}
-                      </div>
-                      <p className="text-xs font-extrabold mt-2.5 line-clamp-2">{p.title}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          <section className="grid gap-12 lg:grid-cols-12">
-            <div className="lg:col-span-5">
-              <Head title="Décadas" hint="De qué época son tus títulos" />
-              {dna.decadeDistribution.length === 0 ? <Empty text="Todavía no hay suficiente información de años de estreno." /> : (
-                <div className="flex items-end justify-between gap-3 min-h-[200px]">
-                  {dna.decadeDistribution.map((d, i) => {
-                    const size = 64 + (d.percentage / maxDecade) * 120;
-                    return (
-                      <div key={d.key} className="flex flex-col items-center gap-3 min-w-0">
-                        <div className="liquid-glass rounded-full flex items-center justify-center text-[#0b0b14]" style={{ width: size, height: size, background: `radial-gradient(circle at 30% 25%, ${hueColor(i)}, ${hueColor(i)}88)` }}>
-                          <span className="font-cinema leading-none" style={{ fontSize: size / 3.2 }}>{d.percentage}%</span>
-                        </div>
-                        <span className="text-xs font-extrabold text-white/80">{d.label}</span>
-                      </div>
-                    );
-                  })}
+        ) : (
+          <div className="grid gap-x-14 gap-y-14 lg:grid-cols-2">
+            <HabitBlock title="Dónde lo ves" items={dna.venueDistribution} empty="Sin datos de lugar todavía." sessions={cov.venue?.sessions} posters={set(4)} offset={0} />
+            <HabitBlock title="Cuándo lo ves" items={dna.timeDistribution} empty="Sin datos de horario todavía." sessions={cov.time?.sessions} posters={set(5)} offset={800} />
+            <HabitBlock title="Con quién" items={dna.companionshipDistribution} empty="Sin datos de compañía todavía." sessions={cov.companionship?.sessions} posters={set(6)} offset={400} />
+            <HabitBlock title="Idioma en que lo ves" items={dna.languageModeDistribution} empty="Sin datos de idioma todavía." sessions={cov.language?.sessions} posters={set(7)} offset={1200} />
+            <HabitBlock title="Cómo lo ves" items={dna.platformDistribution} empty="Sin datos de plataforma todavía." sessions={cov.platform?.sessions} posters={set(8)} offset={600} />
+            <Bath posters={set(9)} offset={1000}>
+              <Sec title="Re-ver" hint="Cuánto volvés a lo que ya viste" />
+              <div className="flex flex-wrap items-center gap-8">
+                <Ring pct={rewatchPct} size={150} stroke={12}><span className="font-cinema text-5xl leading-none"><CountUp value={rewatchPct} suffix="%" /></span></Ring>
+                <div className="grid grid-cols-3 gap-6">
+                  {[{ n: dna.rewatchProfile.rewatchSessions, l: "re-vistas" }, { n: dna.rewatchProfile.uniqueTitles, l: "títulos únicos" }, { n: dna.rewatchProfile.totalSessions, l: "sesiones" }].map(({ n, l }) => (
+                    <div key={l}><p className="font-cinema text-5xl leading-none">{n}</p><p className="text-[11px] font-extrabold uppercase tracking-widest text-white/70 mt-2">{l}</p></div>
+                  ))}
                 </div>
-              )}
-            </div>
-
-            <div className="lg:col-span-4 lg:border-l lg:border-white/15 lg:pl-12">
-              <Head title="Cómo puntuás" />
-              {average != null ? (
-                <div className="space-y-5">
-                  <div className="flex items-end gap-4">
-                    <p className="font-cinema text-8xl leading-none chroma">{average.toFixed(1)}</p>
-                    <div className="pb-2">
-                      {ratingLabel && <span className="liquid-glass-sm px-3.5 py-1.5 rounded-full text-xs font-extrabold">{ratingLabel}</span>}
-                      <p className="text-[11px] font-bold text-white/65 mt-2">mediana {median?.toFixed(1)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-end gap-3 h-28">
-                    {stars.map((s) => {
-                      const n = distribution[String(s)] ?? 0;
-                      return (
-                        <div key={s} className="flex-1 flex flex-col items-center justify-end gap-1.5 h-full">
-                          <span className="text-[11px] font-extrabold text-white/70">{n}</span>
-                          <div className="liquid-glass w-full rounded-xl" style={{ height: `${Math.max(6, (n / maxStar) * 100)}%`, background: "linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.2))" }} />
-                          <span className="text-[11px] font-extrabold text-white/80">{s}★</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {coverage < 0.6 && <p className="text-xs text-white/65">Puntuaste el {Math.round(coverage * 100)}% de tus títulos. A más puntuaciones, más precisa es esta sección.</p>}
-                </div>
-              ) : <Empty text="Todavía no puntuaste títulos. Puntuar te ayuda a afinar tu ADN." />}
-            </div>
-
-            {dna.runtimeProfile.averageMinutes != null && dna.runtimeProfile.label && (
-              <div className="lg:col-span-3 lg:border-l lg:border-white/15 lg:pl-12">
-                <Head title="Duración" hint="Promedio de tus películas" />
-                <Clock className="w-5 h-5 text-white/60 mb-3" />
-                <p className="font-cinema text-8xl leading-none chroma">{dna.runtimeProfile.averageMinutes}<span className="text-2xl ml-2 text-white/65">min</span></p>
-                <p className="text-sm font-extrabold mt-3 text-white/85">{dna.runtimeProfile.label}</p>
               </div>
-            )}
-          </section>
+            </Bath>
+          </div>
+        )}
 
-          <section className="grid gap-12 lg:grid-cols-2">
-            <div>
-              <Head title="Países de origen" hint="Las coproducciones reparten su peso" />
-              <Cloud items={dna.countryDistribution} empty="Todavía no hay suficiente información de países." />
+        {dna.reactionDistribution.length > 0 && (
+          <Bath posters={set(10)}>
+            <Sec title="Qué te dejan" hint="Reacciones que más elegís" />
+            <ReactionWords items={dna.reactionDistribution} />
+          </Bath>
+        )}
+      </div>
+
+      {/* ───────── 03 PERFIL Y CONFIANZA ───────── */}
+      <div className="space-y-16">
+        <Opener n="03" title="Perfil y confianza" id="dna-perfil" />
+
+        <section>
+          <Sec title="Tu perfil de espectador" hint="Etiquetas calculadas con reglas, sin IA" />
+          {dna.contextTags.length === 0 ? <Empty text="Todavía no hay suficientes sesiones para inferir un perfil." /> : (
+            <div className="grid gap-x-14 lg:grid-cols-2">
+              {dna.contextTags.map((t, i) => (
+                <Bath key={t.slug} posters={set(i + 11, 2)} offset={i * 700} strength={0.8}>
+                  <TagRow title={t.label} pct={Math.round(t.score <= 1 ? t.score * 100 : t.score)} text={t.explanation} poster={ranked[(i * 5 + 2) % Math.max(1, ranked.length)]} />
+                </Bath>
+              ))}
             </div>
-            <div className="lg:border-l lg:border-white/15 lg:pl-12">
-              <Head title="Idiomas originales" />
-              <Cloud items={dna.languageDistribution} empty="Todavía no hay suficiente información de idiomas." />
-            </div>
-          </section>
+          )}
+        </section>
 
-          {(dna.recurringDirectors.length > 0 || dna.recurringCast.length > 0) && (
-            <section>
-              <Head title="Creadores recurrentes" />
-              <div className="grid gap-8 md:grid-cols-2">
-                {[{ t: "Directores", l: dna.recurringDirectors }, { t: "Actores", l: dna.recurringCast }].filter((g) => g.l.length > 0).map((g) => (
-                  <div key={g.t}>
-                    <p className={`${label} mb-3`}>{g.t}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {g.l.map((c) => <span key={c.name} className="frost-card inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold">{c.name} <span className="text-xs font-extrabold text-white/60">×{c.count}</span></span>)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-      )}
-
-      {/* ───────── CÓMO MIRÁS ───────── */}
-      {tab === "habitos" && (
-        <div className="space-y-14">
-          {phrase && (
-            <section className="relative overflow-hidden rounded-[2.5rem] border border-white/20 min-h-[280px] flex flex-col justify-end p-7 md:p-12"
-              style={{ boxShadow: "inset 3px 0 0 rgba(255,80,140,.4), inset -3px 0 0 rgba(70,170,255,.4), 0 30px 80px -20px rgba(0,0,0,.6)", background: posters.length ? undefined : "linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,.03))" }}>
-              <PosterWall posters={posters} />
-              <p className="relative font-cinema text-4xl md:text-6xl leading-[1.05] text-pretty max-w-5xl">{phrase.text}</p>
-              <p className="relative text-xs font-bold text-white/65 mt-4">{phrase.disclaimer}</p>
-            </section>
-          )}
-          {!hasHabits ? (
-            <section>
-              <Head title="Cómo mirás" />
-              <Empty text="Todavía no hay sesiones registradas. En la ficha de cada título podés anotar dónde, cuándo y con quién lo viste, y esta sección se completa sola." />
-            </section>
-          ) : (
-            <>
-              <section className="grid gap-12 lg:grid-cols-12">
-                <HabitBlock className="lg:col-span-7" title="Dónde lo ves" items={dna.venueDistribution} empty="Sin datos de lugar todavía." sessions={cov.venue?.sessions}><StackBar items={dna.venueDistribution} /></HabitBlock>
-                <HabitBlock className="lg:col-span-5 lg:border-l lg:border-white/15 lg:pl-12" title="Cuándo lo ves" items={dna.timeDistribution} empty="Sin datos de horario todavía." sessions={cov.time?.sessions}><Pillars items={dna.timeDistribution} /></HabitBlock>
-              </section>
-              <section className="grid gap-12 lg:grid-cols-12">
-                <HabitBlock className="lg:col-span-5" title="Con quién" items={dna.companionshipDistribution} empty="Sin datos de compañía todavía." sessions={cov.companionship?.sessions}><Dots items={dna.companionshipDistribution} /></HabitBlock>
-                <HabitBlock className="lg:col-span-4 lg:border-l lg:border-white/15 lg:pl-12" title="Idioma en que lo ves" items={dna.languageModeDistribution} empty="Sin datos de idioma todavía." sessions={cov.language?.sessions}><StackBar items={dna.languageModeDistribution} /></HabitBlock>
-                <HabitBlock className="lg:col-span-3 lg:border-l lg:border-white/15 lg:pl-12" title="Cómo lo ves" items={dna.platformDistribution} empty="Sin datos de plataforma todavía." sessions={cov.platform?.sessions}><RankList items={dna.platformDistribution} /></HabitBlock>
-              </section>
-              <section>
-                <Head title="Re-ver" hint="Cuánto volvés a lo que ya viste" />
-                <div className="flex flex-wrap items-center gap-10">
-                  <Ring pct={rewatchPct} size={190} stroke={16}><span className="font-cinema text-5xl leading-none"><CountUp value={rewatchPct} suffix="%" /></span></Ring>
-                  <div className="grid grid-cols-3 gap-8">
-                    {[{ n: dna.rewatchProfile.rewatchSessions, l: "re-vistas" }, { n: dna.rewatchProfile.uniqueTitles, l: "títulos únicos" }, { n: dna.rewatchProfile.totalSessions, l: "sesiones" }].map(({ n, l }) => (
-                      <div key={l}><p className="font-cinema text-5xl leading-none">{n}</p><p className="text-[11px] font-extrabold uppercase tracking-widest text-white/65 mt-2">{l}</p></div>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            </>
-          )}
-          {dna.reactionDistribution.length > 0 && (
-            <section>
-              <Head title="Qué te dejan" hint="Reacciones que más elegís" />
-              <div className="flex flex-wrap items-baseline gap-x-7 gap-y-3">
-                {dna.reactionDistribution.map((r, i) => (
-                  <span key={r.key} className="font-cinema leading-none inline-flex items-baseline gap-2" style={{ fontSize: `${1.6 + Math.min(r.percentage, 50) / 16}rem` }}>
-                    <span className="w-2.5 h-2.5 rounded-full self-center" style={{ background: hueColor(i) }} />{r.label}
-                    <span className="font-sans text-xs font-extrabold text-white/60">{r.percentage}%</span>
-                  </span>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-      )}
-
-      {/* ───────── PERFIL Y CONFIANZA ───────── */}
-      {tab === "perfil" && (
-        <div className="space-y-14">
-          <section className="flex flex-wrap items-center gap-10">
-            <Ring pct={dna.confidenceScore} size={230} stroke={18}>
-              <span className="font-cinema text-7xl leading-none"><CountUp value={dna.confidenceScore} /></span>
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-white/65 mt-1">de 100</span>
-            </Ring>
-            <div className="min-w-0 flex-1" style={{ minWidth: 260 }}>
-              <Head title="Confianza del ADN" hint={cls.hint} />
-              <div className="grid grid-cols-3 gap-6 max-w-xl">
+        <div className="grid gap-x-14 gap-y-14 lg:grid-cols-2">
+          <Bath posters={set(20)}>
+            <Sec title="Confianza del ADN" hint={cls.hint} />
+            <div className="flex flex-wrap items-center gap-8">
+              <Ring pct={dna.confidenceScore} size={160} stroke={14}>
+                <span className="font-cinema text-6xl leading-none"><CountUp value={dna.confidenceScore} /></span>
+                <span className="text-[11px] font-extrabold uppercase tracking-widest text-white/70 mt-1">de 100</span>
+              </Ring>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-5">
                 {[{ n: dna.validTitleCount, l: "títulos válidos" }, { n: dna.ratedTitleCount, l: "puntuados" }].map(({ n, l }) => (
-                  <div key={l}><p className="font-cinema text-5xl leading-none">{n}</p><p className="text-[11px] font-extrabold uppercase tracking-widest text-white/65 mt-2">{l}</p></div>
+                  <div key={l}><p className="font-cinema text-5xl leading-none">{n}</p><p className="text-[11px] font-extrabold uppercase tracking-widest text-white/70 mt-2">{l}</p></div>
                 ))}
-                <div><p className="font-cinema text-3xl leading-tight">{cls.label}</p><p className="text-[11px] font-extrabold uppercase tracking-widest text-white/65 mt-2">estado</p></div>
+                <div className="col-span-2"><p className="font-cinema text-3xl leading-tight">{cls.label}</p><p className="text-[11px] font-extrabold uppercase tracking-widest text-white/70 mt-1">estado</p></div>
               </div>
             </div>
-          </section>
-
-          <section>
-            <Head title="Tu perfil de espectador" hint="Etiquetas calculadas con reglas, sin IA" />
-            {dna.contextTags.length === 0 ? <Empty text="Todavía no hay suficientes sesiones para inferir un perfil." /> : (
-              <div>
-                {dna.contextTags.map((t) => <TagRow key={t.slug} title={t.label} pct={Math.round(t.score <= 1 ? t.score * 100 : t.score)} text={t.explanation} />)}
-              </div>
-            )}
-          </section>
+          </Bath>
 
           {Object.keys(cov).length > 0 && (
-            <section>
-              <Head title="Cobertura del contexto" hint="Cuántas sesiones respaldan cada dato" />
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-y-8 [&>div]:px-6 [&>div:first-child]:pl-0 [&>div+div]:md:border-l [&>div+div]:border-white/15">
+            <Bath posters={set(21)} offset={900}>
+              <Sec title="Cobertura del contexto" hint="Cuántas sesiones respaldan cada dato" />
+              <ul className="divide-y divide-white/10">
                 {Object.entries(cov).map(([k, c]) => (
-                  <div key={k}>
-                    <p className="font-cinema text-5xl leading-none">{c.sessions}</p>
-                    <p className="text-sm font-extrabold mt-2">{c.label}</p>
-                    <p className="text-[11px] font-extrabold uppercase tracking-widest text-white/60 mt-1">{c.level}</p>
-                  </div>
+                  <li key={k} className="flex items-baseline gap-4 py-3">
+                    <span className="font-cinema text-4xl leading-none w-14">{c.sessions}</span>
+                    <span className="text-sm font-extrabold flex-1">{c.label}</span>
+                    <span className="text-[11px] font-extrabold uppercase tracking-widest text-white/65">{c.level}</span>
+                  </li>
                 ))}
-              </div>
-            </section>
+              </ul>
+            </Bath>
           )}
         </div>
-      )}
+      </div>
     </div>
+  );
+}
+
+function ReactionWords({ items }: { items: WeightedMetric[] }) {
+  const tint = useContext(BathTint);
+  return (
+    <p className="flex flex-wrap items-baseline gap-x-8 gap-y-3">
+      {items.map((r, i) => (
+        <span key={r.key} className="font-cinema leading-none inline-flex items-baseline gap-2.5 text-4xl md:text-5xl" style={{ color: i === 0 ? tintCss(tint, 1) : "rgba(255,255,255,.88)", transition: "color 1.6s" }}>
+          {r.label}<span className="font-sans text-xs font-extrabold text-white/65">{r.percentage}%</span>
+        </span>
+      ))}
+    </p>
   );
 }
