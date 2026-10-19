@@ -1,5 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
-import { FeaturePromoPage, TrendingPublicPage } from "@/pages/GuestPages";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/app/auth-context";
 import AppShell from "@/components/layout/AppShell";
 import LandingPage from "@/pages/LandingPage";
@@ -20,6 +19,7 @@ import PublicDNAPage from "@/pages/PublicDNAPage";
 import SharedMediaPage from "@/pages/SharedMediaPage";
 import DNAPage from "@/pages/DNAPage";
 import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
+import AccountSettingsPage from "@/pages/AccountSettingsPage";
 import RoadmapPage from "@/pages/RoadmapPage";
 import RoomsPage from "@/pages/RoomsPage";
 import RoomPage from "@/pages/RoomPage";
@@ -28,17 +28,10 @@ import RecommendationsPage from "@/pages/RecommendationsPage";
 import LegalPage from "@/pages/LegalPage";
 import AdminPage from "@/pages/AdminPage";
 
-// Sin sesión, algunas secciones muestran una presentación con invitación en vez de mandar al login.
-const GUEST_PROMOS: Record<string, React.ReactNode> = {
-  "/adn": <FeaturePromoPage kind="adn" />,
-  "/que-vemos-hoy": <FeaturePromoPage kind="tonight" />,
-};
-
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { pathname } = useLocation();
   if (loading) return null;
-  if (!user) return GUEST_PROMOS[pathname] ?? <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
@@ -66,7 +59,6 @@ function AppRoutes() {
     <Routes>
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
-      <Route path="/tendencias" element={<TrendingPublicPage />} />
       <Route path="/privacidad" element={<LegalPage kind="privacidad" />} />
       <Route path="/terminos" element={<LegalPage kind="terminos" />} />
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
@@ -99,7 +91,7 @@ function AppRoutes() {
         <Route path="/salas" element={<RoomsPage />} />
         <Route path="/salas/:id" element={<RoomPage />} />
         <Route path="/configuracion/perfil" element={<ProfileSettingsPage />} />
-        <Route path="/configuracion/cuenta" element={<Navigate to="/configuracion/perfil" replace />} />
+        <Route path="/configuracion/cuenta" element={<AccountSettingsPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

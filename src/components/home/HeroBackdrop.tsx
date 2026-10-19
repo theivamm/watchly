@@ -13,8 +13,9 @@ interface Props {
   chroma?: boolean;
 }
 
-/** Índice anterior (la capa saliente del crossfade). */
-export function usePrevIndex(index: number) {
+/** Fondo cinematográfico: imagen grande con crossfade + manchas de color en movimiento. */
+export default function HeroBackdrop({ items, index, glow, glow2, soft = false, chroma = false }: Props) {
+  // Solo la capa activa y la saliente se animan; animar todas a la vez hace parpadear en mobile.
   const prevRef = useRef(index);
   const [prev, setPrev] = useState(index);
   useEffect(() => {
@@ -22,17 +23,10 @@ export function usePrevIndex(index: number) {
     setPrev(prevRef.current);
     prevRef.current = index;
   }, [index]);
-  return prev;
-}
-
-/** Fondo cinematográfico: imagen grande con crossfade + manchas de color en movimiento. */
-export default function HeroBackdrop({ items, index, glow, glow2, soft = false, chroma = false }: Props) {
-  // Solo la capa activa y la saliente se animan; animar todas a la vez hace parpadear en mobile.
-  const prev = usePrevIndex(index);
 
   const mask = soft
-    ? "linear-gradient(90deg, transparent 26%, #000 51%), linear-gradient(180deg, transparent 0, #000 14%, #000 58%, transparent 100%)"
-    : "linear-gradient(90deg, transparent 26%, #000 54%)";
+    ? "linear-gradient(90deg, transparent 0, #000 34%), linear-gradient(180deg, transparent 0, #000 14%, #000 58%, transparent 100%)"
+    : "linear-gradient(90deg, transparent 0, #000 38%)";
   return (
     <div className={`absolute inset-0 ${soft ? "" : "bg-[#07070d]"}`} aria-hidden="true">
       {!soft && (
@@ -49,7 +43,7 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false, 
         return (
           <div
             key={`${it.backdropPath ?? it.posterPath}-${i}`}
-            className="absolute inset-0 transition-opacity duration-[1800ms] ease-in-out"
+            className="absolute top-0 right-0 h-full w-full lg:w-[74%] transition-opacity duration-[1800ms] ease-in-out"
             style={{
               opacity: i === index ? 1 : 0,
               visibility: live || upcoming ? "visible" : "hidden",
@@ -62,7 +56,6 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false, 
               maskComposite: soft ? "intersect" : undefined,
             }}
           >
-            <div className="absolute top-0 right-0 h-full w-full lg:w-[74%]">
             {chroma && live && hasBackdrop && [-1, 1].map((d) => (
               <div key={d} className="absolute inset-0" style={{ transform: `translateX(${d * 9}px)`, mixBlendMode: "screen", opacity: 0.45, filter: d < 0 ? "sepia(1) saturate(6) hue-rotate(-50deg)" : "sepia(1) saturate(6) hue-rotate(150deg)" }}>
                 <img src={getBackdropUrl(it.backdropPath, "w780")} alt="" decoding="async" className="w-full h-full object-cover" />
@@ -77,7 +70,6 @@ export default function HeroBackdrop({ items, index, glow, glow2, soft = false, 
               className={`absolute inset-0 w-full h-full object-cover ${live ? "cinema-kenburns" : ""}`}
               style={hasBackdrop ? { backfaceVisibility: "hidden" } : { filter: "blur(28px) saturate(1.2)", transform: "scale(1.3)" }}
             />
-            </div>
           </div>
         );
       })}

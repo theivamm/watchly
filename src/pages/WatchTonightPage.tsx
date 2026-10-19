@@ -1,7 +1,7 @@
 import "@/styles/cinema.css";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Shuffle, Clock, Check, ArrowRight, Bookmark, Compass } from "lucide-react";
+import { Shuffle, Clock, Check, ArrowRight } from "lucide-react";
 import { useAuth } from "@/app/auth-context";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { getEntry, getUserLibrary, updateEntry } from "@/services/library";
@@ -137,10 +137,10 @@ function TonightExperience() {
       actions={<Link to="/inicio" className={button}>← Inicio</Link>} />
 
     <div className="liquid-glass rounded-full p-1.5 flex gap-1.5 w-full sm:w-fit mb-10" aria-label="Origen de las recomendaciones">
-      {([{ value: "library", title: "Entre mis pendientes", short: "Pendientes", Icon: Bookmark }, { value: "dna", title: "Descubrir con mi ADN", short: "Descubrir", Icon: Compass }] as const).map((option) => (
+      {([{ value: "library", title: "Entre mis pendientes" }, { value: "dna", title: "Descubrir con mi ADN" }] as const).map((option) => (
         <button key={option.value} disabled={saving} aria-pressed={source === option.value} onClick={() => { resetResults(); setSource(option.value); }}
-          className="flex-1 sm:flex-none h-14 px-4 sm:px-8 rounded-full text-sm sm:text-base font-extrabold transition-all inline-flex items-center justify-center gap-2 whitespace-nowrap"
-          style={{ background: source === option.value ? "#fff" : "transparent", color: source === option.value ? "#111" : "rgba(255,255,255,.85)" }}><option.Icon className="w-4 h-4 shrink-0" /><span className="sm:hidden">{option.short}</span><span className="hidden sm:inline">{option.title}</span></button>
+          className="flex-1 sm:flex-none h-14 px-8 rounded-full text-base font-extrabold transition-all"
+          style={{ background: source === option.value ? "#fff" : "transparent", color: source === option.value ? "#111" : "rgba(255,255,255,.85)" }}>{option.title}</button>
       ))}
     </div>
 

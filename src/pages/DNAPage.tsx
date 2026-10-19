@@ -5,7 +5,6 @@ import { RotateCw, Sparkles, BookOpen, Users, Share2, AlertTriangle } from "luci
 import { useAuth } from "@/app/auth-context";
 import { getMyDna, calculateDna } from "@/services/dna";
 import { getUserLibrary } from "@/services/library";
-import { getMediaDetails } from "@/services/tmdb";
 import type { UserDNA } from "@/types";
 import DNAView, { type DnaPoster } from "@/components/dna/DNAView";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -50,33 +49,9 @@ export default function DNAPage() {
   const [recalculating, setRecalculating] = useState(false);
   const [posters, setPosters] = useState<DnaPoster[]>([]);
 
-  // Género, año, país, idioma y duración no se guardan en la biblioteca: se piden a TMDB una vez por título y se recuerdan en el navegador.
   useEffect(() => {
     if (!user) return;
-    let off = false;
-    type Meta = { g: number[]; y: number | null; c: string[]; l: string; r: number | null };
-    const key = (t: string, id: number) => `watchly:meta2:${t}-${id}`;
-    getUserLibrary(user.id).then(async (es) => {
-      const ents = es.filter((e) => e.poster_path);
-      const m = new Map<string, Meta>();
-      ents.forEach((e) => { try { const raw = localStorage.getItem(key(e.media_type, e.tmdb_id)); if (raw) m.set(key(e.media_type, e.tmdb_id), JSON.parse(raw)); } catch { /* sin caché */ } });
-      const build = () => ents.map((e): DnaPoster => {
-        const x = m.get(key(e.media_type, e.tmdb_id));
-        return { path: e.poster_path as string, title: e.title, rating: e.rating ?? null, type: e.media_type, genreIds: x?.g, year: x?.y ?? null, countries: x?.c, lang: x?.l, runtime: x?.r ?? null };
-      });
-      if (off) return;
-      setPosters(build());
-      const missing = [...ents].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)).filter((e) => !m.has(key(e.media_type, e.tmdb_id))).slice(0, 60);
-      for (let i = 0; i < missing.length && !off; i += 5) {
-        await Promise.all(missing.slice(i, i + 5).map((e) => getMediaDetails(e.media_type as "movie" | "tv", e.tmdb_id).then((d) => {
-          const meta: Meta = { g: d.genreIds, y: d.year ?? null, c: d.countries ?? [], l: d.originalLanguage ?? "", r: d.runtime };
-          m.set(key(e.media_type, e.tmdb_id), meta);
-          try { localStorage.setItem(key(e.media_type, e.tmdb_id), JSON.stringify(meta)); } catch { /* cuota */ }
-        }).catch(() => {})));
-        if (!off) setPosters(build());
-      }
-    }).catch(() => {});
-    return () => { off = true; };
+    getUserLibrary(user.id).then((es) => setPosters(es.filter((e) => e.poster_path).map((e) => ({ path: e.poster_path as string, title: e.title, rating: e.rating ?? null, type: e.media_type })))).catch(() => {});
   }, [user]);
 
   const load = useCallback(async (force = false) => {

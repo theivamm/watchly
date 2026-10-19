@@ -7,7 +7,6 @@ import { useInfiniteTrending } from "@/hooks/useMedia";
 import { useHeroCycle } from "@/hooks/useHeroCycle";
 import HeroBackdrop from "@/components/home/HeroBackdrop";
 import HorizontalCarousel from "@/components/media/HorizontalCarousel";
-import PosterFrame from "@/components/media/PosterFrame";
 import MediaDetailModal from "@/components/media/MediaDetailModal";
 import HelpGuideModal from "@/components/home/HelpGuideModal";
 import { addToLibrary, getUserLibrary } from "@/services/library";
@@ -308,9 +307,10 @@ export default function HomePage() {
             <HorizontalCarousel className="gap-5 pt-2 pb-6">
               {pending.map((e) => (
                 <button key={e.id} type="button" onClick={() => setSelected(toResult(e))} className="group w-[170px] md:w-[200px] shrink-0 snap-start text-left">
-                  <PosterFrame src={getPosterUrl(e.poster_path, "w342")} alt={e.title}>
+                  <div className="relative aspect-[2/3] rounded-[1.6rem] overflow-hidden border border-white/15 shadow-[0_24px_50px_-14px_rgba(0,0,0,.7)] transition-transform duration-500 group-hover:-translate-y-2">
+                    <img src={getPosterUrl(e.poster_path, "w342")} alt={e.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <span className="liquid-glass-sm absolute top-2.5 left-2.5 w-8 h-8 rounded-full flex items-center justify-center"><Bookmark className="w-4 h-4" style={accent} /></span>
-                  </PosterFrame>
+                  </div>
                   <p className="mt-3 px-1 text-sm font-extrabold truncate">{e.title}</p>
                 </button>
               ))}
@@ -327,11 +327,12 @@ export default function HomePage() {
             </div>
             <HorizontalCarousel className="gap-4 pt-2 pb-6">
               {recent.map((e) => (
-                <button key={e.id} type="button" onClick={() => setSelected(toResult(e))} title={e.title} className="group relative w-[130px] md:w-[150px] shrink-0 snap-start text-left">
-                  <PosterFrame src={getPosterUrl(e.poster_path, "w342")} alt={e.title} rounded="rounded-[1.4rem]">
+                <button key={e.id} type="button" onClick={() => setSelected(toResult(e))} title={e.title}
+                  className="group relative w-[130px] md:w-[150px] shrink-0 snap-start aspect-[2/3] rounded-[1.4rem] overflow-hidden border border-white/15 shadow-[0_20px_44px_-16px_rgba(0,0,0,.7)] transition-transform duration-500 hover:-translate-y-1.5">
+                  <img src={getPosterUrl(e.poster_path, "w342")} alt={e.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "linear-gradient(180deg, transparent 45%, rgba(0,0,0,.85))" }} />
                   <p className="absolute left-2.5 right-2.5 bottom-2.5 text-[11px] font-extrabold leading-tight line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity text-left">{e.title}</p>
-                </PosterFrame></button>
+                </button>
               ))}
             </HorizontalCarousel>
           </section>
@@ -353,10 +354,11 @@ export default function HomePage() {
                 return (
                   <div key={key} className="group relative w-[170px] md:w-[200px] shrink-0 snap-start">
                     <button type="button" onClick={() => setSelected(it)} className="w-full text-left">
-                      <PosterFrame src={getPosterUrl(it.posterPath, "w342")} alt={it.title}>
+                      <div className="relative aspect-[2/3] rounded-[1.6rem] overflow-hidden border border-white/15 shadow-[0_24px_50px_-14px_rgba(0,0,0,.7)] transition-transform duration-500 group-hover:-translate-y-2">
+                        <img src={getPosterUrl(it.posterPath, "w342")} alt={it.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                         <span className="liquid-glass-sm absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold">{it.mediaType === "movie" ? "Película" : "Serie"}</span>
                         {it.tmdbRating ? <span className="liquid-glass-sm absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold">★ {it.tmdbRating.toFixed(1)}</span> : null}
-                      </PosterFrame>
+                      </div>
                       <p className="mt-3 px-1 text-sm font-extrabold truncate">{it.title}</p>
                       <p className="px-1 mt-2 text-xs text-violet-200 leading-relaxed">Por qué: {recReasons[`${it.mediaType}-${it.tmdbId}`]}</p>
                       <p className="px-1 text-xs text-white/60">{genreLabel(it.genreIds) || (it.year ?? "")}</p>
@@ -392,9 +394,10 @@ export default function HomePage() {
             <HorizontalCarousel className="gap-5 pt-2 pb-6" onLoadMore={moviesInf.hasMore ? moviesInf.loadMore : undefined} loadingMore={moviesInf.loading}>
               {movies.map((it) => (
                 <button key={`${it.mediaType}-${it.tmdbId}`} type="button" onClick={() => setSelected(it)} className="group w-[170px] md:w-[200px] shrink-0 snap-start text-left">
-                  <PosterFrame src={getPosterUrl(it.posterPath, "w342")} alt={it.title}>
+                  <div className="relative aspect-[2/3] rounded-[1.6rem] overflow-hidden border border-white/15 shadow-[0_24px_50px_-14px_rgba(0,0,0,.7)] transition-transform duration-500 group-hover:-translate-y-2">
+                    <img src={getPosterUrl(it.posterPath, "w342")} alt={it.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     {it.tmdbRating ? <span className="liquid-glass-sm absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold">★ {it.tmdbRating.toFixed(1)}</span> : null}
-                  </PosterFrame>
+                  </div>
                   <p className="mt-3 px-1 text-sm font-extrabold truncate">{it.title}</p>
                   <p className="px-1 text-xs text-white/60">{it.year ?? ""}</p>
                 </button>
