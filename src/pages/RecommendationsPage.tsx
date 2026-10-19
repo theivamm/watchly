@@ -137,8 +137,8 @@ export default function RecommendationsPage() {
                 const key = `${it.mediaType}-${it.tmdbId}`;
                 const on = i === hero.index;
                 return (
-                  <div key={key} className="[grid-area:1/1] transition-all duration-1000"
-                    style={{ opacity: on ? 1 : 0, transform: `translateY(${on ? 0 : 18}px)`, pointerEvents: on ? "auto" : "none" }}>
+                  <div key={key} className="hero-slide [grid-area:1/1] transition-all duration-1000"
+                    style={{ opacity: on ? 1 : 0, transform: `translateY(${on ? 0 : 18}px)`, pointerEvents: on ? "auto" : "none", visibility: on ? "visible" : "hidden" }}>
                     <div className="flex flex-wrap items-center gap-2.5">
                       {it.year && <span className="liquid-glass-sm px-4 py-2 rounded-full text-xs font-extrabold">{it.year}</span>}
                       <span className="liquid-glass-sm px-4 py-2 rounded-full text-xs font-extrabold">{it.mediaType === "movie" ? "Película" : "Serie"}</span>

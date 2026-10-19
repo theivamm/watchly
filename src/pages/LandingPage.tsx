@@ -3,7 +3,7 @@ import { useTrending } from "@/hooks/useMedia";
 import { useRandomCovers } from "@/hooks/useRandomCovers";
 import PublicNav from "@/components/layout/PublicNav";
 import { useHeroCycle } from "@/hooks/useHeroCycle";
-import HeroBackdrop from "@/components/home/HeroBackdrop";
+import HeroBackdrop, { usePrevIndex } from "@/components/home/HeroBackdrop";
 import { getBackdropUrl, getPosterUrl } from "@/services/tmdb";
 import { genreLabel } from "@/lib/genres";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -32,6 +32,7 @@ export default function LandingPage() {
   const trending = (data?.results || []).filter((i) => i.posterPath);
   const heroItems = useRandomCovers(6, true);
   const hero = useHeroCycle(heroItems.map((i) => i.posterPath));
+  const footPrev = usePrevIndex(hero.index);
   const active = heroItems[hero.index];
   const [showDeletedBanner, setShowDeletedBanner] = useState(false);
 
@@ -186,7 +187,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
           {heroItems.map((it, i) => (
             <div key={it.tmdbId} className="absolute left-1/2 bottom-0 w-[90vw] h-[90vw] max-w-[1500px] max-h-[1500px] -translate-x-1/2 translate-y-[45%] rounded-full blur-[130px] transition-opacity duration-[1800ms]"
-              style={{ opacity: i === hero.index ? 0.55 : 0, backgroundImage: `url(${imgOf(it)})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+              style={{ opacity: i === hero.index ? 0.55 : 0, visibility: i === hero.index || i === footPrev ? "visible" : "hidden", backgroundImage: `url(${imgOf(it)})`, backgroundSize: "cover", backgroundPosition: "center" }} />
           ))}
         </div>
         <div className="relative flex overflow-hidden border-b border-white/15 py-4 [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]" aria-hidden="true">
@@ -218,7 +219,7 @@ export default function LandingPage() {
         <div className="relative mt-10 px-2 select-none grid" aria-hidden="true">
           {(heroItems.length ? heroItems : [null]).map((it, i) => (
             <p key={it ? it.tmdbId : "none"} className="[grid-area:1/1] font-cinema text-center whitespace-nowrap text-[26vw] md:text-[24vw] leading-none pt-[0.08em] pb-[0.02em] -mb-[3vw] transition-opacity duration-[1800ms]"
-              style={it ? { opacity: i === hero.index ? 1 : 0, backgroundImage: `url(${imgOf(it)})`, backgroundSize: "cover", backgroundPosition: "center", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", WebkitTextStroke: "2px rgba(255,255,255,.5)" } : { color: "rgba(255,255,255,.15)" }}>
+              style={it ? { opacity: i === hero.index ? 1 : 0, visibility: i === hero.index || i === footPrev ? "visible" : "hidden", backgroundImage: `url(${imgOf(it)})`, backgroundSize: "cover", backgroundPosition: "center", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", WebkitTextStroke: "2px rgba(255,255,255,.5)" } : { color: "rgba(255,255,255,.15)" }}>
               WATCHLY
             </p>
           ))}

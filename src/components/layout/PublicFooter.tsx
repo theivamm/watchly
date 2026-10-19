@@ -1,3 +1,4 @@
+import { usePrevIndex } from "@/components/home/HeroBackdrop";
 import { getBackdropUrl, getPosterUrl } from "@/services/tmdb";
 
 const TICKER = ["Viví tu cine", "Compartí lo que ves", "Tu ADN audiovisual", "¿Qué vemos hoy?", "Tu historial, tuyo"];
@@ -14,12 +15,13 @@ const imgOf = (it: Item) => (it.backdropPath ? getBackdropUrl(it.backdropPath, "
 
 /** Pie de las páginas públicas: sigue el mismo ciclo de imágenes que el hero de cada página. */
 export default function PublicFooter({ items, index }: { items: Item[]; index: number }) {
+  const footPrev = usePrevIndex(index);
   return (
     <footer className="relative overflow-hidden border-t border-white/20">
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         {items.map((it, i) => (
           <div key={it.tmdbId} className="absolute left-1/2 bottom-0 w-[90vw] h-[90vw] max-w-[1500px] max-h-[1500px] -translate-x-1/2 translate-y-[45%] rounded-full blur-[130px] transition-opacity duration-[1800ms]"
-            style={{ opacity: i === index ? 0.55 : 0, backgroundImage: `url(${imgOf(it)})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+            style={{ opacity: i === index ? 0.55 : 0, visibility: i === index || i === footPrev ? "visible" : "hidden", backgroundImage: `url(${imgOf(it)})`, backgroundSize: "cover", backgroundPosition: "center" }} />
         ))}
       </div>
       <div className="relative flex overflow-hidden border-b border-white/15 py-4 [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]" aria-hidden="true">
@@ -47,7 +49,7 @@ export default function PublicFooter({ items, index }: { items: Item[]; index: n
       <div className="relative mt-10 px-2 select-none grid" aria-hidden="true">
         {(items.length ? items : [null]).map((it, i) => (
           <p key={it ? it.tmdbId : "none"} className="[grid-area:1/1] font-cinema text-center whitespace-nowrap text-[26vw] md:text-[24vw] leading-none pt-[0.08em] pb-[0.02em] -mb-[3vw] transition-opacity duration-[1800ms]"
-            style={it ? { opacity: i === index ? 1 : 0, backgroundImage: `url(${imgOf(it)})`, backgroundSize: "cover", backgroundPosition: "center", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", WebkitTextStroke: "2px rgba(255,255,255,.5)" } : { color: "rgba(255,255,255,.15)" }}>
+            style={it ? { opacity: i === index ? 1 : 0, visibility: i === index || i === footPrev ? "visible" : "hidden", backgroundImage: `url(${imgOf(it)})`, backgroundSize: "cover", backgroundPosition: "center", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", WebkitTextStroke: "2px rgba(255,255,255,.5)" } : { color: "rgba(255,255,255,.15)" }}>
             WATCHLY
           </p>
         ))}

@@ -311,3 +311,14 @@ html, body { background-color: #07070d; }
 @media (min-width: 768px) {
   .modal-enter { animation: pop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 }
+/* Anti-parpadeo mobile (no revertir): los vidrios dentro de las diapositivas del hero se
+   funden en opacidad sobre una imagen que también cambia; con backdrop-filter eso parpadea
+   en mobile. Ahí usan un fondo translúcido fijo. */
+@media (max-width: 767px) {
+  .hero-slide .liquid-glass,
+  .hero-slide .liquid-glass-sm {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: linear-gradient(135deg, hsl(var(--accent-h, 265) 70% 55% / 0.3), rgba(255, 255, 255, 0.05)), rgba(16, 14, 30, 0.78);
+  }
+}

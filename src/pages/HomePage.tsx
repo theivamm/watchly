@@ -158,8 +158,8 @@ export default function HomePage() {
                 const key = `${it.mediaType}-${it.tmdbId}`;
                 const on = i === hero.index;
                 return (
-                  <div key={key} className="[grid-area:1/1] transition-all duration-1000"
-                    style={{ opacity: on ? 1 : 0, transform: `translateY(${on ? 0 : 18}px)`, pointerEvents: on ? "auto" : "none" }}>
+                  <div key={key} className="hero-slide [grid-area:1/1] transition-all duration-1000"
+                    style={{ opacity: on ? 1 : 0, transform: `translateY(${on ? 0 : 18}px)`, pointerEvents: on ? "auto" : "none", visibility: on ? "visible" : "hidden" }}>
                     <p className="text-sm font-extrabold text-white/80 mb-4">Hola, <span style={accent}>{name}</span> · esto es tendencia esta semana</p>
                     <div className="flex flex-wrap items-center gap-2.5">
                       {it.year && <span className="liquid-glass-sm px-4 py-2 rounded-full text-xs font-extrabold">{it.year}</span>}
