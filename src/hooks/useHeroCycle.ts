@@ -18,37 +18,38 @@ function rgbToHsl({ r, g, b }: RGB): [number, number, number] {
 export function useHeroCycle(posters: (string | null)[], ms = 8000) {
   const count = posters.length;
   const [index, setIndex] = useState(0);
-  const [progress, setProgress] = useState(0);
   const [cycle, setCycle] = useState(0);
   const [tint, setTint] = useState<RGB>(DEFAULT_TINT);
-  const startRef = useRef(0);
+  const lastInteraction = useRef(0);
   const cache = useRef<Record<string, RGB>>({});
 
   useEffect(() => {
     if (count <= 1) return;
-    startRef.current = performance.now();
-    const t = setInterval(() => {
-      const elapsed = performance.now() - startRef.current;
-      if (elapsed >= ms) {
-        setIndex((i) => (i + 1) % count);
-        setCycle((c) => c + 1);
-        startRef.current = performance.now();
-        setProgress(0);
-      } else {
-        setProgress((elapsed / ms) * 100);
-      }
-    }, 100);
-    return () => clearInterval(t);
+    const media = window.matchMedia("(max-width: 767px), (prefers-reduced-motion: reduce)");
+    const pause = () => { lastInteraction.current = Date.now(); };
+    window.addEventListener("scroll", pause, { passive: true, capture: true });
+    window.addEventListener("pointerdown", pause, { passive: true });
+    const timer = window.setInterval(() => {
+      // No page-wide progress renders. CSS draws the progress bar.
+      // Mobile heroes remain manual; desktop pauses during scroll and interaction.
+      if (media.matches || document.hidden || window.scrollY > window.innerHeight || Date.now() - lastInteraction.current < ms) return;
+      setIndex((i) => (i + 1) % count);
+      setCycle((c) => c + 1);
+    }, ms);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("scroll", pause, true);
+      window.removeEventListener("pointerdown", pause);
+    };
   }, [count, ms]);
 
   const select = useCallback((i: number) => {
-    setIndex(i);
+    setIndex(Math.max(0, Math.min(i, count - 1)));
     setCycle((c) => c + 1);
-    setProgress(0);
-    startRef.current = performance.now();
-  }, []);
+    lastInteraction.current = Date.now();
+  }, [count]);
 
-  const activePoster = posters[index] ?? null;
+  const activePoster = posters[count ? index % count : 0] ?? null;
   useEffect(() => {
     if (!activePoster) return;
     const cached = cache.current[activePoster];
@@ -67,8 +68,7 @@ export function useHeroCycle(posters: (string | null)[], ms = 8000) {
   const hue = s0 < 0.1 ? rgbToHsl(DEFAULT_TINT)[0] : h0;
   const sat = Math.round(Math.min(90, Math.max(62, s0 * 100 + 25)));
   return {
-    index,
-    progress,
+    index: count ? index % count : 0,
     cycle,
     duration: ms,
     select,

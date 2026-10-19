@@ -17,6 +17,8 @@ export default function HorizontalCarousel({
   const railRef = useRef<HTMLDivElement>(null);
   const justDragged = useRef(false);
   const drag = useRef<{ x: number; left: number; moved: boolean; id: number } | null>(null);
+  const dragCleanup = useRef<(() => void) | null>(null);
+  useEffect(() => () => dragCleanup.current?.(), []);
   const [pos, setPos] = useState({ left: false, right: false });
   const onLoadMoreRef = useRef(onLoadMore);
   onLoadMoreRef.current = onLoadMore;
@@ -24,27 +26,35 @@ export default function HorizontalCarousel({
   const update = useCallback(() => {
     const el = railRef.current;
     if (!el) return;
-    setPos({ left: el.scrollLeft > 8, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 8 });
+    const left = el.scrollLeft > 8;
+    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 8;
+    setPos((prev) => prev.left === left && prev.right === right ? prev : { left, right });
   }, []);
 
   useEffect(() => {
     const el = railRef.current;
     if (!el) return;
     update();
-    el.addEventListener("scroll", update, { passive: true });
+    let frame = 0;
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(() => { frame = 0; update(); }); };
+    el.addEventListener("scroll", schedule, { passive: true });
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => {
-      el.removeEventListener("scroll", update);
+      el.removeEventListener("scroll", schedule);
+      cancelAnimationFrame(frame);
       ro.disconnect();
     };
   }, [update]);
+
+  useEffect(() => { update(); }, [children, update]);
 
   const startDrag = (e: React.PointerEvent) => {
     // En táctil se usa el scroll nativo; arrastrar a mano lo traba.
     if (e.pointerType !== "mouse" || e.button !== 0) return;
     const el = railRef.current;
     if (!el) return;
+    dragCleanup.current?.();
     drag.current = { x: e.clientX, left: el.scrollLeft, moved: false, id: e.pointerId };
     el.style.scrollSnapType = "none";
 
@@ -66,14 +76,19 @@ export default function HorizontalCarousel({
       }
       drag.current = null;
       el.style.scrollSnapType = "";
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
+      dragCleanup.current?.();
     };
 
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onUp);
+    dragCleanup.current = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      el.style.scrollSnapType = "";
+      drag.current = null;
+    };
   };
 
   const onClickCapture = (e: React.MouseEvent) => {
@@ -86,7 +101,7 @@ export default function HorizontalCarousel({
   const scrollByCards = (dir: number) => {
     const el = railRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: "smooth" });
+    el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   };
 
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -117,8 +132,9 @@ export default function HorizontalCarousel({
       <div
         ref={railRef}
         onPointerDown={startDrag}
+        onDragStart={(e) => e.preventDefault()}
         onClickCapture={onClickCapture}
-        className={`flex overflow-x-auto no-scrollbar snap-x snap-mandatory md:snap-proximity md:cursor-grab md:active:cursor-grabbing select-none pr-4 md:pr-6 ${className}`}
+        className={`flex overflow-x-auto no-scrollbar snap-x snap-proximity md:cursor-grab md:active:cursor-grabbing select-none pr-4 md:pr-6 ${className}`}
         style={{ overscrollBehaviorX: "contain", WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y" }}
       >
         {children}

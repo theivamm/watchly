@@ -11,7 +11,7 @@ export default function AppShell() {
   const { user } = useAuth();
   const amb = useAmbient();
   return (
-    <div className="relative min-h-screen flex" style={{ backgroundColor: "transparent", ...(amb.vars as CSSProperties) }}>
+    <div className="watchly-app relative min-h-screen flex" style={{ backgroundColor: "transparent", ...(amb.vars as CSSProperties) }}>
       <AmbientLayer items={amb.items} index={amb.index} />
       <Sidebar />
       <div className="flex-1 min-w-0 flex flex-col">

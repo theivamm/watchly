@@ -60,15 +60,6 @@ export default function MediaCard({
       className="relative text-left group w-full cursor-pointer text-white"
     >
       <div className="relative aspect-[2/3] transition-transform duration-500 group-hover:-translate-y-1.5">
-        {/* Brillo con el color del póster */}
-        <img src={posterUrl} alt="" aria-hidden="true" loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover rounded-[1.75rem] blur-2xl scale-95 translate-y-3 opacity-0 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none" />
-        {/* Aberración cromática en el borde al pasar el cursor */}
-        {[-1, 1].map((d) => (
-          <img key={d} src={posterUrl} alt="" aria-hidden="true" loading="lazy"
-            className="absolute inset-0 w-full h-full object-cover rounded-[1.75rem] opacity-0 group-hover:opacity-55 transition-all duration-500 pointer-events-none"
-            style={{ transform: `translateX(${d * 5}px)`, mixBlendMode: "screen", filter: d < 0 ? "sepia(1) saturate(6) hue-rotate(-50deg)" : "sepia(1) saturate(6) hue-rotate(150deg)" }} />
-        ))}
         <div className="relative w-full h-full rounded-[1.75rem] overflow-hidden border border-white/20 shadow-[0_22px_44px_-18px_rgba(0,0,0,.8)] bg-[#0c0a18]">
           <img
             src={posterUrl}

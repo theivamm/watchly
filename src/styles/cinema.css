@@ -297,3 +297,32 @@ html, body { background-color: #07070d; }
 .ai-border:focus-within::before { opacity: 0.5; }
 .ai-border-inner { background: rgba(11, 9, 22, 0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
 @media (prefers-reduced-motion: reduce) { .ai-border { animation: none; } }
+
+/* Scroll performance: solid tinted surfaces do not continuously sample the backdrop. */
+.watchly-app .liquid-glass,
+.watchly-app .liquid-glass-sm,
+.watchly-app .frost-card,
+.watchly-app .liquid-menu,
+.watchly-app .ai-border-inner {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(20, 18, 32, .94);
+}
+.watchly-app [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.watchly-app .cinema-drift-a,
+.watchly-app .cinema-drift-b { display: none; }
+.watchly-app .cinema-kenburns,
+.watchly-app .ai-border { animation: none; }
+.watchly-app .ai-border::before,
+.watchly-app .ai-border::after { display: none; }
+.watchly-app .frost-card { will-change: auto; }
+.watchly-app [class*="transition-"] { transition-duration: 180ms; }
+@media (max-width: 767px), (prefers-reduced-motion: reduce) {
+  .hero-progress { animation: none !important; transform: scaleX(1); }
+}
+@media (hover: none) {
+  .watchly-app .group:hover img { transform: none; }
+}
