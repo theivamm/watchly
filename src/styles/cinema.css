@@ -285,3 +285,29 @@ html, body { background-color: #07070d; }
 }
 .ai-border:focus-within { animation-duration: 2.6s; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), 0 0 18px rgba(130, 140, 255, 0.35); }
 @media (prefers-reduced-motion: reduce) { .ai-border { animation: none; } }
+
+/* Anti-parpadeo mobile (no revertir): la máscara del hero solo desde md, y sin sombras
+   filtradas sobre los títulos que cruzan el fundido de imágenes. */
+@media (min-width: 768px) {
+  .hero-mask {
+    -webkit-mask-image: var(--hero-mask);
+    mask-image: var(--hero-mask);
+    -webkit-mask-composite: var(--hero-mask-composite-webkit);
+    mask-composite: var(--hero-mask-composite);
+  }
+}
+@media (max-width: 767px) {
+  .font-cinema[class*="drop-shadow"] { filter: none; text-shadow: 0 4px 30px rgba(0, 0, 0, 0.55); }
+}
+/* Máscara del banner del modal solo en desktop: en mobile se recalculaba al hacer scroll. */
+@media (min-width: 768px) {
+  .modal-banner-mask {
+    -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+  }
+}
+/* Entrada del modal: en mobile solo fundido (escalar un modal tan cargado parpadea). */
+.modal-enter { animation: fade-in 0.25s ease both; }
+@media (min-width: 768px) {
+  .modal-enter { animation: pop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+}
